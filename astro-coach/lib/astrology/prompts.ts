@@ -84,6 +84,7 @@ export function buildDashaPredictionPrompt(chart: NatalChart, dashaLord: string,
   const { ascendant, planets } = chart;
 
   return `You are a Vedic astrology expert. Generate a behavioral and life theme prediction for the following Dasha period.
+CRITICAL: Return ONLY raw JSON. No apostrophes (use "do not" not "don't"), no special characters, no markdown.
 
 Chart context:
 - Ascendant: ${ascendant.sign}
