@@ -1,0 +1,14 @@
+# Next.js
+astro-coach/.next/
+astro-coach/node_modules/
+astro-coach/.env
+astro-coach/.env.local
+
+# Python
+python-service/__pycache__/
+python-service/*.pyc
+python-service/.venv/
+python-service/venv/
+
+# OS
+.DS_Store
