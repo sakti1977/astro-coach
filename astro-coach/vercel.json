@@ -1,9 +1,5 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "env": {
-    "ANTHROPIC_API_KEY": "@anthropic-api-key",
-    "EPHEMERIS_SERVICE_URL": "@ephemeris-service-url"
-  }
+  "outputDirectory": ".next"
 }
