@@ -50,14 +50,13 @@ function getSignInHouse(chart: ChartDisplay, house: number): string {
   return SIGN_NAMES[signNum].slice(0, 3);
 }
 
-export default function NorthIndianGrid({ chart, size = SIZE, highlightHouse }: Props) {
-  const scale = size / SIZE;
-
+export default function NorthIndianGrid({ chart, size, highlightHouse }: Props) {
   return (
     <svg
       viewBox={`0 0 ${SIZE} ${SIZE}`}
-      width={size}
-      height={size}
+      width={size ?? "100%"}
+      height={size ?? undefined}
+      style={size ? undefined : { height: "auto" }}
       className="border border-gray-200 rounded-lg bg-white"
     >
       {/* Outer grid lines */}

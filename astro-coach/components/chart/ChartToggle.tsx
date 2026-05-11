@@ -110,11 +110,11 @@ export default function ChartToggle({ chart, highlightHouse }: Props) {
       </div>
 
       {/* Chart grid */}
-      <div className="flex justify-center">
+      <div className="w-full max-w-sm mx-auto">
         {gridView === "north" ? (
-          <NorthIndianGrid chart={display} size={340} highlightHouse={varga === "d1" ? highlightHouse : undefined} />
+          <NorthIndianGrid chart={display} highlightHouse={varga === "d1" ? highlightHouse : undefined} />
         ) : (
-          <SouthIndianGrid chart={display} size={340} />
+          <SouthIndianGrid chart={display} />
         )}
       </div>
 
