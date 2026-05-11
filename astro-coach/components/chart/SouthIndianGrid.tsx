@@ -36,19 +36,25 @@ function getPlanetsInSign(chart: ChartDisplay, signNum: number): Array<{ key: st
     }));
 }
 
-export default function SouthIndianGrid({ chart, size = SIZE }: Props) {
-  const cell = size / 4;
+export default function SouthIndianGrid({ chart, size }: Props) {
+  const cell = (size ?? SIZE) / 4;
+  const renderSize = size ?? SIZE;
   const ascSignNum = chart.ascendant.sign_num;
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}
-      className="border border-gray-200 rounded-lg bg-white">
+    <svg
+      viewBox={`0 0 ${renderSize} ${renderSize}`}
+      width={size ?? "100%"}
+      height={size ?? undefined}
+      style={size ? undefined : { height: "auto" }}
+      className="border border-gray-200 rounded-lg bg-white"
+    >
 
       {/* Grid lines */}
       {[0, 1, 2, 3, 4].map(i => (
         <g key={i}>
-          <line x1={i * cell} y1={0} x2={i * cell} y2={size} stroke="#D1D5DB" strokeWidth={1} />
-          <line x1={0} y1={i * cell} x2={size} y2={i * cell} stroke="#D1D5DB" strokeWidth={1} />
+          <line x1={i * cell} y1={0} x2={i * cell} y2={renderSize} stroke="#D1D5DB" strokeWidth={1} />
+          <line x1={0} y1={i * cell} x2={renderSize} y2={i * cell} stroke="#D1D5DB" strokeWidth={1} />
         </g>
       ))}
 
@@ -58,9 +64,9 @@ export default function SouthIndianGrid({ chart, size = SIZE }: Props) {
           fill="#F9FAFB" />
       ))}
       {/* Center label */}
-      <text x={size / 2} y={size / 2 - 8} textAnchor="middle" fontSize={12}
+      <text x={renderSize / 2} y={renderSize / 2 - 8} textAnchor="middle" fontSize={12}
         fill="#9CA3AF" fontWeight="bold">ASTRO</text>
-      <text x={size / 2} y={size / 2 + 8} textAnchor="middle" fontSize={12}
+      <text x={renderSize / 2} y={renderSize / 2 + 8} textAnchor="middle" fontSize={12}
         fill="#9CA3AF" fontWeight="bold">COACH</text>
 
       {/* Sign cells */}

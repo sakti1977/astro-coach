@@ -210,17 +210,33 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             {/* Ephemeris service status pill */}
-            <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
-              serviceStatus === "ok"
-                ? "bg-green-50 border-green-200 text-green-700"
-                : serviceStatus === "down"
-                ? "bg-red-50 border-red-200 text-red-700"
-                : "bg-gray-50 border-gray-200 text-gray-400"
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${
-                serviceStatus === "ok" ? "bg-green-500" : serviceStatus === "down" ? "bg-red-500 animate-pulse" : "bg-gray-300"
+            <div
+              title={
+                serviceStatus === "checking"
+                  ? "Connecting to ephemeris calculation engine…"
+                  : serviceStatus === "ok"
+                  ? "Swiss Ephemeris engine is running and ready"
+                  : "Ephemeris engine offline — run ./start.sh to start it"
+              }
+              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border cursor-default select-none ${
+                serviceStatus === "ok"
+                  ? "bg-green-50 border-green-200 text-green-700"
+                  : serviceStatus === "down"
+                  ? "bg-red-50 border-red-200 text-red-700"
+                  : "bg-gray-50 border-gray-200 text-gray-500"
+              }`}>
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                serviceStatus === "ok"
+                  ? "bg-green-500"
+                  : serviceStatus === "down"
+                  ? "bg-red-500 animate-pulse"
+                  : "bg-gray-400 animate-pulse"
               }`} />
-              {serviceStatus === "ok" ? "Service ready" : serviceStatus === "down" ? "Service offline" : "Checking…"}
+              {serviceStatus === "ok"
+                ? "Ephemeris ready"
+                : serviceStatus === "down"
+                ? "Engine offline"
+                : "Connecting…"}
             </div>
             {hasProfile && (
               <button onClick={() => router.push("/chart")}
@@ -247,7 +263,7 @@ export default function HomePage() {
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-3 gap-4 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           {[
             { icon: "⬡", label: "Accurate Chart", desc: "Swiss Ephemeris + Lahiri ayanamsha" },
             { icon: "◎", label: "Life Validated", desc: "Yes/no questions calibrate accuracy" },
@@ -259,6 +275,47 @@ export default function HomePage() {
               <p className="text-xs text-gray-400 mt-1">{f.desc}</p>
             </div>
           ))}
+        </div>
+
+        {/* Sample insights preview */}
+        <div className="mb-12">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-5">
+            What you&apos;ll discover
+          </p>
+          <div className="space-y-3">
+            {[
+              {
+                planet: "☽",
+                header: "Moon in Rohini · House 4",
+                body: "Your emotional intelligence is one of your greatest assets. You need a stable, beautiful home environment to feel grounded — disruptions there hit you harder than most people realize.",
+                tag: "Personality",
+              },
+              {
+                planet: "♃",
+                header: "Jupiter Mahadasha · Active until 2031",
+                body: "This is an expansion phase — the right time to teach, study, or build something with long-term meaning. Financial growth tends to arrive through reputation, not hustle.",
+                tag: "Current Period",
+              },
+              {
+                planet: "☉",
+                header: "Sun · 10th House",
+                body: "Career is not just income for you — it is identity. Leadership roles suit you, but only when you have genuine authority. Working under micromanagers drains your life force.",
+                tag: "Career",
+              },
+            ].map((item) => (
+              <div key={item.header} className="border border-gray-100 rounded-xl p-4 flex gap-4">
+                <span className="text-2xl leading-none mt-0.5 flex-shrink-0">{item.planet}</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <p className="text-sm font-semibold text-gray-900">{item.header}</p>
+                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{item.tag}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-xs text-gray-300 mt-4">Sample insights — your chart will reflect your actual birth data</p>
         </div>
 
         {/* Form */}
@@ -423,6 +480,52 @@ export default function HomePage() {
             All data stored locally in your browser. Nothing leaves your device except for chart calculation.
           </p>
         </form>
+
+        {/* Technical transparency */}
+        <details className="mt-12 group">
+          <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-600 text-center list-none flex items-center justify-center gap-1 select-none">
+            <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+            How the chart is calculated
+          </summary>
+          <div className="mt-4 border border-gray-100 rounded-xl p-5 space-y-3 text-sm text-gray-600">
+            <div className="flex gap-3">
+              <span className="text-base flex-shrink-0">⬡</span>
+              <div>
+                <p className="font-medium text-gray-800">Swiss Ephemeris (swe)</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Planetary longitudes are computed using the Swiss Ephemeris library — the same engine used by professional Jyotish software. It models gravitational interactions to sub-arc-second precision.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-base flex-shrink-0">◎</span>
+              <div>
+                <p className="font-medium text-gray-800">Lahiri Ayanamsha</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Vedic astrology uses a sidereal zodiac. The Lahiri ayanamsha (~24°) is subtracted from tropical positions to align planets with their actual constellations — the Government of India&apos;s official standard.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-base flex-shrink-0">✦</span>
+              <div>
+                <p className="font-medium text-gray-800">Whole-sign houses</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Each house spans exactly one sign (30°). The ascendant sign becomes house 1, and houses proceed clockwise. This is the dominant system in classical Jyotish texts.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-base flex-shrink-0">◑</span>
+              <div>
+                <p className="font-medium text-gray-800">Vimshottari Dasha</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  The timing system is calculated from the Moon&apos;s nakshatra at birth. The 120-year cycle (Ketu → Venus → Sun → … → Mercury) is divided into major periods (Maha) and sub-periods (Antardasha).
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
     </main>
   );
