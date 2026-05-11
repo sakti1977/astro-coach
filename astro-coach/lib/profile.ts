@@ -75,6 +75,16 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export type CoachingPhase = "gathering" | "recommending";
+
+export interface CoachingObservation {
+  id: string;
+  timestamp: string;
+  text: string;
+  category: "behavior" | "emotion" | "pattern" | "goal" | "block";
+  exchangeIndex: number;
+}
+
 export interface UserProfile {
   birthData: {
     name: string; date: string; time: string;
@@ -94,6 +104,8 @@ export interface UserProfile {
   coaching: {
     behaviorProfile: string[];
     lastUpdated: string;
+    phase: CoachingPhase;
+    exchangeCount: number;
   };
 }
 
@@ -113,6 +125,8 @@ const DEFAULT_PROFILE: UserProfile = {
   coaching: {
     behaviorProfile: [],
     lastUpdated: new Date().toISOString(),
+    phase: "gathering" as CoachingPhase,
+    exchangeCount: 0,
   },
 };
 
@@ -121,7 +135,12 @@ export function getProfile(): UserProfile {
   try {
     const raw = localStorage.getItem(PROFILE_KEY);
     if (!raw) return DEFAULT_PROFILE;
-    return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw) as UserProfile;
+    return {
+      ...DEFAULT_PROFILE,
+      ...parsed,
+      coaching: { ...DEFAULT_PROFILE.coaching, ...parsed.coaching },
+    };
   } catch {
     return DEFAULT_PROFILE;
   }
@@ -167,7 +186,7 @@ export function addValidationAnswer(entry: ValidationEntry): number {
   return score;
 }
 
-export function buildCoachingContext(profile: UserProfile): string {
+export function buildCoachingContext(profile: UserProfile, observations: CoachingObservation[] = []): string {
   const { validation, goals, coaching } = profile;
   const lines: string[] = [];
   if (validation.confirmedThemes.length > 0)
@@ -177,5 +196,12 @@ export function buildCoachingContext(profile: UserProfile): string {
   if (coaching.behaviorProfile.length > 0)
     lines.push(`Behavioral notes: ${coaching.behaviorProfile.join(". ")}`);
   lines.push(`Chart validation accuracy: ${Math.round(validation.accuracyScore * 100)}%`);
+  if (observations.length > 0) {
+    lines.push(
+      `Session observations:\n${observations
+        .map((o) => `  - [${o.category}] ${o.text}`)
+        .join("\n")}`
+    );
+  }
   return lines.join("\n");
 }

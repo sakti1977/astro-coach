@@ -1,19 +1,28 @@
 import { NextRequest } from "next/server";
 import { streamCoachResponse } from "@/lib/claude";
 import { buildCoachSystemPrompt } from "@/lib/astrology/prompts";
-import type { NatalChart, DashaData, ChatMessage } from "@/lib/profile";
+import type { NatalChart, DashaData, ChatMessage, CoachingPhase } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
-  const { chart, dashas, goals, profileContext, vargaContext, messages } = await req.json() as {
-    chart: NatalChart;
-    dashas: DashaData;
-    goals: string[];
-    profileContext: string;
-    vargaContext?: string;
-    messages: ChatMessage[];
-  };
+  const { chart, dashas, goals, profileContext, vargaContext, messages, phase } =
+    (await req.json()) as {
+      chart: NatalChart;
+      dashas: DashaData;
+      goals: string[];
+      profileContext: string;
+      vargaContext?: string;
+      messages: ChatMessage[];
+      phase?: CoachingPhase;
+    };
 
-  const systemPrompt = buildCoachSystemPrompt(chart, dashas, goals, profileContext, vargaContext);
+  const systemPrompt = buildCoachSystemPrompt(
+    chart,
+    dashas,
+    goals,
+    profileContext,
+    vargaContext,
+    phase ?? "gathering"
+  );
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
