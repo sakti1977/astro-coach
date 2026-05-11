@@ -41,7 +41,7 @@ export async function* streamCoachResponse(
 
   const stream = await client.messages.stream({
     model: "claude-sonnet-4-6",
-    max_tokens: 1024,
+    max_tokens: 2048,
     system: [
       {
         type: "text",
