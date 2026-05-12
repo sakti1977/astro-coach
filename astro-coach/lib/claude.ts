@@ -73,7 +73,8 @@ export async function generateDashaPrediction(
   const client = getClient();
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1024,
+    max_tokens: 1500,
+    system: "You are a JSON-only API. Your entire response must be a single raw JSON object with no preamble, no explanation, no markdown, no code fences. Start your response with { and end with }.",
     messages: [{ role: "user", content: prompt }],
   });
   const block = response.content[0];
