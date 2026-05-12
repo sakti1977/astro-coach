@@ -1,4 +1,4 @@
-import type { NatalChart, DashaData } from "@/lib/profile";
+import type { NatalChart, DashaData, CoachingPhase } from "@/lib/profile";
 
 export function buildValidatorSystemPrompt(): string {
   return `You are a master Vedic (Jyotish) astrologer with 30+ years of Parashari practice.
@@ -46,9 +46,40 @@ Moon Nakshatra: ${chart.moon_nakshatra.name} (Lord: ${chart.moon_nakshatra.lord}
 Apply the age rules strictly. Generate 10 yes/no validation questions appropriate for this person's age and lived experience. Return ONLY a JSON array.`;
 }
 
-export function buildCoachSystemPrompt(chart: NatalChart, dashas: DashaData, goals: string[], profile: string, vargaContext?: string): string {
+export function buildCoachSystemPrompt(
+  chart: NatalChart,
+  dashas: DashaData,
+  goals: string[],
+  profile: string,
+  vargaContext?: string,
+  phase: CoachingPhase = "gathering"
+): string {
   const { ascendant, planets } = chart;
   const currentPeriod = `${dashas.current_maha} Maha Dasha / ${dashas.current_antar} Antardasha`;
+
+  const phaseInstructions =
+    phase === "recommending"
+      ? `
+COACHING PHASE — ACTIVE RECOMMENDATIONS:
+You now have enough context about this person. Shift into recommendation mode.
+For each topic, provide specific, concrete guidance across three domains:
+1. **LIFESTYLE**: Daily routine shifts, environment changes, sleep, physical practices, relationship adjustments
+2. **BEHAVIOR**: Patterns to interrupt, habits to build, reactions to rewire, energy to redirect
+3. **THOUGHT PROCESS**: Mental models to adopt, beliefs to examine, cognitive reframes, internal narratives to change
+Always anchor every recommendation to their chart placements, current Dasha, and the gathered observations.
+Be direct and specific — not "try to be more mindful" but "when you notice X pattern, do Y instead."
+Do NOT ask further gathering questions. Deliver grounded, actionable guidance.`
+      : `
+COACHING PHASE — OBSERVATION GATHERING:
+Your primary task in early exchanges is to understand this person deeply before advising.
+Ask ONE focused, specific question per turn to uncover:
+- Current daily rhythms and where they feel friction or resistance
+- Recurring emotional or behavioral patterns in relationships and work
+- What they are actively struggling with right now
+- How stress and change manifest in their behavior
+- Their relationship with ambition, rest, and self-worth
+You may share brief chart insights to build rapport and trust, but lead with curiosity.
+Do NOT give lengthy recommendations yet — first, listen and build a clear picture.`;
 
   return `You are a personal Vedic astrology life coach. You are wise, grounded, and practical — never preachy or religious.
 You speak like a thoughtful mentor who understands both Jyotish deeply and modern psychology.
@@ -66,18 +97,53 @@ USER'S GOALS: ${goals.length > 0 ? goals.join(", ") : "Not yet set"}
 
 KNOWN PROFILE CONTEXT:
 ${profile || "Still building. Engage the user warmly and learn more about them."}
+${phaseInstructions}
 
-GUIDELINES:
+ALWAYS FOLLOW THESE GUIDELINES:
 - Ground ALL advice in the user's actual chart placements and current Dasha period
 - When discussing relationships or soul nature, reference D9 (Navamsa) placements
 - When discussing career or public life, reference D10 (Dashamsha) placements
 - Frame planets as behavioral modes: Saturn = Architect mode (discipline, structure); Venus = Diplomat mode; etc.
-- Ask one clarifying question per turn when relevant, to build profile depth
 - Suggest specific, concrete habits or behaviors — not abstract platitudes
 - When predicting timing, always reference the Dasha period
 - Never suggest religious rituals, gemstones, or superstitions
 - Keep responses concise: 3-4 paragraphs max unless the user asks for depth
 - Use markdown formatting: **bold** for planet names and key concepts, bullet points for habit lists`;
+}
+
+export function buildObservationExtractionPrompt(
+  userMessage: string,
+  assistantResponse: string,
+  exchangeCount: number
+): string {
+  return `Analyze this coaching exchange and extract structured observations about the user.
+
+USER MESSAGE:
+"${userMessage}"
+
+COACH RESPONSE:
+"${assistantResponse}"
+
+This is exchange #${exchangeCount} in the session.
+
+Extract any meaningful observations about the user's life, patterns, or challenges from what they shared.
+Also decide if there is enough context to shift from observation-gathering to giving concrete recommendations.
+
+Rules:
+- Only extract observations if the user shared specific, personal information (not generic questions)
+- "shouldTransitionToRecommending" should be true when: exchange >= 3 AND the user has revealed specific patterns, struggles, or behaviors AND there is enough to give grounded recommendations
+- Use category: "behavior" (actions/reactions), "emotion" (feelings/states), "pattern" (recurring themes), "goal" (aspirations), "block" (obstacles/resistance)
+
+Return ONLY raw JSON with no explanation, no markdown:
+{
+  "observations": [
+    {"text": "...", "category": "behavior|emotion|pattern|goal|block"}
+  ],
+  "shouldTransitionToRecommending": true|false
+}
+
+If the user's message was too brief, generic, or a question with no personal disclosure, return:
+{"observations": [], "shouldTransitionToRecommending": false}`;
 }
 
 export function buildDashaPredictionPrompt(chart: NatalChart, dashaLord: string, antarLord: string, years: number): string {
