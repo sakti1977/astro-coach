@@ -67,6 +67,24 @@ export async function POST(req: NextRequest) {
       };
     }
 
+    // Validate that all required fields are present and non-empty
+    const pred = prediction as any;
+    if (!pred.themes || !Array.isArray(pred.themes) || pred.themes.length === 0) {
+      pred.themes = ["Personal growth and self-discovery", "Life lessons and experiences", "New opportunities"];
+    }
+    if (!pred.cultivate || !Array.isArray(pred.cultivate) || pred.cultivate.length === 0) {
+      pred.cultivate = ["Patience and perseverance", "Self-awareness", "Balance and moderation"];
+    }
+    if (!pred.challenges || !Array.isArray(pred.challenges) || pred.challenges.length === 0) {
+      pred.challenges = ["Unexpected changes", "Need for adaptability", "Emotional resilience"];
+    }
+    if (!pred.actions || !Array.isArray(pred.actions) || pred.actions.length === 0) {
+      pred.actions = ["Reflect on life goals", "Build strong foundations", "Develop new skills"];
+    }
+    if (!pred.summary || typeof pred.summary !== "string") {
+      pred.summary = "A period of growth and transformation guided by planetary influences.";
+    }
+
     return NextResponse.json({ prediction });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Dasha prediction failed";

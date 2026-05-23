@@ -208,14 +208,15 @@ Chart context:
 
 Dasha period: ${dashaLord} Maha Dasha / ${antarLord} Antardasha (next ~${years} years)
 
-Analyze deeply:
-1. Core themes of this period (career, relationships, health, inner growth, spirituality)
-2. Behavioral qualities to cultivate based on ${dashaLord} and ${antarLord} nature
-3. Potential challenges based on planetary dignities and house positions
-4. How the Antardasha lord ${antarLord} modifies or flavors the Mahadasha
-5. Specific action areas and life domains that will be emphasized
-6. Psychological and emotional patterns to expect
-7. Opportunities for growth and evolution
+Generate predictions organized into these REQUIRED fields:
+
+1. "themes": [array of 3-5 core life themes during this period - career, relationships, health, inner growth, spirituality]
+2. "cultivate": [array of 3-5 behavioral qualities to cultivate based on ${dashaLord} and ${antarLord} nature]
+3. "challenges": [array of 3-5 potential challenges, difficulties, or areas to watch out for based on planetary dignities and house positions]
+4. "actions": [array of 3-5 specific action areas, life domains, or practical steps to take during this period]
+5. "summary": "A 1-2 sentence overview of this period"
+
+ALL FIVE FIELDS ARE REQUIRED. Each array must have at least 3 items.
 
 Format as JSON: {"themes": [...], "cultivate": [...], "challenges": [...], "actions": [...], "summary": "..."}`;
 }
