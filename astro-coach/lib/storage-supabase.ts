@@ -75,6 +75,11 @@ class SupabaseStorageAdapter implements StorageAdapter {
 
   // ─── Supabase Sync Methods ────────────────────────────────────────────────
   async syncToServer(userId: string): Promise<void> {
+    if (!supabase) {
+      console.warn("Supabase not configured. Skipping server sync.");
+      return;
+    }
+
     try {
       const profile = getProfile();
       const observations = await this.getObservations();
@@ -126,6 +131,11 @@ class SupabaseStorageAdapter implements StorageAdapter {
   }
 
   async syncFromServer(userId: string): Promise<void> {
+    if (!supabase) {
+      console.warn("Supabase not configured. Skipping server sync.");
+      return;
+    }
+
     try {
       // Fetch user profile
       const { data: profileData, error: profileError } = await supabase

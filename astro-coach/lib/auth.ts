@@ -12,6 +12,10 @@ export const authOptions: NextAuthOptions = {
         mode: { label: "Mode", type: "text" }, // 'signin' or 'signup'
       },
       async authorize(credentials) {
+        if (!supabase) {
+          throw new Error("Authentication is not configured. Please set up Supabase environment variables.")
+        }
+
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password required")
         }

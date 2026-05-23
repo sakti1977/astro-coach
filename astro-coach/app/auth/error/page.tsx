@@ -2,8 +2,9 @@
 
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
-export default function AuthErrorPage() {
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
@@ -41,5 +42,20 @@ export default function AuthErrorPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-3xl mb-4">✦</div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AuthErrorContent />
+    </Suspense>
   );
 }
