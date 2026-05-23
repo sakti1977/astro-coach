@@ -4,7 +4,7 @@ import { buildCoachSystemPrompt } from "@/lib/astrology/prompts";
 import type { NatalChart, DashaData, ChatMessage, CoachingPhase } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
-  const { chart, dashas, goals, profileContext, vargaContext, messages, phase } =
+  const { chart, dashas, goals, profileContext, vargaContext, messages, phase, includeReligiousSolutions } =
     (await req.json()) as {
       chart: NatalChart;
       dashas: DashaData;
@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
       vargaContext?: string;
       messages: ChatMessage[];
       phase?: CoachingPhase;
+      includeReligiousSolutions?: boolean;
     };
 
   const systemPrompt = buildCoachSystemPrompt(
@@ -21,7 +22,8 @@ export async function POST(req: NextRequest) {
     goals,
     profileContext,
     vargaContext,
-    phase ?? "gathering"
+    phase ?? "gathering",
+    includeReligiousSolutions ?? false
   );
 
   const encoder = new TextEncoder();

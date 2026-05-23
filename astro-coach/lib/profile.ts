@@ -106,6 +106,7 @@ export interface UserProfile {
     lastUpdated: string;
     phase: CoachingPhase;
     exchangeCount: number;
+    includeReligiousSolutions: boolean;
   };
 }
 
@@ -127,6 +128,7 @@ const DEFAULT_PROFILE: UserProfile = {
     lastUpdated: new Date().toISOString(),
     phase: "gathering" as CoachingPhase,
     exchangeCount: 0,
+    includeReligiousSolutions: false,
   },
 };
 

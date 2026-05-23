@@ -18,6 +18,9 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [observations, setObservations] = useState<CoachingObservation[]>([]);
   const [phase, setPhase] = useState<CoachingPhase>(profile.coaching.phase ?? "gathering");
   const [exchangeCount, setExchangeCount] = useState(profile.coaching.exchangeCount ?? 0);
+  const [includeReligiousSolutions, setIncludeReligiousSolutions] = useState(
+    profile.coaching.includeReligiousSolutions ?? false
+  );
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -30,6 +33,19 @@ export default function ChatInterface({ chart, dashas }: Props) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  function toggleReligiousSolutions() {
+    const newValue = !includeReligiousSolutions;
+    setIncludeReligiousSolutions(newValue);
+    const current = getProfile();
+    saveProfile({
+      ...current,
+      coaching: {
+        ...current.coaching,
+        includeReligiousSolutions: newValue,
+      },
+    });
+  }
 
   async function extractAndSave(userMessage: string, assistantResponse: string, currentExchangeCount: number) {
     try {
@@ -135,6 +151,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           profileContext: buildCoachingContext(currentProfile, observations),
           vargaContext,
           phase,
+          includeReligiousSolutions,
           messages: newMessages.slice(-12).map((m) => ({ role: m.role, content: m.content })),
         }),
       });
@@ -203,6 +220,22 @@ export default function ChatInterface({ chart, dashas }: Props) {
           <span className="font-medium text-gray-900">{dashas.current_antar}</span> Antar
         </span>
         <span className="ml-auto flex items-center gap-2 text-gray-400">
+          {/* Religious solutions toggle */}
+          <button
+            onClick={toggleReligiousSolutions}
+            className={`text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
+              includeReligiousSolutions
+                ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+            }`}
+            title={
+              includeReligiousSolutions
+                ? "Religious remedies enabled - Click to disable"
+                : "Religious remedies disabled - Click to enable"
+            }
+          >
+            {includeReligiousSolutions ? "🕉 Religious" : "⚛ Behavioral"}
+          </button>
           {observations.length > 0 && (
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
