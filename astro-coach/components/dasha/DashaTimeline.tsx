@@ -19,6 +19,7 @@ interface DashaPrediction {
 
 export default function DashaTimeline({ dashas, birthDate }: Props) {
   const [selectedMaha, setSelectedMaha] = useState<number | null>(null);
+  const [selectedAntar, setSelectedAntar] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<DashaPrediction | null>(null);
   const [loadingPrediction, setLoadingPrediction] = useState(false);
   const [predictionError, setPredictionError] = useState("");
@@ -210,18 +211,52 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
                       {/* Antardasha list */}
                       <div>
                         <p className="text-xs font-medium text-gray-500 uppercase mb-2">Sub-Periods (Antardasha)</p>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="space-y-1.5">
                           {maha.antardashas.map((a, j) => {
                             const isCurrentAntar = a.lord === dashas.current_antar && isCurrent;
+                            const antarKey = `${i}-${j}`;
+                            const isAntarExpanded = selectedAntar === antarKey;
+                            const hasPratyantars = a.pratyantardashas && a.pratyantardashas.length > 0;
+
                             return (
-                              <span key={j}
-                                className={`text-xs px-2 py-0.5 rounded-full border ${
-                                  isCurrentAntar ? "bg-gray-900 text-white border-gray-900" : "border-gray-200 text-gray-600"
-                                }`}
-                                title={`${a.start} → ${a.end}`}
-                              >
-                                {PLANET_META[a.lord.toLowerCase() as PlanetKey]?.symbol ?? ""} {a.lord}
-                              </span>
+                              <div key={j} className="border border-gray-100 rounded">
+                                <button
+                                  onClick={() => hasPratyantars && setSelectedAntar(isAntarExpanded ? null : antarKey)}
+                                  className={`w-full text-left text-xs px-2 py-1.5 rounded flex items-center justify-between ${
+                                    isCurrentAntar ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                                  } ${!hasPratyantars ? "cursor-default" : "cursor-pointer"}`}
+                                  title={`${a.start} → ${a.end}`}
+                                  disabled={!hasPratyantars}
+                                >
+                                  <span>
+                                    {PLANET_META[a.lord.toLowerCase() as PlanetKey]?.symbol ?? ""} {a.lord}
+                                    {isCurrentAntar && <span className="ml-1 text-[10px]">● Now</span>}
+                                  </span>
+                                  {hasPratyantars && (
+                                    <span className={`text-xs ${isCurrentAntar ? "text-white" : "text-gray-400"}`}>
+                                      {isAntarExpanded ? "▲" : "▼"}
+                                    </span>
+                                  )}
+                                </button>
+
+                                {/* Pratyantardasha (third level) */}
+                                {isAntarExpanded && hasPratyantars && (
+                                  <div className="px-2 pb-2 pt-1 bg-gray-50">
+                                    <p className="text-[10px] font-medium text-gray-500 uppercase mb-1">Pratyantar Dasha</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {a.pratyantardashas!.map((p, k) => (
+                                        <span
+                                          key={k}
+                                          className="text-[10px] px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-600"
+                                          title={`${p.lord}: ${p.start} → ${p.end}`}
+                                        >
+                                          {PLANET_META[p.lord.toLowerCase() as PlanetKey]?.symbol ?? ""} {p.lord}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             );
                           })}
                         </div>

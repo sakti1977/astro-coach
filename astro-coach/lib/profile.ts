@@ -34,7 +34,10 @@ export interface DashaData {
   mahadashas: Array<{
     lord: string; years: number; balance_years: number;
     start: string; end: string;
-    antardashas: Array<{ lord: string; years: number; start: string; end: string }>;
+    antardashas: Array<{
+      lord: string; years: number; start: string; end: string;
+      pratyantardashas?: Array<{ lord: string; years: number; start: string; end: string }>;
+    }>;
   }>;
   current_maha: string;
   current_antar: string;
