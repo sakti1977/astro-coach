@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { getProfile, updateProfile } from "@/lib/profile";
+import { getProfile, updateProfile, clearProfile } from "@/lib/profile";
+import { storage } from "@/lib/storage";
 
 // IANA timezone guesses by country code (best-effort for common countries)
 const COUNTRY_TZ: Record<string, string> = {
@@ -185,6 +186,11 @@ export default function HomePage() {
 
       const { chart, dashas } = await res.json();
 
+      // Clear all previous data when new kundli is entered
+      clearProfile();
+      await storage.clearAll();
+
+      // Save fresh profile with new birth data only
       updateProfile({
         birthData: { name: form.name, date: form.date, time: form.time, lat, lng, timezone: form.timezone, city: form.city },
         chart,
