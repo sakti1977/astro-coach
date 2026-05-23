@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { getProfile, updateProfile, clearProfile } from "@/lib/profile";
-import { storage } from "@/lib/storage";
+import { storage } from "@/lib/storage-supabase";
+import { useDataSync } from "@/lib/useDataSync";
 
 // IANA timezone guesses by country code (best-effort for common countries)
 const COUNTRY_TZ: Record<string, string> = {
@@ -46,6 +48,8 @@ interface GeoResult {
 
 export default function HomePage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const { syncToServer } = useDataSync();
   const [hasProfile, setHasProfile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -197,6 +201,16 @@ export default function HomePage() {
         dashas,
       });
 
+      // Sync to server if authenticated
+      if (session?.user?.id) {
+        try {
+          await syncToServer();
+        } catch (syncError) {
+          console.error("Failed to sync to server:", syncError);
+          // Don't block navigation on sync failure
+        }
+      }
+
       router.push("/chart");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -248,6 +262,25 @@ export default function HomePage() {
               <button onClick={() => router.push("/chart")}
                 className="text-sm text-gray-600 hover:text-gray-900 underline underline-offset-2">
                 View my chart →
+              </button>
+            )}
+            {/* User menu */}
+            {session ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">{session.user.email}</span>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+                  className="text-xs text-gray-600 hover:text-gray-900 underline underline-offset-2"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => router.push("/auth/signin")}
+                className="text-sm text-gray-600 hover:text-gray-900 underline underline-offset-2"
+              >
+                Sign in
               </button>
             )}
           </div>
