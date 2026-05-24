@@ -1,5 +1,7 @@
 "use client";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -84,6 +86,7 @@ export default function TransitsPage() {
     : null;
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-white">
       <NavBar />
       <div className="max-w-3xl mx-auto px-4 py-8">
@@ -199,5 +202,6 @@ export default function TransitsPage() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -87,6 +89,7 @@ export default function ValidatePage() {
   const alreadyValidated = profile.validation.isValidated;
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-white">
       <NavBar />
       <div className="max-w-2xl mx-auto px-4 py-8">
@@ -190,5 +193,6 @@ export default function ValidatePage() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

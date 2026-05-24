@@ -1,5 +1,7 @@
 "use client";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -19,6 +21,7 @@ export default function CoachPage() {
   if (!profile?.chart || !profile?.dashas) return null;
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-white flex flex-col">
       <NavBar />
       <div className="flex-1 max-w-3xl mx-auto w-full flex flex-col" style={{ height: "calc(100vh - 56px)" }}>
@@ -33,5 +36,6 @@ export default function CoachPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

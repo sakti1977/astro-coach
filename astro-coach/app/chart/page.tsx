@@ -1,5 +1,7 @@
 "use client";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -28,6 +30,7 @@ export default function ChartPage() {
   const { chart, dashas, birthData } = profile;
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-white">
       <NavBar />
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -129,5 +132,6 @@ export default function ChartPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
