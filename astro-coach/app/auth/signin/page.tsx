@@ -129,16 +129,16 @@ function EmailAuthForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Mode toggle */}
-      <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+      <div className="flex rounded-xl bg-gray-100 p-0.5 gap-0.5">
         {(["signin", "signup"] as EmailMode[]).map((m) => (
           <button
             key={m}
             type="button"
             onClick={() => { setMode(m); setError(""); setInfo(""); setConfirmPassword(""); }}
-            className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
               mode === m
-                ? "bg-gray-900 text-white"
-                : "bg-white text-gray-500 hover:text-gray-900"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             {m === "signin" ? "Sign In" : "Sign Up"}
@@ -154,7 +154,7 @@ function EmailAuthForm({
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="you@example.com"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
@@ -171,7 +171,7 @@ function EmailAuthForm({
           onChange={(e) => setPassword(e.target.value)}
           required
           placeholder="••••••••"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
@@ -186,7 +186,7 @@ function EmailAuthForm({
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 ${
+            className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               confirmPassword && confirmPassword !== password
                 ? "border-red-300 bg-red-50"
                 : "border-gray-200"
@@ -207,7 +207,7 @@ function EmailAuthForm({
       <button
         type="submit"
         disabled={loading || (mode === "signup" && !!confirmPassword && confirmPassword !== password)}
-        className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium text-sm hover:bg-gray-700 transition-colors disabled:opacity-50"
+        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
       >
         {loading
           ? mode === "signin" ? "Signing in…" : "Creating account…"
@@ -333,7 +333,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
             <select
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+              className="border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
             >
               {COUNTRY_CODES.map((c) => (
                 <option key={`${c.code}-${c.label}`} value={c.code}>
@@ -346,7 +346,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="98765 43210"
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onKeyDown={(e) => e.key === "Enter" && sendOtp()}
             />
           </div>
@@ -365,7 +365,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
           type="button"
           onClick={sendOtp}
           disabled={loading || !phoneNumber.trim()}
-          className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium text-sm hover:bg-gray-700 transition-colors disabled:opacity-50"
+          className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
         >
           {loading ? "Sending OTP…" : "Send OTP"}
         </button>
@@ -402,7 +402,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
           value={otp}
           onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
           placeholder="• • • • • •"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
           onKeyDown={(e) => e.key === "Enter" && otp.length === 6 && verifyOtp()}
           autoFocus
         />
@@ -418,7 +418,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
         type="button"
         onClick={verifyOtp}
         disabled={loading || otp.length !== 6}
-        className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium text-sm hover:bg-gray-700 transition-colors disabled:opacity-50"
+        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
       >
         {loading ? "Verifying…" : "Verify & Sign In"}
       </button>
@@ -448,37 +448,37 @@ function SignInForm() {
   const [tab, setTab] = useState<AuthTab>("email");
 
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-6">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-slate-50 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <span className="text-3xl">✦</span>
-            <span className="font-semibold text-gray-900 text-xl tracking-tight">
-              Astro Coach
-            </span>
+          <div className="flex items-center justify-center gap-2.5 mb-5">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
+              <span className="text-white text-lg">✦</span>
+            </div>
+            <span className="font-bold text-gray-900 text-xl tracking-tight">Astro Coach</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {tab === "email" ? "Sign in to your account" : "Sign in with phone"}
+            {tab === "email" ? "Welcome back" : "Sign in with phone"}
           </h1>
           <p className="text-sm text-gray-500">
             {tab === "email"
-              ? "Use your email and password"
-              : "We'll send you a one-time password via SMS"}
+              ? "Enter your email and password to continue"
+              : "We'll send a one-time code via SMS"}
           </p>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex rounded-2xl border border-gray-200 overflow-hidden mb-6">
+        <div className="flex rounded-2xl bg-gray-100 p-1 mb-6 gap-1">
           {(["email", "phone"] as AuthTab[]).map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+              className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 rounded-xl transition-all ${
                 tab === t
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-500 hover:text-gray-900"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               {t === "email" ? (
@@ -491,7 +491,7 @@ function SignInForm() {
         </div>
 
         {/* Form card */}
-        <div className="border border-gray-200 rounded-2xl p-8 bg-white shadow-sm">
+        <div className="bg-white rounded-2xl p-8 shadow-xl shadow-gray-100/80 border border-gray-100">
           {tab === "email" ? (
             <EmailAuthForm callbackUrl={callbackUrl} />
           ) : (
@@ -501,7 +501,7 @@ function SignInForm() {
 
         {/* Privacy note */}
         <p className="text-center text-xs text-gray-400 mt-6">
-          Your data is encrypted and stored securely. We never share your information.
+          🔒 Your data is encrypted and stored securely
         </p>
       </div>
     </main>

@@ -87,12 +87,12 @@ export default function TransitsPage() {
 
   return (
     <ProtectedRoute>
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
       <NavBar />
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-6 flex items-start justify-between">
+      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto px-4 py-5 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Current Transits</h1>
+            <h1 className="text-xl font-bold text-gray-900">Current Transits</h1>
             <p className="text-sm text-gray-400 mt-1">
               Gochar — planetary positions today relative to your natal chart
             </p>
@@ -103,11 +103,13 @@ export default function TransitsPage() {
           <button
             onClick={() => fetchTransits(profile.chart!.ascendant.sign_num, profile.birthData?.timezone ?? "UTC")}
             disabled={loading}
-            className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            className="text-xs text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 disabled:opacity-40 transition-colors font-medium"
           >
             {loading ? "Refreshing…" : "↻ Refresh"}
           </button>
         </div>
+      </div>
+      <div className="max-w-3xl mx-auto px-4 py-8">
 
         {error && (
           <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-700 mb-6">
@@ -143,7 +145,7 @@ export default function TransitsPage() {
               return (
                 <div
                   key={key}
-                  className={`rounded-xl border p-4 transition-all ${isKeyHouse ? "border-gray-300 bg-gray-50" : "border-gray-100 bg-white"}`}
+                  className={`rounded-xl border p-4 transition-all ${isKeyHouse ? "border-indigo-100 bg-indigo-50/50" : "border-gray-100 bg-white"}`}
                 >
                   <div className="flex items-center gap-3">
                     {/* Planet */}
@@ -177,7 +179,7 @@ export default function TransitsPage() {
 
                     {/* House badge */}
                     <div className={`flex-shrink-0 w-12 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
-                      isKeyHouse ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600"
+                      isKeyHouse ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"
                     }`}>
                       {houseSuffix(h)}
                     </div>

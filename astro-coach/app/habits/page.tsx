@@ -147,16 +147,18 @@ export default function HabitsPage() {
 
   return (
     <ProtectedRoute>
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
       <NavBar />
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Habits & Behavior</h1>
+      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto px-4 py-5">
+          <h1 className="text-xl font-bold text-gray-900">Habits & Behavior</h1>
           <p className="text-sm text-gray-400 mt-1">
             Grounded in your {dashas?.current_maha} Maha Dasha · {dashas?.current_antar} Antardasha
           </p>
         </div>
+      </div>
 
+      <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Radar + Goals */}
           <div className="space-y-6">
@@ -179,7 +181,7 @@ export default function HabitsPage() {
                 <p className="text-xs font-medium text-gray-400 uppercase">Your Goals</p>
                 <button
                   onClick={() => setShowGoalForm((s) => !s)}
-                  className="text-xs text-gray-900 font-medium hover:underline"
+                  className="text-xs text-indigo-600 font-medium hover:underline"
                 >
                   + Add Goal
                 </button>
@@ -203,7 +205,7 @@ export default function HabitsPage() {
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                   />
                   <button onClick={addGoal}
-                    className="w-full bg-gray-900 text-white py-2 rounded-lg text-sm font-medium">
+                    className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">
                     Save Goal
                   </button>
                 </div>
@@ -240,7 +242,7 @@ export default function HabitsPage() {
               <button
                 onClick={generateHabits}
                 disabled={loadingHabits}
-                className="text-sm bg-gray-900 text-white px-4 py-2 rounded-xl font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors disabled:opacity-50"
               >
                 {loadingHabits ? "Generating..." : habits.length > 0 ? "Refresh Habits" : "Generate Habits →"}
               </button>
@@ -261,7 +263,7 @@ export default function HabitsPage() {
                 <button
                   onClick={generateHabits}
                   disabled={loadingHabits}
-                  className="bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors disabled:opacity-50"
                 >
                   {loadingHabits ? "Claude is generating habits..." : "Generate My Habits →"}
                 </button>
@@ -273,12 +275,12 @@ export default function HabitsPage() {
                   const meta = PLANET_META[h.planet?.toLowerCase() as PlanetKey];
                   return (
                     <div key={h.id}
-                      className={`border rounded-xl p-4 transition-all ${done ? "border-gray-900 bg-gray-50" : "border-gray-100 bg-white"}`}>
+                      className={`border rounded-xl p-4 transition-all ${done ? "border-indigo-200 bg-indigo-50/40" : "border-gray-100 bg-white"}`}>
                       <div className="flex items-start gap-3">
                         <button
                           onClick={() => toggleHabitToday(h.id)}
                           className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                            done ? "bg-gray-900 border-gray-900 text-white" : "border-gray-300 hover:border-gray-900"
+                            done ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-300 hover:border-indigo-500"
                           }`}
                         >
                           {done && <span className="text-xs">✓</span>}
@@ -321,7 +323,7 @@ export default function HabitsPage() {
                     const allDone = habits.every((h) => h.completedDates.includes(ds));
                     return (
                       <div key={ds} className="text-center">
-                        <div className={`h-8 rounded-md ${allDone ? "bg-gray-900" : anyDone ? "bg-gray-300" : "bg-gray-50 border border-gray-100"}`} />
+                        <div className={`h-8 rounded-md ${allDone ? "bg-indigo-600" : anyDone ? "bg-indigo-200" : "bg-gray-50 border border-gray-100"}`} />
                         <p className="text-xs text-gray-400 mt-1">
                           {["Su","Mo","Tu","We","Th","Fr","Sa"][d.getDay()]}
                         </p>

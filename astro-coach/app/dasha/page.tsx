@@ -22,15 +22,17 @@ export default function DashaPage() {
 
   return (
     <ProtectedRoute>
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
       <NavBar />
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Vimshottari Dasha Timeline</h1>
+      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto px-4 py-5">
+          <h1 className="text-xl font-bold text-gray-900">Vimshottari Dasha Timeline</h1>
           <p className="text-sm text-gray-400 mt-1">
             120-year planetary period cycle based on your Moon nakshatra ({profile.chart?.moon_nakshatra.name})
           </p>
         </div>
+      </div>
+      <div className="max-w-3xl mx-auto px-4 py-8">
         <DashaTimeline dashas={profile.dashas} birthDate={profile.birthData.date} />
       </div>
     </div>
