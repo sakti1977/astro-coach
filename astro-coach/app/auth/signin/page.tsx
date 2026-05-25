@@ -60,10 +60,11 @@ function EmailAuthForm({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState("");
+  const [info, setInfo]                   = useState(""); // success/info messages
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setError(""); setInfo("");
 
     if (mode === "signup") {
       if (password !== confirmPassword) {
@@ -86,7 +87,14 @@ function EmailAuthForm({
       });
 
       if (result?.error) {
-        setError(result.error);
+        // Distinguish informational messages from real errors
+        const msg = result.error;
+        if (msg.toLowerCase().includes("check your email") ||
+            msg.toLowerCase().includes("confirmation link")) {
+          setInfo(msg);
+        } else {
+          setError(msg);
+        }
       } else if (result?.ok) {
         router.push(callbackUrl);
         router.refresh();
@@ -98,6 +106,26 @@ function EmailAuthForm({
     }
   }
 
+  // Show success screen after email signup with confirmation
+  if (info) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
+          <div className="text-3xl mb-2">📬</div>
+          <p className="text-sm font-medium text-green-800 mb-1">Check your inbox!</p>
+          <p className="text-sm text-green-700">{info}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => { setInfo(""); setMode("signin"); }}
+          className="w-full border border-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors"
+        >
+          Back to Sign In
+        </button>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Mode toggle */}
@@ -106,7 +134,7 @@ function EmailAuthForm({
           <button
             key={m}
             type="button"
-            onClick={() => { setMode(m); setError(""); setConfirmPassword(""); }}
+            onClick={() => { setMode(m); setError(""); setInfo(""); setConfirmPassword(""); }}
             className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
               mode === m
                 ? "bg-gray-900 text-white"
@@ -131,7 +159,12 @@ function EmailAuthForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Password
+          {mode === "signup" && (
+            <span className="text-gray-400 font-normal ml-1">(min. 6 characters)</span>
+          )}
+        </label>
         <input
           type="password"
           value={password}
@@ -153,8 +186,15 @@ function EmailAuthForm({
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 ${
+              confirmPassword && confirmPassword !== password
+                ? "border-red-300 bg-red-50"
+                : "border-gray-200"
+            }`}
           />
+          {confirmPassword && confirmPassword !== password && (
+            <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+          )}
         </div>
       )}
 
@@ -166,13 +206,23 @@ function EmailAuthForm({
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || (mode === "signup" && !!confirmPassword && confirmPassword !== password)}
         className="w-full bg-gray-900 text-white py-3 rounded-xl font-medium text-sm hover:bg-gray-700 transition-colors disabled:opacity-50"
       >
         {loading
           ? mode === "signin" ? "Signing in…" : "Creating account…"
           : mode === "signin" ? "Sign In" : "Create Account"}
       </button>
+
+      {mode === "signin" && (
+        <p className="text-center text-xs text-gray-500">
+          Don&apos;t have an account?{" "}
+          <button type="button" onClick={() => { setMode("signup"); setError(""); }}
+            className="text-gray-900 font-medium hover:underline">
+            Sign up free
+          </button>
+        </p>
+      )}
     </form>
   );
 }
