@@ -98,7 +98,22 @@ export const authOptions: NextAuthOptions = {
               })
 
             if (signUpError) throw signUpError
-            if (!authData.user) throw new Error("Failed to create user")
+
+            // Supabase returns user:null when email confirmation is required
+            // OR when the email is already registered (silent, to prevent enumeration)
+            if (!authData.user) {
+              throw new Error(
+                "Account created — please check your email for a confirmation link. " +
+                "If you already registered, try signing in instead."
+              )
+            }
+
+            // user exists but hasn't confirmed email yet (confirmation enabled)
+            if (!authData.session && authData.user.identities?.length === 0) {
+              throw new Error(
+                "This email is already registered. Please sign in or check your inbox for a confirmation email."
+              )
+            }
 
             await ensureProfile(authData.user.id)
 
