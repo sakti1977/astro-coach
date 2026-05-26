@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { generateDashaPrediction } from "@/lib/claude";
 import { buildDashaPredictionPrompt } from "@/lib/astrology/prompts";
+import { prepareJsonString } from "@/lib/claude-json";
 import type { NatalChart } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
+  // BUG-02: guard Claude spend — only enforce when auth is configured
+  if (process.env.NEXTAUTH_SECRET) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   try {
     const { chart, dashaLord, antarLord, years } = await req.json() as {
       chart: NatalChart;
@@ -15,29 +26,9 @@ export async function POST(req: NextRequest) {
     const prompt = buildDashaPredictionPrompt(chart, dashaLord, antarLord, years, new Date().toISOString());
     const raw = await generateDashaPrediction(prompt);
 
-    // Strip markdown fences and any preamble text
-    let cleaned = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "").trim();
-
-    // Find the JSON object - look for first { and last }
-    const start = cleaned.indexOf("{");
-    const end = cleaned.lastIndexOf("}");
-
-    if (start === -1 || end === -1) {
-      console.error("Raw response:", raw);
-      throw new Error("Claude did not return valid JSON - no braces found");
-    }
-
-    let jsonStr = cleaned.slice(start, end + 1);
-
-    // More robust sanitization of control characters
-    jsonStr = jsonStr.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, (c) => {
-      // Keep \n and \t as they should be escaped
-      return " ";
-    });
-
-    // Ensure newlines and tabs are properly escaped if they aren't already
-    jsonStr = jsonStr.replace(/(?<!\\)\n/g, "\\n");
-    jsonStr = jsonStr.replace(/(?<!\\)\t/g, "\\t");
+    // prepareJsonString strips fences, sanitises control chars, and locates the
+    // outermost {} — throws if no braces found (caught by outer try/catch below)
+    const jsonStr = prepareJsonString(raw);
 
     let prediction: unknown;
     try {
@@ -68,7 +59,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate that all required fields are present and non-empty
-    const pred = prediction as any;
+    const pred = prediction as Record<string, unknown>;
     if (!pred.themes || !Array.isArray(pred.themes) || pred.themes.length === 0) {
       pred.themes = ["Personal growth and self-discovery", "Life lessons and experiences", "New opportunities"];
     }

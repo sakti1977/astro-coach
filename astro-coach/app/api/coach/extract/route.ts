@@ -1,6 +1,9 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildObservationExtractionPrompt } from "@/lib/astrology/prompts";
+import { extractJsonObject } from "@/lib/claude-json";
 
 let _client: Anthropic | null = null;
 function getClient() {
@@ -8,7 +11,17 @@ function getClient() {
   return _client;
 }
 
+const FALLBACK = { observations: [], shouldTransitionToRecommending: false };
+
 export async function POST(req: NextRequest) {
+  // BUG-02: guard Claude spend — only enforce when auth is configured
+  if (process.env.NEXTAUTH_SECRET) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   const { userMessage, assistantResponse, exchangeCount } = (await req.json()) as {
     userMessage: string;
     assistantResponse: string;
@@ -25,23 +38,14 @@ export async function POST(req: NextRequest) {
     });
 
     const block = response.content[0];
-    if (block.type !== "text") {
-      return Response.json({ observations: [], shouldTransitionToRecommending: false });
-    }
+    if (block.type !== "text") return NextResponse.json(FALLBACK);
 
-    const text = block.text.trim();
-    const jsonStart = text.indexOf("{");
-    const jsonEnd = text.lastIndexOf("}");
-    if (jsonStart === -1 || jsonEnd === -1) {
-      return Response.json({ observations: [], shouldTransitionToRecommending: false });
-    }
-
-    const parsed = JSON.parse(text.slice(jsonStart, jsonEnd + 1));
-    return Response.json({
+    const parsed = extractJsonObject(block.text);
+    return NextResponse.json({
       observations: Array.isArray(parsed.observations) ? parsed.observations : [],
       shouldTransitionToRecommending: Boolean(parsed.shouldTransitionToRecommending),
     });
   } catch {
-    return Response.json({ observations: [], shouldTransitionToRecommending: false });
+    return NextResponse.json(FALLBACK);
   }
 }

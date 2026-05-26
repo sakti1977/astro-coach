@@ -9,14 +9,14 @@ function getClient(): Anthropic {
   return _client;
 }
 
-export async function validateChartWithOpus(
+export async function validateChart(
   systemPrompt: string,
   userPrompt: string
 ): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
-    model: "claude-opus-4-7",
-    max_tokens: 2048,
+    model: "claude-sonnet-4-6",  // TOKEN-01: was claude-opus-4-7 (~80% cost reduction)
+    max_tokens: 1024,             // TOKEN-01: was 2048; validation JSON array fits easily
     system: [
       {
         type: "text",
@@ -85,7 +85,7 @@ export async function generateDashaPrediction(
   const client = getClient();
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1500,
+    max_tokens: 700,   // TOKEN-02: was 1500; dasha JSON (5 keys, ~500 tokens) fits comfortably
     system: "You are a JSON-only API. Your entire response must be a single raw JSON object with no preamble, no explanation, no markdown, no code fences. Start your response with { and end with }.",
     messages: [{ role: "user", content: prompt }],
   });

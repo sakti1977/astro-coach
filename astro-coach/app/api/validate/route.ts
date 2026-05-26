@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateChartWithOpus } from "@/lib/claude";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { validateChart } from "@/lib/claude";
 import { buildValidatorSystemPrompt, buildValidatorUserPrompt } from "@/lib/astrology/prompts";
+import { extractJsonArray } from "@/lib/claude-json";
 import type { NatalChart } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
+  // BUG-02: guard Claude spend — only enforce when auth is configured
+  if (process.env.NEXTAUTH_SECRET) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   try {
     const { chart, birthDate }: { chart: NatalChart; birthDate?: string } = await req.json();
     if (!chart) return NextResponse.json({ error: "Chart required" }, { status: 400 });
@@ -11,12 +22,8 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildValidatorSystemPrompt();
     const userPrompt = buildValidatorUserPrompt(chart, birthDate);
 
-    const raw = await validateChartWithOpus(systemPrompt, userPrompt);
-
-    const stripped = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "").trim();
-    const match = stripped.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error("Claude did not return a valid JSON array");
-    const questions = JSON.parse(match[0]);
+    const raw = await validateChart(systemPrompt, userPrompt);
+    const questions = extractJsonArray(raw);
 
     return NextResponse.json({ questions });
   } catch (err: unknown) {

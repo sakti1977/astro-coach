@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { generateHabits } from "@/lib/claude";
 import { buildHabitPrompt } from "@/lib/astrology/prompts";
+import { extractJsonArray } from "@/lib/claude-json";
 import type { NatalChart } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
+  // BUG-02: guard Claude spend — only enforce when auth is configured
+  if (process.env.NEXTAUTH_SECRET) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   try {
     const { chart, dashaLord, goals, weakPlanets } = await req.json() as {
       chart: NatalChart;
@@ -14,12 +25,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = buildHabitPrompt(chart, dashaLord, goals, weakPlanets, new Date().toISOString());
     const raw = await generateHabits(prompt);
-
-    // Strip markdown code fences if present
-    const stripped = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "").trim();
-    const match = stripped.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error("Claude did not return a valid JSON array. Response: " + raw.slice(0, 200));
-    const habits = JSON.parse(match[0]);
+    const habits = extractJsonArray(raw);
 
     return NextResponse.json({ habits });
   } catch (err: unknown) {

@@ -1,9 +1,19 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { streamCoachResponse } from "@/lib/claude";
 import { buildCoachSystemPrompt } from "@/lib/astrology/prompts";
 import type { NatalChart, DashaData, ChatMessage, CoachingPhase } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
+  // BUG-02: guard Claude spend — only enforce when auth is configured
+  if (process.env.NEXTAUTH_SECRET) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   const { chart, dashas, goals, profileContext, vargaContext, messages, phase, includeReligiousSolutions } =
     (await req.json()) as {
       chart: NatalChart;
