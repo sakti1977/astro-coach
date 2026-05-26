@@ -1,4 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
+import {
+  MAX_TOKENS_VALIDATE,
+  MAX_TOKENS_COACH,
+  MAX_TOKENS_DASHA,
+  MAX_TOKENS_HABITS,
+  MAX_TOKENS_EXTRACT,
+  MAX_TOKENS_SUMMARISE,
+} from "@/lib/constants";
 
 let _client: Anthropic | null = null;
 
@@ -16,7 +24,7 @@ export async function validateChart(
   const client = getClient();
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",  // TOKEN-01: was claude-opus-4-7 (~80% cost reduction)
-    max_tokens: 1024,             // TOKEN-01: was 2048; validation JSON array fits easily
+    max_tokens: MAX_TOKENS_VALIDATE,
     system: [
       {
         type: "text",
@@ -65,7 +73,7 @@ export async function* streamCoachResponse(
 
   const stream = await client.messages.stream({
     model: "claude-haiku-4-5",   // 5–8× faster than Sonnet; ideal for real-time chat
-    max_tokens: 700,             // coaching replies don't need > 700 tokens
+    max_tokens: MAX_TOKENS_COACH,
     system: systemBlocks,
     messages,
   });
@@ -86,7 +94,7 @@ export async function generateDashaPrediction(
   const client = getClient();
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 700,   // TOKEN-02: was 1500; dasha JSON (5 keys, ~500 tokens) fits comfortably
+    max_tokens: MAX_TOKENS_DASHA,
     system: "You are a JSON-only API. Your entire response must be a single raw JSON object with no preamble, no explanation, no markdown, no code fences. Start your response with { and end with }.",
     messages: [{ role: "user", content: prompt }],
   });
@@ -99,7 +107,20 @@ export async function generateHabits(prompt: string): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1024,
+    max_tokens: MAX_TOKENS_HABITS,
+    messages: [{ role: "user", content: prompt }],
+  });
+  const block = response.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response type");
+  return block.text;
+}
+
+/** PERF-01: compress accumulated observations into a compact profile summary. */
+export async function summariseObservations(prompt: string): Promise<string> {
+  const client = getClient();
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: MAX_TOKENS_SUMMARISE,
     messages: [{ role: "user", content: prompt }],
   });
   const block = response.content[0];

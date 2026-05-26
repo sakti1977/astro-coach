@@ -1,5 +1,7 @@
 "use client";
 
+import { CHAT_HISTORY_MAX, MAX_ARCHIVES } from "@/lib/constants";
+
 const PROFILE_KEY = "astro_coach_profile";
 
 export interface PlanetData {
@@ -88,6 +90,18 @@ export interface CoachingObservation {
   exchangeIndex: number;
 }
 
+/** Cached transit data with a timestamp for TTL checks (PERF-03). */
+export interface CachedTransits {
+  data: {
+    planets: Record<string, {
+      sign: string; sign_num: number; degree: number; abs_pos: number;
+      house: number; retrograde: boolean; house_from_natal_lagna: number;
+    }>;
+    calculated_at: string;
+  };
+  cachedAt: string; // ISO timestamp of when we stored this
+}
+
 export interface UserProfile {
   birthData: {
     name: string; date: string; time: string;
@@ -111,6 +125,8 @@ export interface UserProfile {
     exchangeCount: number;
     includeReligiousSolutions: boolean;
   };
+  /** PERF-03: cached planetary transits with a 2-hour TTL. */
+  cachedTransits?: CachedTransits;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -191,14 +207,14 @@ export function archiveProfile(): void {
   const archiveKeys = Object.keys(localStorage)
     .filter((k) => k.startsWith(`${PROFILE_KEY}_archive_`))
     .sort(); // lexicographic sort is chronological for timestamp keys
-  while (archiveKeys.length > 5) {
+  while (archiveKeys.length > MAX_ARCHIVES) {
     localStorage.removeItem(archiveKeys.shift()!);
   }
 }
 
 export function addChatMessage(message: ChatMessage): void {
   const profile = getProfile();
-  const history = [...profile.chatHistory, message].slice(-100); // keep last 100
+  const history = [...profile.chatHistory, message].slice(-CHAT_HISTORY_MAX);
   saveProfile({ ...profile, chatHistory: history });
 }
 

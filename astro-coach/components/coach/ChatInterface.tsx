@@ -6,6 +6,14 @@ import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingP
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile } from "@/lib/profile";
 import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
+import {
+  CHAT_HISTORY_DISPLAY,
+  CHAT_WINDOW_API,
+  OBS_CAP,
+  OBS_SUMMARISE_EVERY,
+  EXTRACT_MIN_USER_CHARS,
+  EXTRACT_MIN_ASST_CHARS,
+} from "@/lib/constants";
 
 interface Props {
   chart: NatalChart;
@@ -14,7 +22,7 @@ interface Props {
 
 export default function ChatInterface({ chart, dashas }: Props) {
   const profile = getProfile();
-  const [messages, setMessages] = useState<ChatMessage[]>(profile.chatHistory.slice(-20));
+  const [messages, setMessages] = useState<ChatMessage[]>(profile.chatHistory.slice(-CHAT_HISTORY_DISPLAY));
   const [observations, setObservations] = useState<CoachingObservation[]>([]);
   const [phase, setPhase] = useState<CoachingPhase>(profile.coaching.phase ?? "gathering");
   const [exchangeCount, setExchangeCount] = useState(profile.coaching.exchangeCount ?? 0);
@@ -47,6 +55,26 @@ export default function ChatInterface({ chart, dashas }: Props) {
     });
   }
 
+  /** PERF-01: compress all stored observations into a compact summary set. */
+  async function compressObservations(allObs: CoachingObservation[], currentExchangeCount: number) {
+    try {
+      const res = await fetch("/api/coach/summarise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ observations: allObs, exchangeCount: currentExchangeCount }),
+      });
+      if (!res.ok) return;
+      const { summaryObservations } = (await res.json()) as { summaryObservations: CoachingObservation[] };
+      if (!summaryObservations.length) return; // keep originals on empty response
+
+      await storage.clearObservations();
+      for (const o of summaryObservations) await storage.addObservation(o);
+      setObservations(summaryObservations);
+    } catch {
+      // summarisation errors are non-fatal; keep existing observations
+    }
+  }
+
   async function extractAndSave(userMessage: string, assistantResponse: string, currentExchangeCount: number) {
     try {
       const res = await fetch("/api/coach/extract", {
@@ -75,9 +103,26 @@ export default function ChatInterface({ chart, dashas }: Props) {
         newObs.push(obs);
       }
 
+      // PERF-01: fetch updated list and apply cap / summarisation
+      const allObs = await storage.getObservations();
+
+      // Hard cap — trim oldest beyond OBS_CAP
+      if (allObs.length > OBS_CAP) {
+        const trimmed = allObs.slice(-OBS_CAP);
+        await storage.clearObservations();
+        for (const o of trimmed) await storage.addObservation(o);
+        setObservations(trimmed);
+      } else if (newObs.length > 0) {
+        setObservations((prev) => [...prev, ...newObs]);
+      }
+
+      // Summarise every OBS_SUMMARISE_EVERY exchanges (fire-and-forget)
+      if (currentExchangeCount > 0 && currentExchangeCount % OBS_SUMMARISE_EVERY === 0) {
+        compressObservations(allObs, currentExchangeCount);
+      }
+
       // Update phase + exchange count in profile (localStorage)
-      const newPhase: CoachingPhase =
-        shouldTransitionToRecommending ? "recommending" : phase;
+      const newPhase: CoachingPhase = shouldTransitionToRecommending ? "recommending" : phase;
       const current = getProfile();
       saveProfile({
         ...current,
@@ -91,7 +136,6 @@ export default function ChatInterface({ chart, dashas }: Props) {
 
       setPhase(newPhase);
       setExchangeCount(currentExchangeCount);
-      if (newObs.length > 0) setObservations((prev) => [...prev, ...newObs]);
     } catch {
       // extraction errors are non-fatal; coaching continues
     }
@@ -152,7 +196,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           vargaContext,
           phase,
           includeReligiousSolutions,
-          messages: newMessages.slice(-12).map((m) => ({ role: m.role, content: m.content })),
+          messages: newMessages.slice(-CHAT_WINDOW_API).map((m) => ({ role: m.role, content: m.content })),
         }),
       });
 
@@ -192,9 +236,11 @@ export default function ChatInterface({ chart, dashas }: Props) {
       };
       addChatMessage(finalMsg);
 
-      // Extract observations in background — non-blocking, errors are silent
+      // TOKEN-05: skip extraction for short exchanges — not enough signal
       const nextExchangeCount = exchangeCount + 1;
-      extractAndSave(capturedInput, accumulated, nextExchangeCount);
+      if (capturedInput.length >= EXTRACT_MIN_USER_CHARS && accumulated.length >= EXTRACT_MIN_ASST_CHARS) {
+        extractAndSave(capturedInput, accumulated, nextExchangeCount);
+      }
     } catch {
       const errMsg: ChatMessage = {
         role: "assistant",

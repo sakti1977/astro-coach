@@ -7,6 +7,8 @@
  *    Upstash Redis + @upstash/ratelimit for true distributed rate limiting.
  */
 
+import { RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS } from "@/lib/constants";
+
 interface Counter {
   count: number;
   resetAt: number; // unix ms
@@ -18,13 +20,13 @@ const store = new Map<string, Counter>();
  * Returns true (request allowed) or false (rate limit exceeded).
  *
  * @param key       Unique key per client — typically the caller's IP address.
- * @param limit     Maximum requests per window (default 20).
- * @param windowMs  Window length in milliseconds (default 60 s).
+ * @param limit     Maximum requests per window (default RATE_LIMIT_MAX).
+ * @param windowMs  Window length in milliseconds (default RATE_LIMIT_WINDOW_MS).
  */
 export function checkRateLimit(
   key: string,
-  limit = 20,
-  windowMs = 60_000
+  limit = RATE_LIMIT_MAX,
+  windowMs = RATE_LIMIT_WINDOW_MS
 ): boolean {
   const now = Date.now();
   const entry = store.get(key);

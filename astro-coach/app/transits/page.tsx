@@ -5,7 +5,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
-import { getProfile, type UserProfile } from "@/lib/profile";
+import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
+import { TRANSIT_TTL_MS } from "@/lib/constants";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 
 interface TransitPlanet {
@@ -57,6 +58,17 @@ export default function TransitsPage() {
     const p = getProfile();
     if (!p.chart) { router.push("/"); return; }
     setProfile(p);
+
+    // PERF-03: serve from profile cache if < 2 hours old
+    if (p.cachedTransits) {
+      const ageMs = Date.now() - new Date(p.cachedTransits.cachedAt).getTime();
+      if (ageMs < TRANSIT_TTL_MS) {
+        setTransits(p.cachedTransits.data as TransitData);
+        setLoading(false);
+        return;
+      }
+    }
+
     fetchTransits(p.chart.ascendant.sign_num, p.birthData?.timezone ?? "UTC");
   }, [router]);
 
@@ -69,9 +81,11 @@ export default function TransitsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ natal_asc_sign_num: natalAscSignNum, tz_str: tzStr }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Transit fetch failed");
+      const data = await res.json() as TransitData;
+      if (!res.ok) throw new Error((data as unknown as { error?: string }).error ?? "Transit fetch failed");
       setTransits(data);
+      // PERF-03: persist to profile cache
+      updateProfile({ cachedTransits: { data, cachedAt: new Date().toISOString() } });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load transits");
     } finally {

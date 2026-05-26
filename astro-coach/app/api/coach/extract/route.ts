@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildObservationExtractionPrompt } from "@/lib/astrology/prompts";
 import { extractJsonObject } from "@/lib/claude-json";
+import { MAX_TOKENS_EXTRACT } from "@/lib/constants";
 
 let _client: Anthropic | null = null;
 function getClient() {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
   try {
     const response = await getClient().messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 512,
+      max_tokens: MAX_TOKENS_EXTRACT,
       messages: [{ role: "user", content: prompt }],
     });
 
