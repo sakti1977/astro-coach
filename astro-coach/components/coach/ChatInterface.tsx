@@ -287,15 +287,17 @@ export default function ChatInterface({ chart, dashas }: Props) {
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-gray-900 text-white rounded-br-sm"
+                  ? "bg-indigo-600 text-white rounded-br-sm"
                   : "bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm"
               }`}
             >
               {msg.role === "assistant" && msg.content === "" ? (
-                <span className="inline-flex gap-1">
-                  <span className="animate-bounce">●</span>
-                  <span className="animate-bounce" style={{ animationDelay: "0.1s" }}>●</span>
-                  <span className="animate-bounce" style={{ animationDelay: "0.2s" }}>●</span>
+                <span className="inline-flex items-center gap-1.5 text-gray-400">
+                  <svg className="w-3 h-3 animate-spin text-indigo-400" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  <span className="text-xs">Thinking…</span>
                 </span>
               ) : msg.role === "assistant" ? (
                 <div className="chat-markdown text-sm leading-relaxed">
@@ -320,12 +322,12 @@ export default function ChatInterface({ chart, dashas }: Props) {
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
             placeholder={phase === "recommending" ? "Ask for recommendations..." : "Tell me about yourself..."}
             disabled={streaming}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:opacity-50"
+            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
           />
           <button
             onClick={send}
             disabled={!input.trim() || streaming}
-            className="bg-gray-900 text-white rounded-xl px-4 py-2.5 text-sm font-medium disabled:opacity-40 hover:bg-gray-700 transition-colors"
+            className="bg-indigo-600 text-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-40 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
           >
             {streaming ? "..." : "Send"}
           </button>

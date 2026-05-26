@@ -54,11 +54,13 @@ Moon Nakshatra: ${chart.moon_nakshatra.name} (Lord: ${chart.moon_nakshatra.lord}
 Apply the age rules strictly. Generate 10 yes/no validation questions appropriate for this person's age and lived experience. Return ONLY a JSON array.`;
 }
 
+// NOTE: `profile` (dynamic observations) is intentionally NOT included here.
+// It is passed as a separate system block in streamCoachResponse so the large
+// static block can be cache-hit on every subsequent turn.
 export function buildCoachSystemPrompt(
   chart: NatalChart,
   dashas: DashaData,
   goals: string[],
-  profile: string,
   vargaContext?: string,
   phase: CoachingPhase = "gathering",
   includeReligiousSolutions: boolean = false
@@ -131,9 +133,6 @@ USER'S ASTROLOGICAL PROFILE (D1 Rasi — Birth Chart):
 - Current Period: ${currentPeriod}
 ${vargaContext ? `\nVARGA CHART INSIGHTS:\n${vargaContext}` : ""}
 USER'S GOALS: ${goals.length > 0 ? goals.join(", ") : "Not yet set"}
-
-KNOWN PROFILE CONTEXT:
-${profile || "Still building. Engage the user warmly and learn more about them."}
 ${phaseInstructions}
 
 ${religiousSolutionsGuidance}

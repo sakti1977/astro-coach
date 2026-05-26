@@ -16,11 +16,12 @@ export async function POST(req: NextRequest) {
       includeReligiousSolutions?: boolean;
     };
 
+  // profileContext (dynamic observations) is passed separately to streamCoachResponse
+  // so the large static system prompt block is always cache-hit after the first call.
   const systemPrompt = buildCoachSystemPrompt(
     chart,
     dashas,
     goals,
-    profileContext,
     vargaContext,
     phase ?? "gathering",
     includeReligiousSolutions ?? false
