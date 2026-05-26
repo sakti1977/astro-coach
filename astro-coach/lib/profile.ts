@@ -191,9 +191,18 @@ export function addValidationAnswer(entry: ValidationEntry): number {
   return score;
 }
 
-export function buildCoachingContext(profile: UserProfile, observations: CoachingObservation[] = []): string {
+export function buildCoachingContext(
+  profile: UserProfile,
+  observations: CoachingObservation[] = [],
+  todayIso?: string
+): string {
   const { validation, goals, coaching } = profile;
   const lines: string[] = [];
+
+  // Always anchor with current date so Claude knows "now"
+  const now = todayIso ? new Date(todayIso) : new Date();
+  lines.push(`Current date: ${now.toDateString()} (${now.toISOString()})`);
+
   if (validation.confirmedThemes.length > 0)
     lines.push(`Confirmed life themes: ${validation.confirmedThemes.join(", ")}`);
   if (goals.length > 0)

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       weakPlanets: string[];
     };
 
-    const prompt = buildHabitPrompt(chart, dashaLord, goals, weakPlanets);
+    const prompt = buildHabitPrompt(chart, dashaLord, goals, weakPlanets, new Date().toISOString());
     const raw = await generateHabits(prompt);
 
     // Strip markdown code fences if present

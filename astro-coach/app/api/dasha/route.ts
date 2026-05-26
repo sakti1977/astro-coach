@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       years: number;
     };
 
-    const prompt = buildDashaPredictionPrompt(chart, dashaLord, antarLord, years);
+    const prompt = buildDashaPredictionPrompt(chart, dashaLord, antarLord, years, new Date().toISOString());
     const raw = await generateDashaPrediction(prompt);
 
     // Strip markdown fences and any preamble text

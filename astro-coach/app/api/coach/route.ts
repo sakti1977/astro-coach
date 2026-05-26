@@ -16,23 +16,34 @@ export async function POST(req: NextRequest) {
       includeReligiousSolutions?: boolean;
     };
 
-  // profileContext (dynamic observations) is passed separately to streamCoachResponse
-  // so the large static system prompt block is always cache-hit after the first call.
+  // Authoritative current date/time — always computed server-side so Claude
+  // has an accurate, unambiguous "now" anchor regardless of client timezone.
+  const todayIso = new Date().toISOString();
+
+  // profileContext (dynamic observations + current date) is passed separately to
+  // streamCoachResponse so the large static system prompt block is always
+  // cache-hit after the first call in a session.
   const systemPrompt = buildCoachSystemPrompt(
     chart,
     dashas,
     goals,
+    todayIso,
     vargaContext,
     phase ?? "gathering",
     includeReligiousSolutions ?? false
   );
+
+  // Prepend today's date to the dynamic context block so it's always current
+  // even if profileContext itself hasn't changed.
+  const now = new Date(todayIso);
+  const dynamicContext = `Current date: ${now.toDateString()} (${todayIso})\n${profileContext}`;
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       try {
         const apiMessages = messages.map((m) => ({ role: m.role, content: m.content }));
-        for await (const chunk of streamCoachResponse(systemPrompt, apiMessages, profileContext)) {
+        for await (const chunk of streamCoachResponse(systemPrompt, apiMessages, dynamicContext)) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk })}\n\n`));
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));

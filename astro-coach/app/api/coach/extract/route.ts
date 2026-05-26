@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     exchangeCount: number;
   };
 
-  const prompt = buildObservationExtractionPrompt(userMessage, assistantResponse, exchangeCount);
+  const prompt = buildObservationExtractionPrompt(userMessage, assistantResponse, exchangeCount, new Date().toISOString());
 
   try {
     const response = await getClient().messages.create({

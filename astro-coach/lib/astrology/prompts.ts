@@ -61,11 +61,56 @@ export function buildCoachSystemPrompt(
   chart: NatalChart,
   dashas: DashaData,
   goals: string[],
+  todayIso: string,           // server-supplied: new Date().toISOString()
   vargaContext?: string,
   phase: CoachingPhase = "gathering",
   includeReligiousSolutions: boolean = false
 ): string {
   const { ascendant, planets } = chart;
+
+  // ── Date / time context ────────────────────────────────────────────────────
+  const today = new Date(todayIso);
+  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+                       "July", "August", "September", "October", "November", "December"];
+  const todayFormatted = `${DAY_NAMES[today.getUTCDay()]}, ${today.getUTCDate()} ${MONTH_NAMES[today.getUTCMonth()]} ${today.getUTCFullYear()}`;
+
+  function daysUntil(isoDate: string): number {
+    const target = new Date(isoDate);
+    return Math.max(0, Math.round((target.getTime() - today.getTime()) / 86_400_000));
+  }
+  function daysAgo(isoDate: string): number {
+    const target = new Date(isoDate);
+    return Math.max(0, Math.round((today.getTime() - target.getTime()) / 86_400_000));
+  }
+
+  // Find Maha Dasha start (end of previous maha)
+  const currentMaha = dashas.mahadashas.find(m => m.lord === dashas.current_maha);
+  const mahaStartFormatted = currentMaha
+    ? `${new Date(currentMaha.start).getUTCDate()} ${MONTH_NAMES[new Date(currentMaha.start).getUTCMonth()]} ${new Date(currentMaha.start).getUTCFullYear()}`
+    : "unknown";
+  const mahaEndFormatted = `${new Date(dashas.current_maha_end).getUTCDate()} ${MONTH_NAMES[new Date(dashas.current_maha_end).getUTCMonth()]} ${new Date(dashas.current_maha_end).getUTCFullYear()}`;
+  const antarEndFormatted = `${new Date(dashas.current_antar_end).getUTCDate()} ${MONTH_NAMES[new Date(dashas.current_antar_end).getUTCMonth()]} ${new Date(dashas.current_antar_end).getUTCFullYear()}`;
+
+  const mahaDaysIn      = currentMaha ? daysAgo(currentMaha.start) : 0;
+  const mahaDaysLeft    = daysUntil(dashas.current_maha_end);
+  const antarDaysLeft   = daysUntil(dashas.current_antar_end);
+
+  // Find next Antar Dasha lord
+  const currentAntarList = currentMaha?.antardashas ?? [];
+  const currentAntarIdx  = currentAntarList.findIndex(a => a.lord === dashas.current_antar);
+  const nextAntar        = currentAntarList[currentAntarIdx + 1];
+  const nextAntarNote    = nextAntar
+    ? ` → Next Antardasha: **${nextAntar.lord}** starting ${antarEndFormatted}`
+    : "";
+
+  const timingBlock = `TODAY'S DATE: ${todayFormatted}
+
+CURRENT DASHA TIMING:
+- **${dashas.current_maha} Maha Dasha**: started ${mahaStartFormatted} · ends ${mahaEndFormatted} (${mahaDaysIn} days in, ${mahaDaysLeft} days remaining)
+- **${dashas.current_antar} Antardasha**: ends ${antarEndFormatted} (${antarDaysLeft} days remaining)${nextAntarNote}
+Use these dates to anchor all timing-based guidance. When the user asks about "now", "this year", "recently", or "upcoming", interpret relative to ${todayFormatted}.`;
+
   const currentPeriod = `${dashas.current_maha} Maha Dasha / ${dashas.current_antar} Antardasha`;
 
   const phaseInstructions =
@@ -119,6 +164,8 @@ Ground all remedies in modern psychology, habit formation, and practical life ad
   return `You are a personal Vedic astrology life coach. You are wise, grounded, and practical — never preachy${includeReligiousSolutions ? '' : ' or religious'}.
 You speak like a thoughtful mentor who understands both Jyotish deeply and modern psychology.
 
+${timingBlock}
+
 USER'S ASTROLOGICAL PROFILE (D1 Rasi — Birth Chart):
 - Ascendant (Lagna): ${ascendant.sign} at ${ascendant.degree.toFixed(1)}°
 - Sun: ${planets.sun?.sign} (House ${planets.sun?.house})${planets.sun?.retrograde ? " (R)" : ""} at ${planets.sun?.degree.toFixed(1)}°
@@ -150,7 +197,8 @@ ALWAYS FOLLOW THESE GUIDELINES:
 - Reference nakshatras for deeper psychological insights and karma patterns
 - Suggest specific, concrete habits or behaviors — not abstract platitudes
 - When predicting timing, always reference the Dasha and Antardasha periods
-- Consider transits of slow-moving planets (Saturn, Jupiter, Rahu/Ketu) for current influences
+- When the user asks about timing, use TODAY'S DATE and the Dasha end dates above to give precise answers ("about X months away", "you have Y days left in this Antardasha")
+- Consider transits of slow-moving planets (Saturn, Jupiter, Rahu/Ketu) for current influences — anchor all transit reasoning to today's date
 - Keep responses concise: 3-4 paragraphs max unless the user asks for depth
 - Use markdown formatting: **bold** for planet names and key concepts, bullet points for habit lists
 - When giving predictions, focus on psychological preparation and behavioral readiness rather than fatalistic outcomes
@@ -160,9 +208,13 @@ ALWAYS FOLLOW THESE GUIDELINES:
 export function buildObservationExtractionPrompt(
   userMessage: string,
   assistantResponse: string,
-  exchangeCount: number
+  exchangeCount: number,
+  todayIso?: string
 ): string {
-  return `Analyze this coaching exchange and extract structured observations about the user.
+  const dateNote = todayIso
+    ? `\nSession date: ${new Date(todayIso).toDateString()}`
+    : "";
+  return `Analyze this coaching exchange and extract structured observations about the user.${dateNote}
 
 USER MESSAGE:
 "${userMessage}"
@@ -192,13 +244,22 @@ If the user's message was too brief, generic, or a question with no personal dis
 {"observations": [], "shouldTransitionToRecommending": false}`;
 }
 
-export function buildDashaPredictionPrompt(chart: NatalChart, dashaLord: string, antarLord: string, years: number): string {
+export function buildDashaPredictionPrompt(
+  chart: NatalChart,
+  dashaLord: string,
+  antarLord: string,
+  years: number,
+  todayIso?: string
+): string {
   const { ascendant, planets } = chart;
   const dashaLordPlanet = planets[dashaLord.toLowerCase() as keyof typeof planets];
   const antarLordPlanet = planets[antarLord.toLowerCase() as keyof typeof planets];
+  const todayNote = todayIso
+    ? `\nToday's date: ${new Date(todayIso).toDateString()} — use this as the reference point for all timing language.`
+    : "";
 
   return `You are a Vedic astrology expert. Generate a behavioral and life theme prediction for the following Dasha period.
-CRITICAL: Return ONLY raw JSON. No apostrophes (use "do not" not "don't"), no special characters, no markdown.
+CRITICAL: Return ONLY raw JSON. No apostrophes (use "do not" not "don't"), no special characters, no markdown.${todayNote}
 
 Chart context:
 - Ascendant: ${ascendant.sign}
@@ -220,11 +281,20 @@ ALL FIVE FIELDS ARE REQUIRED. Each array must have at least 3 items.
 Format as JSON: {"themes": [...], "cultivate": [...], "challenges": [...], "actions": [...], "summary": "..."}`;
 }
 
-export function buildHabitPrompt(chart: NatalChart, dashaLord: string, goals: string[], weakPlanets: string[]): string {
+export function buildHabitPrompt(
+  chart: NatalChart,
+  dashaLord: string,
+  goals: string[],
+  weakPlanets: string[],
+  todayIso?: string
+): string {
   const dashaLordPlanet = chart.planets[dashaLord.toLowerCase() as keyof typeof chart.planets];
+  const todayNote = todayIso
+    ? `Today's date: ${new Date(todayIso).toDateString()}\n`
+    : "";
 
   return `You are a behavioral coach grounding habit recommendations in Vedic astrology.
-
+${todayNote}
 Current Dasha Lord: ${dashaLord} in ${dashaLordPlanet?.sign ?? "unknown"} (House ${dashaLordPlanet?.house ?? "?"})
 User Goals: ${goals.length > 0 ? goals.join(", ") : "none set"}
 Planets needing strengthening: ${weakPlanets.length > 0 ? weakPlanets.join(", ") : "none"}
