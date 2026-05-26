@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { getProfile, updateProfile, clearProfile } from "@/lib/profile";
+import { getProfile, updateProfile, clearProfile, archiveProfile } from "@/lib/profile";
+import ConfirmResetModal from "@/components/ConfirmResetModal";
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
 
@@ -53,6 +54,11 @@ export default function HomePage() {
   const [hasProfile, setHasProfile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [pendingChartData, setPendingChartData] = useState<{
+    chart: import("@/lib/profile").NatalChart;
+    dashas: import("@/lib/profile").DashaData;
+  } | null>(null);
   const [serviceStatus, setServiceStatus] = useState<ServiceStatus>("checking");
 
   const [form, setForm] = useState({
@@ -156,6 +162,50 @@ export default function HomePage() {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
+  // Finalise the chart switch after the user confirms (or when there's no
+  // existing data to protect). `archive` triggers an archiveProfile() call
+  // before clearing, giving the user a localStorage backup.
+  async function applyNewChart(
+    chart: import("@/lib/profile").NatalChart,
+    dashas: import("@/lib/profile").DashaData,
+    archive: boolean
+  ) {
+    setLoading(true);
+    try {
+      if (archive) archiveProfile();
+      clearProfile();
+      await storage.clearAll();
+
+      const [year, month, day] = form.date.split("-").map(Number);
+      const [hour, minute] = form.time.split(":").map(Number);
+      const lat = parseFloat(form.lat);
+      const lng = parseFloat(form.lng);
+
+      updateProfile({
+        birthData: {
+          name: form.name, date: form.date, time: form.time,
+          lat, lng, timezone: form.timezone, city: form.city,
+        },
+        chart,
+        dashas,
+      });
+
+      if (session?.user?.id) {
+        try { await syncToServer(); } catch (syncError) {
+          console.error("Failed to sync to server:", syncError);
+        }
+      }
+
+      router.push("/chart");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+      setShowResetModal(false);
+      setPendingChartData(null);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -190,28 +240,17 @@ export default function HomePage() {
 
       const { chart, dashas } = await res.json();
 
-      // Clear all previous data when new kundli is entered
-      clearProfile();
-      await storage.clearAll();
-
-      // Save fresh profile with new birth data only
-      updateProfile({
-        birthData: { name: form.name, date: form.date, time: form.time, lat, lng, timezone: form.timezone, city: form.city },
-        chart,
-        dashas,
-      });
-
-      // Sync to server if authenticated
-      if (session?.user?.id) {
-        try {
-          await syncToServer();
-        } catch (syncError) {
-          console.error("Failed to sync to server:", syncError);
-          // Don't block navigation on sync failure
-        }
+      // BUG-03: if the user has existing chart data, ask before overwriting
+      const existing = getProfile();
+      if (existing.chart) {
+        setPendingChartData({ chart, dashas });
+        setShowResetModal(true);
+        setLoading(false);
+        return; // modal callbacks will call applyNewChart
       }
 
-      router.push("/chart");
+      // No existing data — apply immediately
+      await applyNewChart(chart, dashas, false);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -221,6 +260,14 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-white">
+      {/* BUG-03: confirmation modal when overwriting existing chart data */}
+      {showResetModal && pendingChartData && (
+        <ConfirmResetModal
+          onArchiveAndReplace={() => applyNewChart(pendingChartData.chart, pendingChartData.dashas, true)}
+          onReplaceOnly={() => applyNewChart(pendingChartData.chart, pendingChartData.dashas, false)}
+          onCancel={() => { setShowResetModal(false); setPendingChartData(null); }}
+        />
+      )}
       {/* Header */}
       <div className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50 px-6 py-3.5">
         <div className="max-w-4xl mx-auto flex items-center justify-between">

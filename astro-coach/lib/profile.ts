@@ -168,6 +168,34 @@ export function clearProfile(): void {
   localStorage.removeItem(PROFILE_KEY);
 }
 
+/**
+ * Save the current profile under a timestamped archive key before clearing.
+ * Archives are stored as `astro_coach_profile_archive_{timestamp}` so they
+ * do not interfere with the live profile key. Up to 5 archives are kept;
+ * older ones are pruned to avoid filling localStorage.
+ */
+export function archiveProfile(): void {
+  if (typeof window === "undefined") return;
+  const profile = getProfile();
+  if (!profile.chart) return; // nothing worth archiving
+
+  const archiveKey = `${PROFILE_KEY}_archive_${Date.now()}`;
+  try {
+    localStorage.setItem(archiveKey, JSON.stringify(profile));
+  } catch {
+    // localStorage quota exceeded — skip archive silently
+    return;
+  }
+
+  // Prune oldest archives so we keep at most 5
+  const archiveKeys = Object.keys(localStorage)
+    .filter((k) => k.startsWith(`${PROFILE_KEY}_archive_`))
+    .sort(); // lexicographic sort is chronological for timestamp keys
+  while (archiveKeys.length > 5) {
+    localStorage.removeItem(archiveKeys.shift()!);
+  }
+}
+
 export function addChatMessage(message: ChatMessage): void {
   const profile = getProfile();
   const history = [...profile.chatHistory, message].slice(-100); // keep last 100

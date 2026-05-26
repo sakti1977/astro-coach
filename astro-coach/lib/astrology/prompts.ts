@@ -54,16 +54,14 @@ Moon Nakshatra: ${chart.moon_nakshatra.name} (Lord: ${chart.moon_nakshatra.lord}
 Apply the age rules strictly. Generate 10 yes/no validation questions appropriate for this person's age and lived experience. Return ONLY a JSON array.`;
 }
 
-// NOTE: `profile` (dynamic observations) is intentionally NOT included here.
-// It is passed as a separate system block in streamCoachResponse so the large
-// static block can be cache-hit on every subsequent turn.
+// NOTE: phase, goals, and vargaContext are intentionally NOT included here.
+// They belong in buildCoachDynamicBlock (Block 2) so that changes to any of
+// those values do NOT bust the ephemeral cache on Block 1.
+// Profile observations are also kept in Block 2 for the same reason.
 export function buildCoachSystemPrompt(
   chart: NatalChart,
   dashas: DashaData,
-  goals: string[],
   todayIso: string,           // server-supplied: new Date().toISOString()
-  vargaContext?: string,
-  phase: CoachingPhase = "gathering",
   includeReligiousSolutions: boolean = false
 ): string {
   const { ascendant, planets } = chart;
@@ -113,38 +111,6 @@ Use these dates to anchor all timing-based guidance. When the user asks about "n
 
   const currentPeriod = `${dashas.current_maha} Maha Dasha / ${dashas.current_antar} Antardasha`;
 
-  const phaseInstructions =
-    phase === "recommending"
-      ? `
-COACHING PHASE — ACTIVE RECOMMENDATIONS:
-You now have enough context about this person. Shift into recommendation mode.
-For each topic, provide specific, concrete guidance across three domains:
-1. **LIFESTYLE**: Daily routine shifts, environment changes, sleep hygiene, physical practices, relationship boundaries and adjustments, dietary considerations aligned to planetary nature
-2. **BEHAVIOR**: Patterns to interrupt, habits to build, reactions to rewire, energy to redirect, communication styles to adopt, work approaches to experiment with
-3. **THOUGHT PROCESS**: Mental models to adopt, beliefs to examine, cognitive reframes, internal narratives to change, self-perception shifts, ways to reframe challenges
-Always anchor every recommendation to their chart placements, current Dasha, and the gathered observations.
-Be direct and specific — not "try to be more mindful" but "when you notice X pattern, do Y instead."
-Reference specific planetary energies in their chart and how to work with them consciously.
-Explain WHY each recommendation works based on their chart structure.
-Do NOT ask further gathering questions. Deliver grounded, actionable guidance.`
-      : `
-COACHING PHASE — OBSERVATION GATHERING:
-Your primary task in early exchanges is to understand this person deeply before advising.
-Ask ONE focused, specific question per turn to uncover:
-- Current daily rhythms, routines, and where they feel friction, resistance, or natural flow
-- Recurring emotional or behavioral patterns in relationships, work, and self-perception
-- What they are actively struggling with right now and what triggers stress
-- How stress and change manifest in their behavior (withdrawal, aggression, overthinking, escapism)
-- Their relationship with ambition, rest, discipline, and self-worth
-- What brings them genuine joy and energy vs. what depletes them
-- How they make decisions and what they tend to overthink
-- Patterns in past relationships, career changes, or life transitions
-- Areas where they feel stuck, blocked, or repetitive
-- Their natural gifts that they may be underutilizing
-You may share brief chart insights to build rapport and trust, but lead with curiosity.
-Your questions should be specific and personal, not generic. Focus on concrete behaviors and experiences.
-Do NOT give lengthy recommendations yet — first, listen and build a clear picture.`;
-
   const religiousSolutionsGuidance = includeReligiousSolutions
     ? `RELIGIOUS & SPIRITUAL REMEDIES:
 When appropriate, you may suggest traditional Vedic remedies and spiritual practices:
@@ -178,9 +144,6 @@ USER'S ASTROLOGICAL PROFILE (D1 Rasi — Birth Chart):
 - Rahu: ${planets.rahu?.sign} (House ${planets.rahu?.house}) at ${planets.rahu?.degree.toFixed(1)}°
 - Ketu: ${planets.ketu?.sign} (House ${planets.ketu?.house}) at ${planets.ketu?.degree.toFixed(1)}°
 - Current Period: ${currentPeriod}
-${vargaContext ? `\nVARGA CHART INSIGHTS:\n${vargaContext}` : ""}
-USER'S GOALS: ${goals.length > 0 ? goals.join(", ") : "Not yet set"}
-${phaseInstructions}
 
 ${religiousSolutionsGuidance}
 
@@ -203,6 +166,72 @@ ALWAYS FOLLOW THESE GUIDELINES:
 - Use markdown formatting: **bold** for planet names and key concepts, bullet points for habit lists
 - When giving predictions, focus on psychological preparation and behavioral readiness rather than fatalistic outcomes
 - Always emphasize free will and conscious choice within astrological influences`;
+}
+
+/**
+ * TOKEN-03/04: Build the dynamic (non-cached) Block 2 for the coaching prompt.
+ *
+ * Contains everything that can change mid-session:
+ *  - phase instructions (gathering → recommending transition)
+ *  - user goals (editable from Habits page)
+ *  - varga chart context (computed once per chart but excluded from Block 1
+ *    to keep the cached block user-chart-agnostic in shape)
+ *  - the raw profileContext string (observations accumulated in this session)
+ *
+ * This block intentionally has NO cache_control so Block 1 cache is never
+ * busted by changes to these fields.
+ */
+export function buildCoachDynamicBlock(
+  phase: CoachingPhase,
+  goals: string[],
+  vargaContext: string | undefined,
+  profileContext: string
+): string {
+  const phaseInstructions =
+    phase === "recommending"
+      ? `COACHING PHASE — ACTIVE RECOMMENDATIONS:
+You now have enough context about this person. Shift into recommendation mode.
+For each topic, provide specific, concrete guidance across three domains:
+1. **LIFESTYLE**: Daily routine shifts, environment changes, sleep hygiene, physical practices, relationship boundaries and adjustments, dietary considerations aligned to planetary nature
+2. **BEHAVIOR**: Patterns to interrupt, habits to build, reactions to rewire, energy to redirect, communication styles to adopt, work approaches to experiment with
+3. **THOUGHT PROCESS**: Mental models to adopt, beliefs to examine, cognitive reframes, internal narratives to change, self-perception shifts, ways to reframe challenges
+Always anchor every recommendation to their chart placements, current Dasha, and the gathered observations.
+Be direct and specific — not "try to be more mindful" but "when you notice X pattern, do Y instead."
+Reference specific planetary energies in their chart and how to work with them consciously.
+Explain WHY each recommendation works based on their chart structure.
+Do NOT ask further gathering questions. Deliver grounded, actionable guidance.`
+      : `COACHING PHASE — OBSERVATION GATHERING:
+Your primary task in early exchanges is to understand this person deeply before advising.
+Ask ONE focused, specific question per turn to uncover:
+- Current daily rhythms, routines, and where they feel friction, resistance, or natural flow
+- Recurring emotional or behavioral patterns in relationships, work, and self-perception
+- What they are actively struggling with right now and what triggers stress
+- How stress and change manifest in their behavior (withdrawal, aggression, overthinking, escapism)
+- Their relationship with ambition, rest, discipline, and self-worth
+- What brings them genuine joy and energy vs. what depletes them
+- How they make decisions and what they tend to overthink
+- Patterns in past relationships, career changes, or life transitions
+- Areas where they feel stuck, blocked, or repetitive
+- Their natural gifts that they may be underutilizing
+You may share brief chart insights to build rapport and trust, but lead with curiosity.
+Your questions should be specific and personal, not generic. Focus on concrete behaviors and experiences.
+Do NOT give lengthy recommendations yet — first, listen and build a clear picture.`;
+
+  const parts: string[] = [];
+
+  parts.push(`USER'S GOALS: ${goals.length > 0 ? goals.join(", ") : "Not yet set"}`);
+
+  if (vargaContext) {
+    parts.push(`VARGA CHART INSIGHTS:\n${vargaContext}`);
+  }
+
+  parts.push(phaseInstructions);
+
+  if (profileContext.trim()) {
+    parts.push(`KNOWN OBSERVATIONS (gathered from this session):\n${profileContext}`);
+  }
+
+  return parts.join("\n\n");
 }
 
 export function buildObservationExtractionPrompt(

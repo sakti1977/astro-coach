@@ -57,8 +57,9 @@ export async function* streamCoachResponse(
   if (profileContext.trim()) {
     systemBlocks.push({
       type: "text",
-      text: `KNOWN PROFILE CONTEXT (gathered from previous exchanges):\n${profileContext}`,
-      // No cache_control here — it's small and changes often; let Block 1 carry the cache
+      text: profileContext,
+      // No cache_control — this block changes every time goals/phase/observations
+      // update. Block 1 carries the ephemeral cache; this block stays uncached.
     });
   }
 
