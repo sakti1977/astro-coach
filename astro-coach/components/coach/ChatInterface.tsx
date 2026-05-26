@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase } from "@/lib/profile";
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile } from "@/lib/profile";
-import { storage } from "@/lib/storage";
+import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 
 interface Props {
