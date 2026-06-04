@@ -61,6 +61,13 @@ function EmailAuthForm({
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState("");
   const [info, setInfo]                   = useState(""); // success/info messages
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetSent, setResetSent]         = useState(false);
+
+  function getResetRedirectUrl() {
+    if (typeof window === "undefined") return undefined;
+    return `${window.location.origin}/auth/reset-password`;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,6 +113,37 @@ function EmailAuthForm({
     }
   }
 
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setInfo("");
+
+    if (!supabase) {
+      setError("Password reset is not configured. Please contact support.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim(),
+        { redirectTo: getResetRedirectUrl() }
+      );
+
+      if (resetError) throw resetError;
+      setResetSent(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to send reset link. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   // Show success screen after email signup with confirmation
   if (info) {
     return (
@@ -126,6 +164,59 @@ function EmailAuthForm({
     );
   }
 
+  if (showForgotPassword) {
+    return (
+      <form onSubmit={handleForgotPassword} className="space-y-4">
+        <div className="text-center">
+          <h2 className="text-base font-semibold text-gray-900">Reset your password</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Enter your account email and we&apos;ll send a secure reset link.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="you@example.com"
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {resetSent && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700">
+            If an account exists for this email, a password reset link has been sent.
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
+        >
+          {loading ? "Sending reset link…" : "Send reset link"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setShowForgotPassword(false); setResetSent(false); setError(""); }}
+          className="w-full border border-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors"
+        >
+          Back to Sign In
+        </button>
+      </form>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Mode toggle */}
@@ -134,7 +225,14 @@ function EmailAuthForm({
           <button
             key={m}
             type="button"
-            onClick={() => { setMode(m); setError(""); setInfo(""); setConfirmPassword(""); }}
+            onClick={() => {
+              setMode(m);
+              setError("");
+              setInfo("");
+              setConfirmPassword("");
+              setShowForgotPassword(false);
+              setResetSent(false);
+            }}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
               mode === m
                 ? "bg-white text-gray-900 shadow-sm"
@@ -173,6 +271,17 @@ function EmailAuthForm({
           placeholder="••••••••"
           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
+        {mode === "signin" && (
+          <div className="text-right mt-1.5">
+            <button
+              type="button"
+              onClick={() => { setShowForgotPassword(true); setError(""); setInfo(""); }}
+              className="text-xs text-indigo-700 hover:text-indigo-900 underline"
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
       </div>
 
       {mode === "signup" && (
@@ -333,6 +442,8 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
             <select
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
+              aria-label="Country code"
+              title="Country code"
               className="border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
             >
               {COUNTRY_CODES.map((c) => (
