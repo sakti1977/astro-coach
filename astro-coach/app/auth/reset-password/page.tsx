@@ -1,11 +1,22 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-export default function ResetPasswordPage() {
+function LoadingScreen() {
+  return (
+    <main className="min-h-screen bg-white flex items-center justify-center px-6">
+      <div className="text-center">
+        <div className="text-3xl mb-4">✦</div>
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    </main>
+  );
+}
+
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -194,5 +205,13 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
