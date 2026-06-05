@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { getProfile, updateProfile } from "@/lib/profile";
+import { getProfile, saveProfile, updateProfile, type UserProfile } from "@/lib/profile";
 
 // IANA timezone guesses by country code (best-effort for common countries)
 const COUNTRY_TZ: Record<string, string> = {
@@ -65,7 +65,11 @@ export default function HomePage() {
 
   useEffect(() => {
     const p = getProfile();
-    if (p.chart && p.dashas) setHasProfile(true);
+    if (p.chart && p.dashas) {
+      // Returning user on this browser — go straight to their chart
+      router.push("/chart");
+      return;
+    }
 
     // Pre-fill form for returning users
     if (p.birthData) {
@@ -149,6 +153,26 @@ export default function HomePage() {
 
   function setField(key: string, val: string) {
     setForm((f) => ({ ...f, [key]: val }));
+  }
+
+  function importProfile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string) as UserProfile;
+        if (!parsed.chart || !parsed.dashas) {
+          setError("This file doesn't look like a valid Astro Coach backup.");
+          return;
+        }
+        saveProfile(parsed);
+        router.push("/chart");
+      } catch {
+        setError("Could not read the backup file. Make sure it's a valid JSON backup.");
+      }
+    };
+    reader.readAsText(file);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -316,6 +340,18 @@ export default function HomePage() {
             ))}
           </div>
           <p className="text-center text-xs text-gray-300 mt-4">Sample insights — your chart will reflect your actual birth data</p>
+        </div>
+
+        {/* Restore from backup */}
+        <div className="mb-6 border border-dashed border-gray-200 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-700">Have a backup file?</p>
+            <p className="text-xs text-gray-400 mt-0.5">Restore your chart from a previous export</p>
+          </div>
+          <label className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-2 transition-colors whitespace-nowrap">
+            ↑ Restore backup
+            <input type="file" accept=".json" onChange={importProfile} className="hidden" />
+          </label>
         </div>
 
         {/* Form */}

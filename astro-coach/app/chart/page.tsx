@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 import ChartToggle from "@/components/chart/ChartToggle";
-import { getProfile, type UserProfile } from "@/lib/profile";
+import { getProfile, saveProfile, type UserProfile } from "@/lib/profile";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 
 export default function ChartPage() {
@@ -16,6 +16,28 @@ export default function ChartPage() {
     if (!p.chart) { router.push("/"); return; }
     setProfile(p);
   }, [router]);
+
+  function exportProfile() {
+    const p = getProfile();
+    const blob = new Blob([JSON.stringify(p, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `astro-coach-${p.birthData?.name?.replace(/\s+/g, "-") ?? "profile"}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function resetChart() {
+    if (!confirm("This will clear your chart and all coaching data. Are you sure?")) return;
+    saveProfile({
+      birthData: null, chart: null, dashas: null,
+      validation: { questions: [], accuracyScore: 0, confirmedThemes: [], isValidated: false },
+      goals: [], habits: [], chatHistory: [],
+      coaching: { behaviorProfile: [], lastUpdated: new Date().toISOString(), phase: "gathering", exchangeCount: 0 },
+    });
+    router.push("/");
+  }
 
   if (!profile?.chart || !profile?.dashas) {
     return (
@@ -123,6 +145,24 @@ export default function ChartPage() {
                 className="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
               >
                 Talk to Coach →
+              </button>
+            </div>
+
+            {/* Data management */}
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={exportProfile}
+                className="flex-1 text-xs text-gray-400 hover:text-gray-700 py-2 border border-gray-100 rounded-xl transition-colors"
+                title="Download your chart data as a JSON backup"
+              >
+                ↓ Backup data
+              </button>
+              <button
+                onClick={resetChart}
+                className="flex-1 text-xs text-gray-400 hover:text-red-600 py-2 border border-gray-100 rounded-xl transition-colors"
+                title="Clear chart and start over"
+              >
+                ✕ Reset chart
               </button>
             </div>
           </div>
