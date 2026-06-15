@@ -20,7 +20,11 @@ Also decide if there is enough context to shift from observation-gathering to gi
 
 Rules:
 - Only extract observations if the user shared specific, personal information (not generic questions)
-- "shouldTransitionToRecommending" should be true when: exchange >= 3 AND the user has revealed specific patterns, struggles, or behaviors AND there is enough to give grounded recommendations
+- "shouldTransitionToRecommending" should be true if ANY of these conditions is met:
+  1. exchange >= 6 (enough exchanges have passed — stop gathering, start recommending)
+  2. exchange >= 3 AND the user has revealed at least TWO of: current life situation, a recurring struggle, a specific behavior pattern, a stated goal, or a concrete block
+  3. The coach has asked 4+ questions already — pivot to recommendations now
+- Be DECISIVE — err toward transitioning sooner. Waiting for perfect data delays useful guidance.
 - Use category: "behavior" (actions/reactions), "emotion" (feelings/states), "pattern" (recurring themes), "goal" (aspirations), "block" (obstacles/resistance)
 
 Return ONLY raw JSON with no explanation, no markdown:

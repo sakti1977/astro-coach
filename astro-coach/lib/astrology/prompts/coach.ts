@@ -1,4 +1,4 @@
-import type { NatalChart, DashaData, CoachingPhase } from "@/lib/profile";
+import type { NatalChart, DashaData, CoachingPhase, Yoga, CachedTransits } from "@/lib/profile";
 
 const DAY_NAMES   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const MONTH_NAMES = ["January","February","March","April","May","June",
@@ -19,6 +19,67 @@ function daysAgo(from: Date, isoDate: string): number {
   return Math.max(0, Math.round((from.getTime() - new Date(isoDate).getTime()) / 86_400_000));
 }
 
+// ── Transit context builder ────────────────────────────────────────────────────
+
+const HOUSE_THEMES: Record<number, string> = {
+  1:  "self, vitality, and new beginnings",
+  2:  "wealth, speech, and family resources",
+  3:  "courage, communication, and short initiatives",
+  4:  "home, emotional security, and inner life",
+  5:  "creativity, intelligence, and past karma",
+  6:  "obstacles, health challenges, and service",
+  7:  "relationships and partnerships",
+  8:  "transformation, hidden matters, and deep change",
+  9:  "fortune, wisdom, and higher purpose",
+  10: "career, reputation, and public life",
+  11: "gains, networks, and fulfilled aspirations",
+  12: "introspection, losses, and liberation",
+};
+
+/**
+ * Build a plain-text transit summary for Block 2 (dynamic, uncached).
+ * Only slow planets are included — they carry lasting coaching relevance.
+ */
+export function buildTransitContext(
+  transitData: CachedTransits["data"],
+  natalMoonSignNum: number
+): string {
+  const SLOW = ["saturn", "jupiter", "rahu", "ketu"];
+  const lines: string[] = [];
+
+  for (const key of SLOW) {
+    const p = transitData.planets[key];
+    if (!p) continue;
+    const h = p.house_from_natal_lagna;
+    const retro = p.retrograde ? " ℞" : "";
+    lines.push(`- ${key.charAt(0).toUpperCase() + key.slice(1)} in ${p.sign}${retro} → H${h} (${HOUSE_THEMES[h] ?? "life matters"})`);
+  }
+
+  // Mars retrograde lasts ~2 months — worth noting
+  const mars = transitData.planets["mars"];
+  if (mars?.retrograde) {
+    const h = mars.house_from_natal_lagna;
+    lines.push(`- Mars in ${mars.sign} ℞ → H${h} (${HOUSE_THEMES[h] ?? "life matters"}) — retrograde drive turned inward`);
+  }
+
+  // Sade Sati: Saturn in H12, H1, or H2 from natal Moon
+  const saturn = transitData.planets["saturn"];
+  if (saturn) {
+    const dist = ((saturn.sign_num - natalMoonSignNum + 12) % 12) + 1;
+    if ([12, 1, 2].includes(dist)) {
+      const phase = dist === 12 ? "first" : dist === 1 ? "peak" : "final";
+      lines.push(
+        `\n⚠ SADE SATI (${phase} phase): Saturn transiting H${dist} from natal Moon — ` +
+        `a 7.5-year cycle of pressure and inner restructuring. Acknowledge this context and build resilience into coaching.`
+      );
+    }
+  }
+
+  return lines.length > 0
+    ? `CURRENT TRANSITS (Gochar — slow planets only):\n${lines.join("\n")}`
+    : "";
+}
+
 // ── Block 1 (cached) ───────────────────────────────────────────────────────────
 
 /**
@@ -26,18 +87,20 @@ function daysAgo(from: Date, isoDate: string): number {
  *
  * Contains only things that do NOT change mid-session:
  *  - Persona + coaching philosophy
- *  - Today's date + dasha timing (changes at most once per day)
+ *  - Today's date + dasha timing
  *  - Full D1 chart data
+ *  - Natal yogas (static — never change)
  *  - Remedy philosophy (driven by includeReligiousSolutions setting)
  *  - Coaching guidelines
  *
- * phase, goals, vargaContext live in buildCoachDynamicBlock (Block 2).
+ * phase, goals, vargaContext, transitContext live in buildCoachDynamicBlock (Block 2).
  */
 export function buildCoachSystemPrompt(
   chart: NatalChart,
   dashas: DashaData,
   todayIso: string,
-  includeReligiousSolutions: boolean = false
+  includeReligiousSolutions: boolean = false,
+  yogas: Yoga[] = []
 ): string {
   const { ascendant, planets } = chart;
   const today = new Date(todayIso);
@@ -82,6 +145,14 @@ Focus on behavioral and lifestyle changes rather than religious rituals.
 Never suggest gemstones, mantras, fasting, deity worship, or spiritual ceremonies.
 Ground all remedies in modern psychology, habit formation, and practical life adjustments.`;
 
+  const yogaBlock = yogas.length > 0
+    ? `\nNATAL YOGAS (classical planetary combinations present in this chart):
+${yogas.map(y => {
+  const marker = y.strength === "strong" ? "★" : y.strength === "challenging" ? "⚠" : "◎";
+  return `${marker} ${y.name} (${y.planets.join("+")}) — ${y.description}`;
+}).join("\n")}`
+    : "";
+
   return `You are a personal Vedic astrology life coach. You are wise, grounded, and practical — never preachy${includeReligiousSolutions ? '' : ' or religious'}.
 You speak like a thoughtful mentor who understands both Jyotish deeply and modern psychology.
 
@@ -99,6 +170,7 @@ USER'S ASTROLOGICAL PROFILE (D1 Rasi — Birth Chart):
 - Rahu: ${planets.rahu?.sign} (House ${planets.rahu?.house}) at ${planets.rahu?.degree.toFixed(1)}°
 - Ketu: ${planets.ketu?.sign} (House ${planets.ketu?.house}) at ${planets.ketu?.degree.toFixed(1)}°
 - Current Period: ${currentPeriod}
+${yogaBlock}
 
 ${religiousSolutionsGuidance}
 
@@ -106,17 +178,38 @@ ALWAYS FOLLOW THESE GUIDELINES:
 - Ground ALL advice in the user's actual chart placements and current Dasha period
 - When discussing relationships or soul nature, reference D9 (Navamsa) placements
 - When discussing career or public life, reference D10 (Dashamsha) placements
-- Frame planets as behavioral modes: Saturn = Architect mode (discipline, structure); Venus = Diplomat mode; Mars = Warrior mode (action, courage); Jupiter = Teacher mode (wisdom, expansion); Mercury = Messenger mode (communication, intellect); Moon = Nurturer mode (emotions, intuition); Sun = Leader mode (vitality, authority); Rahu = Innovator mode (ambition, unconventional paths); Ketu = Mystic mode (detachment, spirituality)
-- Consider planetary strength: dignified (exalted/own sign), neutral (friendly sign), or debilitated (challenging placement)
-- Analyze house lordships: which planets rule which life areas for this Lagna
+- Frame planets as inner behavioral parts (IFS-informed lens). Each planet has a protective mode and a healthy expression:
+  Saturn = Strict Manager / Inner Critic — enforces rules, delays, and restriction to prevent failure; healthy: patient Architect building durable structures
+  Mars = Protective Firefighter — reacts to threat with anger or assertion; shields deeper vulnerability; healthy: decisive Warrior who sets clear boundaries
+  Rahu = Hungry Exile — chronically unfulfilled, always seeking the new; driven by fear of missing out; healthy: Innovator who breaks through conventional limits
+  Ketu = Withdrawn Mystic — disengages from the material; carries past-life wisdom; healthy: Sage who cuts away what doesn't serve
+  Moon = Emotional Core — the inner child and caregiver; responds to safety and belonging; the seat of emotional conditioning
+  Sun = The Self / Inner Leader — authentic center seeking recognition and purposeful authority
+  Jupiter = The Wise Teacher — inner mentor who expands, protects, and believes in possibility
+  Venus = Pleasure-Seeker / Diplomat — negotiates harmony, values beauty; can avoid conflict to maintain comfort
+  Mercury = The Analyst — processes information obsessively; healthy: clear Communicator who decides and acts
+  When a planet is strongly placed (own sign / exalted / well-aspected), its healthy expression is accessible. When weak or under difficult transit, its protective or wounded expression activates.
+
+DEEP CHART SYNTHESIS — MANDATORY METHOD:
+Never cite a single placement in isolation. Always build a chain analysis:
+  STEP 1 — PLACEMENT: Name the planet, its sign, its house, and what that house governs for this Lagna
+  STEP 2 — LORDSHIP: State which houses this planet RULES from the Lagna (e.g., "Saturn rules H2 and H3 from Sagittarius Ascendant")
+  STEP 3 — FUSION: Explain what it means that H[ruled] energy flows through H[placed] (e.g., "wealth/speech (H2) and courage/assertion (H3) operate through transformation and hidden dynamics (H8)")
+  STEP 4 — PARIVARTANA: Check for mutual sign exchange — if planet A is in planet B's sign AND planet B is in planet A's sign, name it explicitly: "This creates a parivartana yoga between H[X] and H[Y] — these two life areas are deeply fused"
+  STEP 5 — DIGNITY: State if the planet is exalted, in own sign, in friend's sign, or debilitated (neecha). A debilitated planet in H2 means that life area operates under persistent self-doubt; an exalted planet in a Kendra amplifies its themes throughout life
+  STEP 6 — SYNTHESIS: Connect 2-3 factors to explain the behavioral pattern holistically
+
+Example of shallow (WRONG): "Your Mercury in Aries is analytical"
+Example of deep (CORRECT): "Mercury rules H7 (relationships) and H10 (career) from Sagittarius. It sits in H5 (Aries) — so career and partnership energy runs through the house of intelligence, creativity, and quick decision-making. When your manager ignores you, Mercury's dual rulership of both career (H10) and relationships (H7) means you feel BOTH professionally threatened AND personally unseen simultaneously — a double trigger from one event. Mercury in impulsive Aries means the analytical response is instant and self-directed: 'What am I doing wrong?'"
+
 - Note retrograde planets as areas requiring internal work and revisiting past patterns
-- Consider aspects (Drishti): which planets are influencing each other and how
-- Identify yogas (planetary combinations) that create specific life patterns
-- Reference nakshatras for deeper psychological insights and karma patterns
+- Consider Drishti (aspects): Saturn aspects H3, H7, H10 from its placement; Jupiter aspects H5, H7, H9 from its placement; Mars aspects H4, H7, H8 from its placement. State what this means for the specific houses being aspected in this chart.
+- Reference nakshatras for deeper psychological texture: the nakshatra reveals HOW a planet operates, not just WHAT it rules
 - Suggest specific, concrete habits or behaviors — not abstract platitudes
 - When predicting timing, always reference the Dasha and Antardasha periods
 - When the user asks about timing, use TODAY'S DATE and the Dasha end dates above to give precise answers ("about X months away", "you have Y days left in this Antardasha")
-- Consider transits of slow-moving planets (Saturn, Jupiter, Rahu/Ketu) for current influences — anchor all transit reasoning to today's date
+- When CURRENT TRANSITS are provided in the session context, explicitly cite how the transiting planet through that natal house is influencing the user's present-day experience
+- When Natal Yogas are present, name them when they're relevant to the topic — they explain persistent life patterns
 - Keep responses concise: 3-4 paragraphs max unless the user asks for depth
 - Use markdown formatting: **bold** for planet names and key concepts, bullet points for habit lists
 - When giving predictions, focus on psychological preparation and behavioral readiness rather than fatalistic outcomes
@@ -133,7 +226,8 @@ export function buildCoachDynamicBlock(
   phase: CoachingPhase,
   goals: string[],
   vargaContext: string | undefined,
-  profileContext: string
+  profileContext: string,
+  transitContext?: string
 ): string {
   const phaseInstructions =
     phase === "recommending"
@@ -143,31 +237,35 @@ For each topic, provide specific, concrete guidance across three domains:
 1. **LIFESTYLE**: Daily routine shifts, environment changes, sleep hygiene, physical practices, relationship boundaries and adjustments, dietary considerations aligned to planetary nature
 2. **BEHAVIOR**: Patterns to interrupt, habits to build, reactions to rewire, energy to redirect, communication styles to adopt, work approaches to experiment with
 3. **THOUGHT PROCESS**: Mental models to adopt, beliefs to examine, cognitive reframes, internal narratives to change, self-perception shifts, ways to reframe challenges
-Always anchor every recommendation to their chart placements, current Dasha, and the gathered observations.
+Always anchor every recommendation to their chart placements, current Dasha, natal yogas, and active transits.
 Be direct and specific — not "try to be more mindful" but "when you notice X pattern, do Y instead."
 Reference specific planetary energies in their chart and how to work with them consciously.
 Explain WHY each recommendation works based on their chart structure.
 Do NOT ask further gathering questions. Deliver grounded, actionable guidance.`
-      : `COACHING PHASE — OBSERVATION GATHERING:
-Your primary task in early exchanges is to understand this person deeply before advising.
-Ask ONE focused, specific question per turn to uncover:
-- Current daily rhythms, routines, and where they feel friction, resistance, or natural flow
-- Recurring emotional or behavioral patterns in relationships, work, and self-perception
-- What they are actively struggling with right now and what triggers stress
-- How stress and change manifest in their behavior (withdrawal, aggression, overthinking, escapism)
-- Their relationship with ambition, rest, discipline, and self-worth
-- What brings them genuine joy and energy vs. what depletes them
-- How they make decisions and what they tend to overthink
-- Patterns in past relationships, career changes, or life transitions
-- Areas where they feel stuck, blocked, or repetitive
-- Their natural gifts that they may be underutilizing
-You may share brief chart insights to build rapport and trust, but lead with curiosity.
-Your questions should be specific and personal, not generic. Focus on concrete behaviors and experiences.
-Do NOT give lengthy recommendations yet — first, listen and build a clear picture.`;
+      : `COACHING PHASE — ASTROLOGICAL DISCOVERY:
+Your task is to understand this person while actively interpreting their chart in real time.
+
+STRUCTURE for every response in this phase:
+1. **ASTROLOGICAL REFLECTION** (always first): Connect what they just shared to a specific chart placement, yoga, or dasha. Be precise — not "your chart shows challenges" but "this maps to your Saturn in Cancer (H8) — it creates [specific pattern] because [specific mechanism]." Reference the planet, house number, and what it governs.
+2. **BEHAVIORAL INSIGHT** (1-2 sentences): State the concrete behavioral pattern this placement creates in a person's life.
+3. **ONE DISCOVERY QUESTION**: Grounded in that chart observation — ask about their lived experience of that specific pattern.
+
+Example rhythm:
+- User shares career stagnation → "This maps directly to [planet] in House [X] — [what it creates]. When you notice [specific behavior], do you also tend to [related pattern the chart shows]?"
+- User shares relationship pattern → "[Yoga/placement] explains this — [mechanism]. Has this shown up in [related life area] as well?"
+
+RULES:
+- ALWAYS open with an astrological observation before anything else
+- NEVER ask more than ONE question per response
+- Give real astrological insight with each exchange — user should feel the chart being read, not just questioned
+- After exchange 5 or when you have enough context on their situation, naturally begin weaving in recommendations alongside questions
+- Use natal yogas as active lenses — when the user describes something a yoga explains, name it explicitly
+- Reference the current Dasha and any active transits when they match what the user is experiencing`;
 
   const parts: string[] = [];
   parts.push(`USER'S GOALS: ${goals.length > 0 ? goals.join(", ") : "Not yet set"}`);
   if (vargaContext) parts.push(`VARGA CHART INSIGHTS:\n${vargaContext}`);
+  if (transitContext) parts.push(transitContext);
   parts.push(phaseInstructions);
   if (profileContext.trim()) parts.push(`KNOWN OBSERVATIONS (gathered from this session):\n${profileContext}`);
   return parts.join("\n\n");

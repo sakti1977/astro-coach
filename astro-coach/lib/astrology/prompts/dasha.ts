@@ -14,25 +14,11 @@ export function buildDashaPredictionPrompt(
     ? `\nToday's date: ${new Date(todayIso).toDateString()} — use this as the reference point for all timing language.`
     : "";
 
-  return `You are a Vedic astrology expert. Generate a behavioral and life theme prediction for the following Dasha period.
-CRITICAL: Return ONLY raw JSON. No apostrophes (use "do not" not "don't"), no special characters, no markdown.${todayNote}
+  return `Vedic astrology expert. Dasha prediction — raw JSON only, no markdown.${todayNote}
 
-Chart context:
-- Ascendant: ${ascendant.sign}
-- ${dashaLord} in chart: ${dashaLordPlanet?.sign ?? "unknown"}, House ${dashaLordPlanet?.house ?? "?"}, ${dashaLordPlanet?.retrograde ? "Retrograde" : "Direct"}, Nakshatra: ${dashaLordPlanet?.nakshatra.name ?? "unknown"}
-- ${antarLord} in chart: ${antarLordPlanet?.sign ?? "unknown"}, House ${antarLordPlanet?.house ?? "?"}, ${antarLordPlanet?.retrograde ? "Retrograde" : "Direct"}
+Chart: Ascendant ${ascendant.sign} | ${dashaLord}: ${dashaLordPlanet?.sign ?? "unknown"} H${dashaLordPlanet?.house ?? "?"} ${dashaLordPlanet?.retrograde ? "R" : ""} ${dashaLordPlanet?.nakshatra.name ?? ""} | ${antarLord}: ${antarLordPlanet?.sign ?? "unknown"} H${antarLordPlanet?.house ?? "?"}${antarLordPlanet?.retrograde ? " R" : ""}
+Period: ${dashaLord} Maha / ${antarLord} Antar (~${years} yr)
 
-Dasha period: ${dashaLord} Maha Dasha / ${antarLord} Antardasha (next ~${years} years)
-
-Generate predictions organized into these REQUIRED fields:
-
-1. "themes": [array of 3-5 core life themes during this period - career, relationships, health, inner growth, spirituality]
-2. "cultivate": [array of 3-5 behavioral qualities to cultivate based on ${dashaLord} and ${antarLord} nature]
-3. "challenges": [array of 3-5 potential challenges, difficulties, or areas to watch out for based on planetary dignities and house positions]
-4. "actions": [array of 3-5 specific action areas, life domains, or practical steps to take during this period]
-5. "summary": "A 1-2 sentence overview of this period"
-
-ALL FIVE FIELDS ARE REQUIRED. Each array must have at least 3 items.
-
-Format as JSON: {"themes": [...], "cultivate": [...], "challenges": [...], "actions": [...], "summary": "..."}`;
+Return this exact JSON (ALL 5 fields required, each array 3-4 items, strings under 15 words each):
+{"themes":["...","...","..."],"cultivate":["...","...","..."],"challenges":["...","...","..."],"actions":["...","...","..."],"summary":"1-2 sentence overview."}`;
 }

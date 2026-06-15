@@ -24,7 +24,7 @@ const COUNTRY_TZ: Record<string, string> = {
 };
 
 const ALL_TIMEZONES = [
-  "Asia/Kolkata", "Asia/Mumbai", "Asia/Karachi", "Asia/Dhaka", "Asia/Colombo",
+  "Asia/Kolkata", "Asia/Karachi", "Asia/Dhaka", "Asia/Colombo",
   "Asia/Kathmandu", "Asia/Rangoon", "Asia/Bangkok", "Asia/Jakarta",
   "Asia/Singapore", "Asia/Kuala_Lumpur", "Asia/Manila", "Asia/Shanghai",
   "Asia/Tokyo", "Asia/Dubai", "Asia/Tehran", "Asia/Riyadh",
@@ -36,6 +36,10 @@ const ALL_TIMEZONES = [
   "America/Mexico_City", "Australia/Sydney", "Australia/Perth",
   "Pacific/Auckland", "Pacific/Honolulu",
 ];
+
+function normalizeTimezone(timezone: string | null | undefined): string {
+  return timezone === "Asia/Mumbai" ? "Asia/Kolkata" : timezone ?? "Asia/Kolkata";
+}
 
 type ServiceStatus = "checking" | "ok" | "down";
 
@@ -49,9 +53,9 @@ interface GeoResult {
 
 export default function HomePage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { syncToServer } = useDataSync();
-  const [hasProfile, setHasProfile] = useState(false);
+  const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
@@ -74,32 +78,51 @@ export default function HomePage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const p = getProfile();
-    if (p.chart && p.dashas) setHasProfile(true);
+  // Track if user already has a calculated chart (for overview instead of blank redirect)
+  const [hasExistingChart, setHasExistingChart] = useState(false);
 
-    // Pre-fill form for returning users
-    if (p.birthData) {
-      const bd = p.birthData;
-      setForm({
-        name: bd.name ?? "",
-        date: bd.date ?? "",
-        time: bd.time ?? "",
-        city: bd.city ?? "",
-        lat: bd.lat != null ? String(bd.lat) : "",
-        lng: bd.lng != null ? String(bd.lng) : "",
-        timezone: bd.timezone ?? "Asia/Kolkata",
-      });
-      if (bd.lat != null) setCitySelected(true);
-    } else {
-      // First visit: default to local timezone
-      const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (localTz && ALL_TIMEZONES.includes(localTz)) {
-        setForm((f) => ({ ...f, timezone: localTz }));
-      }
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (status === "unauthenticated") {
+      router.replace("/auth/signin");
+      return;
     }
 
-    // Check ephemeris service health via Next.js proxy
+    const p = getProfile();
+    const hasExisting = !!(p.chart && p.dashas);
+    queueMicrotask(() => setHasExistingChart(hasExisting));
+
+    if (p.birthData) {
+      const bd = p.birthData;
+      queueMicrotask(() => {
+        setForm({
+          name: bd.name ?? "",
+          date: bd.date ?? "",
+          time: bd.time ?? "",
+          city: bd.city ?? "",
+          lat: bd.lat != null ? String(bd.lat) : "",
+          lng: bd.lng != null ? String(bd.lng) : "",
+          timezone: normalizeTimezone(bd.timezone),
+        });
+        if (bd.lat != null) setCitySelected(true);
+        setReady(true);
+      });
+    } else {
+      const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      queueMicrotask(() => {
+        if (localTz && ALL_TIMEZONES.includes(localTz)) {
+          setForm((f) => ({ ...f, timezone: localTz }));
+        }
+        setReady(true);
+      });
+    }
+
+    // We no longer hard-redirect to /chart — the home page now serves as a useful landing + quick actions when a chart exists.
+  }, [status, router]);
+
+  // Service health check runs independently of auth state
+  useEffect(() => {
     async function checkService() {
       try {
         const res = await fetch("/api/health", { signal: AbortSignal.timeout(5000) });
@@ -110,6 +133,42 @@ export default function HomePage() {
     }
     checkService();
   }, []);
+
+  async function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setGeoLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(4);
+        const lng = pos.coords.longitude.toFixed(4);
+        setForm((f) => ({
+          ...f,
+          lat,
+          lng,
+          city: f.city || "Current location – please confirm city",
+        }));
+        setCitySelected(true);
+        setGeoLoading(false);
+        setShowDropdown(false);
+        setGeoResults([]);
+        // Gentle hint
+        setTimeout(() => {
+          if (!form.city || form.city.includes("Current")) {
+            // focus city input for user to refine name
+          }
+        }, 300);
+      },
+      (err) => {
+        setGeoLoading(false);
+        setError("Could not get your location. Please type your city instead.");
+        console.error(err);
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -176,8 +235,6 @@ export default function HomePage() {
       clearProfile();
       await storage.clearAll();
 
-      const [year, month, day] = form.date.split("-").map(Number);
-      const [hour, minute] = form.time.split(":").map(Number);
       const lat = parseFloat(form.lat);
       const lng = parseFloat(form.lng);
 
@@ -258,9 +315,19 @@ export default function HomePage() {
     }
   }
 
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-3xl mb-4 text-indigo-400">✦</div>
+          <p className="text-sm text-gray-400">Loading…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-white">
-      {/* BUG-03: confirmation modal when overwriting existing chart data */}
       {showResetModal && pendingChartData && (
         <ConfirmResetModal
           onArchiveAndReplace={() => applyNewChart(pendingChartData.chart, pendingChartData.dashas, true)}
@@ -290,12 +357,6 @@ export default function HomePage() {
               }`} />
               {serviceStatus === "ok" ? "Ready" : serviceStatus === "down" ? "Offline" : "Connecting…"}
             </div>
-            {hasProfile && (
-              <button onClick={() => router.push("/chart")}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
-                My chart →
-              </button>
-            )}
             {session ? (
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center">
@@ -379,10 +440,44 @@ export default function HomePage() {
           <p className="text-center text-xs text-gray-300 mt-4">Sample insights — your chart will reflect your actual birth data</p>
         </div>
 
+        {/* Existing chart overview + journey guidance (big convenience win — home is now useful landing page) */}
+        {hasExistingChart && ready && (
+          <div className="mb-8 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-indigo-500 font-semibold">Welcome back</p>
+                <p className="text-xl font-semibold text-gray-900 mt-0.5">{form.name || "Your chart"} • {form.city}</p>
+                <p className="text-sm text-gray-500 mt-1">Your data is ready across Chart, Dasha, Coach, Habits, and more.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => router.push("/chart")} className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">Open Chart</button>
+                <button onClick={() => router.push("/coach")} className="px-4 py-2 text-sm font-medium border border-indigo-200 text-indigo-700 rounded-xl hover:bg-indigo-50">Talk to Coach</button>
+                <button onClick={() => router.push("/profile")} className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50">Profile &amp; Edit Data</button>
+              </div>
+            </div>
+
+            {/* Quick next steps */}
+            <div className="mt-5 pt-4 border-t border-gray-100">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Recommended next steps</p>
+              <div className="flex flex-wrap gap-2 text-sm">
+                <button onClick={() => router.push("/validate")} className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100">Validate chart accuracy</button>
+                <button onClick={() => router.push("/habits")} className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">Generate habits for current dasha</button>
+                <button onClick={() => router.push("/dasha")} className="px-3 py-1.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100">Explore your dasha timeline</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Form */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Calculate your birth chart</h2>
-          <p className="text-sm text-gray-400 mb-6">Enter your birth details below — takes under a minute</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+            {hasExistingChart ? "Update birth details or recalculate" : "Calculate your birth chart"}
+          </h2>
+          <p className="text-sm text-gray-400 mb-6">
+            {hasExistingChart
+              ? "Change time, place or name and recalculate. Your previous data can be archived."
+              : "Enter your birth details below — takes under a minute"}
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -399,25 +494,27 @@ export default function HomePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date of Birth <span className="text-red-400">*</span>
                 </label>
-                <input type="date" value={form.date} onChange={(e) => setField("date", e.target.value)} required
+                <input type="date" title="Date of birth" value={form.date} onChange={(e) => setField("date", e.target.value)} required
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Time of Birth <span className="text-red-400">*</span>
-                  <span className="text-xs text-gray-400 ml-1">(exact)</span>
+                  <span className="text-xs text-gray-400 ml-1">(as exact as possible)</span>
                 </label>
-                <input type="time" value={form.time} onChange={(e) => setField("time", e.target.value)} required
+                <input type="time" title="Time of birth" value={form.time} onChange={(e) => setField("time", e.target.value)} required
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
               </div>
             </div>
 
+            <p className="text-[11px] text-gray-400 -mt-1 mb-1">Tip: Hospital records or a parent’s memory are best. Within 15–30 minutes is usually sufficient — you can refine later with the Validate tool.</p>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Place of Birth <span className="text-red-400">*</span>
-                <span className="text-xs text-gray-400 ml-1">— type to search</span>
+                <span className="text-xs text-gray-400 ml-1">— type to search or use location</span>
               </label>
               <div className="relative" ref={dropdownRef}>
                 <input
@@ -425,16 +522,24 @@ export default function HomePage() {
                   onFocus={() => geoResults.length > 0 && setShowDropdown(true)}
                   placeholder="e.g. Mumbai, Kolkata, London…"
                   autoComplete="off"
-                  className={`w-full border rounded-xl px-4 py-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors ${
+                  className={`w-full border rounded-xl px-4 py-3 pr-20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors ${
                     citySelected ? "border-green-300 bg-green-50" : "border-gray-200"
                   }`}
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   {geoLoading ? (
                     <span className="text-gray-400 text-sm animate-spin inline-block">⟳</span>
                   ) : citySelected ? (
                     <span className="text-green-500">✓</span>
                   ) : null}
+                  <button
+                    type="button"
+                    onClick={useCurrentLocation}
+                    className="text-[10px] px-2 py-0.5 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 active:bg-gray-100"
+                    title="Use your device's current location for coordinates"
+                  >
+                    📍 Current
+                  </button>
                 </div>
                 {showDropdown && geoResults.length > 0 && (
                   <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
@@ -465,7 +570,7 @@ export default function HomePage() {
               ))}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Timezone</label>
-                <select value={form.timezone} onChange={(e) => setField("timezone", e.target.value)}
+                <select title="Timezone" value={form.timezone} onChange={(e) => setField("timezone", e.target.value)}
                   className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
                   {ALL_TIMEZONES.map((tz) => (
                     <option key={tz} value={tz}>{tz}</option>
@@ -483,9 +588,17 @@ export default function HomePage() {
             {serviceStatus === "down" && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
                 <p className="font-medium mb-1">⚠ Ephemeris service is not running</p>
-                <p className="text-xs font-mono bg-amber-100 rounded-lg px-3 py-2 mt-2">
-                  cd python-service &amp;&amp; uvicorn main:app --port 8000
-                </p>
+                <p className="text-xs mb-2">The Python calculation service must be running for chart generation.</p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.open("https://github.com", "_blank")}
+                    className="text-xs bg-amber-200 hover:bg-amber-300 text-amber-900 px-3 py-1 rounded-lg"
+                  >
+                    View start.sh instructions
+                  </button>
+                  <code className="text-[10px] bg-amber-100 px-2 py-1 rounded self-center">cd python-service &amp;&amp; uvicorn main:app --port 8000</code>
+                </div>
               </div>
             )}
 

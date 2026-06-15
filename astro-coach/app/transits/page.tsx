@@ -1,7 +1,5 @@
 "use client";
 
-import ProtectedRoute from "@/components/ProtectedRoute";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -57,19 +55,22 @@ export default function TransitsPage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart) { router.push("/"); return; }
-    setProfile(p);
+    queueMicrotask(() => setProfile(p));
 
     // PERF-03: serve from profile cache if < 2 hours old
-    if (p.cachedTransits) {
+    const tzStr = p.birthData?.timezone ?? "UTC";
+    if (p.cachedTransits?.tzStr === tzStr) {
       const ageMs = Date.now() - new Date(p.cachedTransits.cachedAt).getTime();
       if (ageMs < TRANSIT_TTL_MS) {
-        setTransits(p.cachedTransits.data as TransitData);
-        setLoading(false);
+        queueMicrotask(() => {
+          setTransits(p.cachedTransits!.data as TransitData);
+          setLoading(false);
+        });
         return;
       }
     }
 
-    fetchTransits(p.chart.ascendant.sign_num, p.birthData?.timezone ?? "UTC");
+    fetchTransits(p.chart.ascendant.sign_num, tzStr);
   }, [router]);
 
   async function fetchTransits(natalAscSignNum: number, tzStr: string) {
@@ -85,7 +86,7 @@ export default function TransitsPage() {
       if (!res.ok) throw new Error((data as unknown as { error?: string }).error ?? "Transit fetch failed");
       setTransits(data);
       // PERF-03: persist to profile cache
-      updateProfile({ cachedTransits: { data, cachedAt: new Date().toISOString() } });
+      updateProfile({ cachedTransits: { data, cachedAt: new Date().toISOString(), tzStr } });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load transits");
     } finally {
@@ -93,14 +94,22 @@ export default function TransitsPage() {
     }
   }
 
-  if (!profile?.chart) return null;
+  if (!profile?.chart) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-400">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   const calcTime = transits?.calculated_at
     ? new Date(transits.calculated_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
     : null;
 
   return (
-    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
       <NavBar />
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
@@ -218,6 +227,5 @@ export default function TransitsPage() {
         )}
       </div>
     </div>
-    </ProtectedRoute>
   );
 }

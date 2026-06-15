@@ -132,9 +132,13 @@ NEXTAUTH_SECRET=your-secret-here
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Optional but recommended in production for distributed rate limiting
+UPSTASH_REDIS_REST_URL=https://your-upstash-redis.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-upstash-rest-token
 ```
 
-See `.env.local.example` for template.
+See `.env.example` for template.
 
 ## Technology Stack
 
@@ -171,6 +175,8 @@ See `.env.local.example` for template.
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `UPSTASH_REDIS_REST_URL` (recommended)
+   - `UPSTASH_REDIS_REST_TOKEN` (recommended)
 4. Deploy!
 
 See [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for details.

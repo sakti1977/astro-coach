@@ -4,7 +4,6 @@ import {
   MAX_TOKENS_COACH,
   MAX_TOKENS_DASHA,
   MAX_TOKENS_HABITS,
-  MAX_TOKENS_EXTRACT,
   MAX_TOKENS_SUMMARISE,
 } from "@/lib/constants";
 
@@ -95,12 +94,15 @@ export async function generateDashaPrediction(
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: MAX_TOKENS_DASHA,
-    system: "You are a JSON-only API. Your entire response must be a single raw JSON object with no preamble, no explanation, no markdown, no code fences. Start your response with { and end with }.",
-    messages: [{ role: "user", content: prompt }],
+    system: "You are a JSON-only API. Respond with a single raw JSON object — no preamble, no markdown, no code fences.",
+    messages: [
+      { role: "user", content: prompt },
+      { role: "assistant", content: "{" },
+    ],
   });
   const block = response.content[0];
   if (block.type !== "text") throw new Error("Unexpected response type");
-  return block.text;
+  return "{" + block.text;
 }
 
 export async function generateHabits(prompt: string): Promise<string> {

@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getApiAccessContext } from "@/lib/api-auth";
 import { summariseObservations } from "@/lib/claude";
 import { buildObservationSummarisationPrompt } from "@/lib/astrology/prompts";
 import { extractJsonObject } from "@/lib/claude-json";
 import type { CoachingObservation } from "@/lib/profile";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  // Auth guard — consistent with all Claude routes
-  if (process.env.NEXTAUTH_SECRET) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const access = await getApiAccessContext(req);
+  if (access instanceof NextResponse) return access;
+
+  if (!(await checkRateLimit(access.rateLimitKey))) {
+    return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
   const { observations, exchangeCount } = (await req.json()) as {

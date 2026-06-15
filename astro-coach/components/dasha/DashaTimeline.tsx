@@ -39,11 +39,6 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
     return meta?.color ?? "#6B7280";
   }
 
-  function getBg(lord: string): string {
-    const meta = PLANET_META[lord.toLowerCase() as PlanetKey];
-    return meta?.bg ?? "#F3F4F6";
-  }
-
   async function loadPrediction(idx: number) {
     const maha = dashas.mahadashas[idx];
     if (selectedMaha === idx) {

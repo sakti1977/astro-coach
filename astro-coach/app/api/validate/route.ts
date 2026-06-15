@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { validateChart } from "@/lib/claude";
 import { buildValidatorSystemPrompt, buildValidatorUserPrompt } from "@/lib/astrology/prompts";
@@ -8,17 +7,10 @@ import { extractJsonArray } from "@/lib/claude-json";
 import type { NatalChart } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
-  // BUG-02: guard Claude spend — only enforce when auth is configured
-  if (process.env.NEXTAUTH_SECRET) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  }
+  const access = await getApiAccessContext(req);
+  if (access instanceof NextResponse) return access;
 
-  // SCALE-01: 20 requests / minute per IP
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkRateLimit(ip)) {
+  if (!(await checkRateLimit(access.rateLimitKey))) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 

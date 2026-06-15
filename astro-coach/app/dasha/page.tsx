@@ -1,7 +1,5 @@
 "use client";
 
-import ProtectedRoute from "@/components/ProtectedRoute";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -15,13 +13,21 @@ export default function DashaPage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart || !p.dashas) { router.push("/"); return; }
-    setProfile(p);
+    queueMicrotask(() => setProfile(p));
   }, [router]);
 
-  if (!profile?.dashas || !profile?.birthData) return null;
+  if (!profile?.dashas || !profile?.birthData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-400">Loading your dasha timeline…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
       <NavBar />
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
@@ -36,6 +42,5 @@ export default function DashaPage() {
         <DashaTimeline dashas={profile.dashas} birthDate={profile.birthData.date} />
       </div>
     </div>
-    </ProtectedRoute>
   );
 }
