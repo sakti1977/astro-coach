@@ -24,7 +24,7 @@ const COUNTRY_TZ: Record<string, string> = {
 };
 
 const ALL_TIMEZONES = [
-  "Asia/Kolkata", "Asia/Mumbai", "Asia/Karachi", "Asia/Dhaka", "Asia/Colombo",
+  "Asia/Kolkata", "Asia/Karachi", "Asia/Dhaka", "Asia/Colombo",
   "Asia/Kathmandu", "Asia/Rangoon", "Asia/Bangkok", "Asia/Jakarta",
   "Asia/Singapore", "Asia/Kuala_Lumpur", "Asia/Manila", "Asia/Shanghai",
   "Asia/Tokyo", "Asia/Dubai", "Asia/Tehran", "Asia/Riyadh",
@@ -36,6 +36,10 @@ const ALL_TIMEZONES = [
   "America/Mexico_City", "Australia/Sydney", "Australia/Perth",
   "Pacific/Auckland", "Pacific/Honolulu",
 ];
+
+function normalizeTimezone(timezone: string | null | undefined): string {
+  return timezone === "Asia/Mumbai" ? "Asia/Kolkata" : timezone ?? "Asia/Kolkata";
+}
 
 type ServiceStatus = "checking" | "ok" | "down";
 
@@ -49,9 +53,9 @@ interface GeoResult {
 
 export default function HomePage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { syncToServer } = useDataSync();
-  const [hasProfile, setHasProfile] = useState(false);
+  const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
@@ -75,31 +79,49 @@ export default function HomePage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const p = getProfile();
-    if (p.chart && p.dashas) setHasProfile(true);
+    if (status === "loading") return;
 
-    // Pre-fill form for returning users
-    if (p.birthData) {
-      const bd = p.birthData;
-      setForm({
-        name: bd.name ?? "",
-        date: bd.date ?? "",
-        time: bd.time ?? "",
-        city: bd.city ?? "",
-        lat: bd.lat != null ? String(bd.lat) : "",
-        lng: bd.lng != null ? String(bd.lng) : "",
-        timezone: bd.timezone ?? "Asia/Kolkata",
-      });
-      if (bd.lat != null) setCitySelected(true);
-    } else {
-      // First visit: default to local timezone
-      const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (localTz && ALL_TIMEZONES.includes(localTz)) {
-        setForm((f) => ({ ...f, timezone: localTz }));
-      }
+    if (status === "unauthenticated") {
+      router.replace("/auth/signin");
+      return;
     }
 
-    // Check ephemeris service health via Next.js proxy
+    // Authenticated — redirect to chart if one already exists
+    const p = getProfile();
+    if (p.chart && p.dashas) {
+      router.replace("/chart");
+      return;
+    }
+
+    // Authenticated but no chart yet — show the creation form
+    if (p.birthData) {
+      const bd = p.birthData;
+      queueMicrotask(() => {
+        setForm({
+          name: bd.name ?? "",
+          date: bd.date ?? "",
+          time: bd.time ?? "",
+          city: bd.city ?? "",
+          lat: bd.lat != null ? String(bd.lat) : "",
+          lng: bd.lng != null ? String(bd.lng) : "",
+          timezone: normalizeTimezone(bd.timezone),
+        });
+        if (bd.lat != null) setCitySelected(true);
+        setReady(true);
+      });
+    } else {
+      const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      queueMicrotask(() => {
+        if (localTz && ALL_TIMEZONES.includes(localTz)) {
+          setForm((f) => ({ ...f, timezone: localTz }));
+        }
+        setReady(true);
+      });
+    }
+  }, [status, router]);
+
+  // Service health check runs independently of auth state
+  useEffect(() => {
     async function checkService() {
       try {
         const res = await fetch("/api/health", { signal: AbortSignal.timeout(5000) });
@@ -176,8 +198,6 @@ export default function HomePage() {
       clearProfile();
       await storage.clearAll();
 
-      const [year, month, day] = form.date.split("-").map(Number);
-      const [hour, minute] = form.time.split(":").map(Number);
       const lat = parseFloat(form.lat);
       const lng = parseFloat(form.lng);
 
@@ -258,9 +278,19 @@ export default function HomePage() {
     }
   }
 
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-3xl mb-4 text-indigo-400">✦</div>
+          <p className="text-sm text-gray-400">Loading…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-white">
-      {/* BUG-03: confirmation modal when overwriting existing chart data */}
       {showResetModal && pendingChartData && (
         <ConfirmResetModal
           onArchiveAndReplace={() => applyNewChart(pendingChartData.chart, pendingChartData.dashas, true)}
@@ -290,12 +320,6 @@ export default function HomePage() {
               }`} />
               {serviceStatus === "ok" ? "Ready" : serviceStatus === "down" ? "Offline" : "Connecting…"}
             </div>
-            {hasProfile && (
-              <button onClick={() => router.push("/chart")}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
-                My chart →
-              </button>
-            )}
             {session ? (
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center">
@@ -399,7 +423,7 @@ export default function HomePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Date of Birth <span className="text-red-400">*</span>
                 </label>
-                <input type="date" value={form.date} onChange={(e) => setField("date", e.target.value)} required
+                <input type="date" title="Date of birth" value={form.date} onChange={(e) => setField("date", e.target.value)} required
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
               </div>
@@ -408,7 +432,7 @@ export default function HomePage() {
                   Time of Birth <span className="text-red-400">*</span>
                   <span className="text-xs text-gray-400 ml-1">(exact)</span>
                 </label>
-                <input type="time" value={form.time} onChange={(e) => setField("time", e.target.value)} required
+                <input type="time" title="Time of birth" value={form.time} onChange={(e) => setField("time", e.target.value)} required
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
               </div>
@@ -465,7 +489,7 @@ export default function HomePage() {
               ))}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Timezone</label>
-                <select value={form.timezone} onChange={(e) => setField("timezone", e.target.value)}
+                <select title="Timezone" value={form.timezone} onChange={(e) => setField("timezone", e.target.value)}
                   className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
                   {ALL_TIMEZONES.map((tz) => (
                     <option key={tz} value={tz}>{tz}</option>

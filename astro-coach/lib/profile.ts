@@ -4,6 +4,13 @@ import { CHAT_HISTORY_MAX, MAX_ARCHIVES } from "@/lib/constants";
 
 const PROFILE_KEY = "astro_coach_profile";
 
+export interface Yoga {
+  name: string;
+  planets: string[];
+  description: string;
+  strength: "strong" | "moderate" | "challenging";
+}
+
 export interface PlanetData {
   sign: string;
   sign_num: number;
@@ -30,6 +37,7 @@ export interface NatalChart extends ChartDisplay {
   ascendant: { sign: string; sign_num: number; degree: number; abs_pos: number; d9_sign_num?: number; d10_sign_num?: number; d7_sign_num?: number };
   planets: Record<string, PlanetData>;
   moon_nakshatra: { num: number; name: string; pada: number; lord: string };
+  yogas?: Yoga[];
 }
 
 export interface DashaData {
@@ -100,6 +108,7 @@ export interface CachedTransits {
     calculated_at: string;
   };
   cachedAt: string; // ISO timestamp of when we stored this
+  tzStr?: string;
 }
 
 export interface UserProfile {

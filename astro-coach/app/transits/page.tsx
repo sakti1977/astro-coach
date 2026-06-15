@@ -57,19 +57,22 @@ export default function TransitsPage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart) { router.push("/"); return; }
-    setProfile(p);
+    queueMicrotask(() => setProfile(p));
 
     // PERF-03: serve from profile cache if < 2 hours old
-    if (p.cachedTransits) {
+    const tzStr = p.birthData?.timezone ?? "UTC";
+    if (p.cachedTransits?.tzStr === tzStr) {
       const ageMs = Date.now() - new Date(p.cachedTransits.cachedAt).getTime();
       if (ageMs < TRANSIT_TTL_MS) {
-        setTransits(p.cachedTransits.data as TransitData);
-        setLoading(false);
+        queueMicrotask(() => {
+          setTransits(p.cachedTransits!.data as TransitData);
+          setLoading(false);
+        });
         return;
       }
     }
 
-    fetchTransits(p.chart.ascendant.sign_num, p.birthData?.timezone ?? "UTC");
+    fetchTransits(p.chart.ascendant.sign_num, tzStr);
   }, [router]);
 
   async function fetchTransits(natalAscSignNum: number, tzStr: string) {
@@ -85,7 +88,7 @@ export default function TransitsPage() {
       if (!res.ok) throw new Error((data as unknown as { error?: string }).error ?? "Transit fetch failed");
       setTransits(data);
       // PERF-03: persist to profile cache
-      updateProfile({ cachedTransits: { data, cachedAt: new Date().toISOString() } });
+      updateProfile({ cachedTransits: { data, cachedAt: new Date().toISOString(), tzStr } });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load transits");
     } finally {

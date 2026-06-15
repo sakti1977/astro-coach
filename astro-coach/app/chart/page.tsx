@@ -32,7 +32,7 @@ export default function ChartPage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart) { router.push("/"); return; }
-    setProfile(p);
+    queueMicrotask(() => setProfile(p));
   }, [router]);
 
   if (!profile?.chart || !profile?.dashas) {

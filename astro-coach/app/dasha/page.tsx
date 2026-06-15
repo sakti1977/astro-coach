@@ -15,7 +15,7 @@ export default function DashaPage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart || !p.dashas) { router.push("/"); return; }
-    setProfile(p);
+    queueMicrotask(() => setProfile(p));
   }, [router]);
 
   if (!profile?.dashas || !profile?.birthData) return null;

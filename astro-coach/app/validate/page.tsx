@@ -28,8 +28,10 @@ export default function ValidatePage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart) { router.push("/"); return; }
-    setProfile(p);
-    if (p.validation.isValidated) setAccuracyScore(p.validation.accuracyScore);
+    queueMicrotask(() => {
+      setProfile(p);
+      if (p.validation.isValidated) setAccuracyScore(p.validation.accuracyScore);
+    });
   }, [router]);
 
   async function startValidation() {
@@ -96,7 +98,7 @@ export default function ValidatePage() {
         <div className="max-w-2xl mx-auto px-4 py-5">
           <h1 className="text-xl font-bold text-gray-900">Chart Validation</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Claude Opus analyzes your chart and asks questions to confirm accuracy
+            Claude analyzes your chart and asks questions to confirm accuracy
           </p>
         </div>
       </div>
@@ -122,7 +124,7 @@ export default function ValidatePage() {
             <div className="border border-gray-100 rounded-xl p-6">
               <h2 className="font-semibold text-gray-900 mb-2">How validation works</h2>
               <ol className="space-y-2 text-sm text-gray-600">
-                <li className="flex gap-2"><span className="font-mono text-gray-400">1.</span>Claude Opus (Anthropic&apos;s most capable model) analyzes your birth chart</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-400">1.</span>Claude analyzes your birth chart</li>
                 <li className="flex gap-2"><span className="font-mono text-gray-400">2.</span>It generates 10 yes/no questions about life events derived from your chart</li>
                 <li className="flex gap-2"><span className="font-mono text-gray-400">3.</span>Your answers calibrate the chart interpretation accuracy</li>
                 <li className="flex gap-2"><span className="font-mono text-gray-400">4.</span>Future predictions are weighted by this accuracy score</li>
@@ -147,7 +149,7 @@ export default function ValidatePage() {
         {phase === "loading" && (
           <div className="text-center py-20">
             <p className="text-4xl mb-4 animate-pulse">✦</p>
-            <p className="text-gray-500">Claude Opus is reading your chart...</p>
+            <p className="text-gray-500">Claude is reading your chart...</p>
             <p className="text-xs text-gray-400 mt-2">This takes about 10–15 seconds</p>
           </div>
         )}

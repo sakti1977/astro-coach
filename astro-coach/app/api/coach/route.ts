@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
-  const { chart, dashas, goals, profileContext, vargaContext, messages, phase, includeReligiousSolutions } =
+  const { chart, dashas, goals, profileContext, vargaContext, messages, phase, includeReligiousSolutions, transitContext } =
     (await req.json()) as {
       chart: NatalChart;
       dashas: DashaData;
@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
       messages: ChatMessage[];
       phase?: CoachingPhase;
       includeReligiousSolutions?: boolean;
+      transitContext?: string;
     };
 
   // Authoritative current date/time — always computed server-side so Claude
@@ -44,7 +45,8 @@ export async function POST(req: NextRequest) {
     chart,
     dashas,
     todayIso,
-    includeReligiousSolutions ?? false
+    includeReligiousSolutions ?? false,
+    chart.yogas ?? []
   );
 
   // Block 2 (uncached) — everything that can change mid-session.
@@ -52,7 +54,8 @@ export async function POST(req: NextRequest) {
     phase ?? "gathering",
     goals,
     vargaContext,
-    profileContext
+    profileContext,
+    transitContext
   );
 
   const encoder = new TextEncoder();

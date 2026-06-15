@@ -35,7 +35,7 @@ export default function HabitsPage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart || !p.dashas) { router.push("/"); return; }
-    setProfile(p);
+    queueMicrotask(() => setProfile(p));
   }, [router]);
 
   function refreshProfile() {
@@ -132,7 +132,7 @@ export default function HabitsPage() {
 
   if (!profile) return null;
 
-  const { habits, goals, chart, dashas } = profile;
+  const { habits, goals, dashas } = profile;
   const todayStr = today();
   const currentMahaMeta = dashas ? PLANET_META[dashas.current_maha.toLowerCase() as PlanetKey] : null;
 
@@ -190,6 +190,7 @@ export default function HabitsPage() {
               {showGoalForm && (
                 <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-lg">
                   <select
+                    title="Goal category"
                     value={newGoal.category}
                     onChange={(e) => setNewGoal((g) => ({ ...g, category: e.target.value as typeof GOAL_CATEGORIES[number] }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
