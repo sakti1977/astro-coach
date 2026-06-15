@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { getProfile, updateProfile, clearProfile, archiveProfile } from "@/lib/profile";
+import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type UserProfile } from "@/lib/profile";
 import ConfirmResetModal from "@/components/ConfirmResetModal";
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
@@ -221,9 +221,6 @@ export default function HomePage() {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  // Finalise the chart switch after the user confirms (or when there's no
-  // existing data to protect). `archive` triggers an archiveProfile() call
-  // before clearing, giving the user a localStorage backup.
   async function applyNewChart(
     chart: import("@/lib/profile").NatalChart,
     dashas: import("@/lib/profile").DashaData,
@@ -261,6 +258,26 @@ export default function HomePage() {
       setShowResetModal(false);
       setPendingChartData(null);
     }
+  }
+
+  function importProfile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string) as UserProfile;
+        if (!parsed.chart || !parsed.dashas) {
+          setError("This file doesn't look like a valid Astro Coach backup.");
+          return;
+        }
+        saveProfile(parsed);
+        router.push("/chart");
+      } catch {
+        setError("Could not read the backup file. Make sure it's a valid JSON backup.");
+      }
+    };
+    reader.readAsText(file);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -440,7 +457,7 @@ export default function HomePage() {
           <p className="text-center text-xs text-gray-300 mt-4">Sample insights — your chart will reflect your actual birth data</p>
         </div>
 
-        {/* Existing chart overview + journey guidance (big convenience win — home is now useful landing page) */}
+        {/* Existing chart overview + journey guidance */}
         {hasExistingChart && ready && (
           <div className="mb-8 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -465,6 +482,20 @@ export default function HomePage() {
                 <button onClick={() => router.push("/dasha")} className="px-3 py-1.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100">Explore your dasha timeline</button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Restore from backup — shown only when no chart exists yet (new device / cleared browser) */}
+        {!hasExistingChart && ready && (
+          <div className="mb-6 border border-dashed border-gray-200 rounded-xl p-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Have a backup file?</p>
+              <p className="text-xs text-gray-400 mt-0.5">Restore your chart from a previous export</p>
+            </div>
+            <label className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-2 transition-colors whitespace-nowrap">
+              ↑ Restore backup
+              <input type="file" accept=".json" onChange={importProfile} className="hidden" />
+            </label>
           </div>
         )}
 
