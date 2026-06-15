@@ -255,7 +255,14 @@ export default function ChatInterface({ chart, dashas }: Props) {
           phase,
           includeReligiousSolutions,
           transitContext: transitContext || undefined,
-          messages: newMessages.slice(-CHAT_WINDOW_API).map((m) => ({ role: m.role, content: m.content })),
+          messages: (() => {
+            // Keep up to 20 messages, but the Anthropic API requires the first
+            // message to be a user turn. A slice of an odd-length array can
+            // start with an assistant message, which causes API errors.
+            const window = newMessages.slice(-20).map((m) => ({ role: m.role, content: m.content }));
+            const firstUser = window.findIndex((m) => m.role === "user");
+            return firstUser > 0 ? window.slice(firstUser) : window;
+          })(),
         }),
       });
 

@@ -12,7 +12,7 @@ export const CHAT_WINDOW_API = 12;
 export const CHAT_HISTORY_MAX = 100;
 
 // ── Claude token budgets ───────────────────────────────────────────────────────
-export const MAX_TOKENS_COACH     = 700;   // streaming coach replies
+export const MAX_TOKENS_COACH     = 2048;  // streaming coach replies (doubled to prevent mid-thought cutoff)
 export const MAX_TOKENS_DASHA     = 1200;  // dasha prediction JSON (5 arrays × 4 items needs headroom)
 export const MAX_TOKENS_VALIDATE  = 1024;  // chart validation questions
 export const MAX_TOKENS_HABITS    = 1024;  // habit list JSON
