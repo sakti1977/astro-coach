@@ -94,15 +94,15 @@ export async function generateDashaPrediction(
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: MAX_TOKENS_DASHA,
-    system: "You are a JSON-only API. Respond with a single raw JSON object — no preamble, no markdown, no code fences.",
+    temperature: 0.1,
+    system: "You are a strict JSON-only API. Output EXACTLY one valid JSON object and nothing else. Do not add any explanation, greeting, or markdown. Do not wrap the JSON in code fences. The output must start with { and end with }.",
     messages: [
       { role: "user", content: prompt },
-      { role: "assistant", content: "{" },
     ],
   });
   const block = response.content[0];
   if (block.type !== "text") throw new Error("Unexpected response type");
-  return "{" + block.text;
+  return block.text;
 }
 
 export async function generateHabits(prompt: string): Promise<string> {

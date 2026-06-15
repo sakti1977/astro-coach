@@ -25,8 +25,9 @@ export async function POST(req: NextRequest) {
     const prompt = buildDashaPredictionPrompt(chart, dashaLord, antarLord, years, new Date().toISOString());
     const raw = await generateDashaPrediction(prompt);
 
-    // prepareJsonString strips fences, sanitises control chars, and locates the
-    // outermost {} — throws if no braces found (caught by outer try/catch below)
+    // prepareJsonString strips any stray text/markdown, sanitises control chars,
+    // and extracts the outermost JSON object. This is now the only path (no more
+    // assistant prefill is used because newer Claude models reject it).
     const jsonStr = prepareJsonString(raw);
 
     let prediction: unknown;

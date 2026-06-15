@@ -14,11 +14,28 @@ export function buildDashaPredictionPrompt(
     ? `\nToday's date: ${new Date(todayIso).toDateString()} — use this as the reference point for all timing language.`
     : "";
 
-  return `Vedic astrology expert. Dasha prediction — raw JSON only, no markdown.${todayNote}
+  return `You are a precise Vedic astrology expert specializing in Vimshottari Dasha interpretation.
 
-Chart: Ascendant ${ascendant.sign} | ${dashaLord}: ${dashaLordPlanet?.sign ?? "unknown"} H${dashaLordPlanet?.house ?? "?"} ${dashaLordPlanet?.retrograde ? "R" : ""} ${dashaLordPlanet?.nakshatra.name ?? ""} | ${antarLord}: ${antarLordPlanet?.sign ?? "unknown"} H${antarLordPlanet?.house ?? "?"}${antarLordPlanet?.retrograde ? " R" : ""}
-Period: ${dashaLord} Maha / ${antarLord} Antar (~${years} yr)
+Task: Provide a concise, practical prediction for the given dasha period in STRICT JSON format only.
 
-Return this exact JSON (ALL 5 fields required, each array 3-4 items, strings under 15 words each):
-{"themes":["...","...","..."],"cultivate":["...","...","..."],"challenges":["...","...","..."],"actions":["...","...","..."],"summary":"1-2 sentence overview."}`;
+Chart context:
+- Ascendant: ${ascendant.sign}
+- ${dashaLord} Maha Dasha lord placement: ${dashaLordPlanet?.sign ?? "unknown"} House ${dashaLordPlanet?.house ?? "?"} ${dashaLordPlanet?.retrograde ? "(retrograde)" : ""} ${dashaLordPlanet?.nakshatra.name ?? ""}
+- ${antarLord} Antar Dasha lord placement: ${antarLordPlanet?.sign ?? "unknown"} House ${antarLordPlanet?.house ?? "?"}${antarLordPlanet?.retrograde ? " (retrograde)" : ""}
+- Period length: ~${years} years${todayNote}
+
+Output EXACTLY this JSON structure with no extra text, no markdown, no explanations before or after:
+
+{
+  "themes": ["3-4 short themes (under 12 words each)"],
+  "cultivate": ["3-4 qualities or skills to develop (under 12 words each)"],
+  "challenges": ["3-4 potential obstacles or tests (under 12 words each)"],
+  "actions": ["3-4 concrete recommended actions (under 12 words each)"],
+  "summary": "1-2 sentence neutral overview of the period's overall flavor."
+}
+
+Rules:
+- All strings must be practical and grounded (behavioral / life area language, not poetic or overly mystical).
+- Use the current date as the reference for "now".
+- Do not invent specific events or dates unless strongly indicated by the placements.`;
 }
