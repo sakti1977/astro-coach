@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import ChartToggle from "@/components/chart/ChartToggle";
 import { getProfile, type UserProfile } from "@/lib/profile";
@@ -62,10 +63,11 @@ export default function ChartPage() {
                 {birthData?.date} &middot; {birthData?.time} &middot; {birthData?.city}
               </p>
             </div>
-            <div className="text-right">
+            <div className="text-right flex flex-col items-end gap-1">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold">
                 <span>⬡</span> {SIGN_NAMES[chart.ascendant.sign_num]} Lagna
               </span>
+              <Link href="/profile" className="text-xs text-indigo-600 hover:underline">Edit birth data →</Link>
             </div>
           </div>
         </div>

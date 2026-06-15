@@ -94,7 +94,16 @@ export default function TransitsPage() {
     }
   }
 
-  if (!profile?.chart) return null;
+  if (!profile?.chart) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-400">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   const calcTime = transits?.calculated_at
     ? new Date(transits.calculated_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })

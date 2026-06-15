@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
+import SyncStatus from "@/components/SyncStatus";
 
 const NAV_ITEMS = [
   { href: "/chart",    label: "Chart",    icon: "⬡" },
@@ -49,15 +50,22 @@ export default function NavBar() {
 
         {/* User menu */}
         {session && (
-          <div className="flex items-center gap-3 ml-4 flex-shrink-0">
-            <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center">
-              <span className="text-indigo-700 text-xs font-semibold">
-                {(session.user.email ?? session.user.phone ?? "?")[0].toUpperCase()}
-              </span>
-            </div>
+          <div className="flex items-center gap-2.5 ml-3 flex-shrink-0">
+            <SyncStatus />
+            <Link
+              href="/profile"
+              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 transition-colors"
+              title="Profile &amp; settings"
+            >
+              <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center">
+                <span className="text-indigo-700 text-xs font-semibold">
+                  {(session.user.email ?? session.user.phone ?? "?")[0].toUpperCase()}
+                </span>
+              </div>
+            </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-              className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+              className="text-xs text-gray-400 hover:text-gray-700 transition-colors pl-1"
             >
               Sign out
             </button>
