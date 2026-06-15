@@ -1,13 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getApiAccessContext } from "@/lib/api-auth";
 import { fetchChart, fetchDashas, checkEphemerisHealth } from "@/lib/ephemeris";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const access = await getApiAccessContext(req);
+  if (access instanceof NextResponse) return access;
+
+  if (!(await checkRateLimit(access.rateLimitKey))) {
+    return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const { name, year, month, day, hour, minute, lat, lng, tz_str } = body;
 
     if (!name || !year || !month || !day || lat == null || lng == null || !tz_str) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: tz_str });
+    } catch {
+      return NextResponse.json({ error: "Invalid timezone" }, { status: 400 });
     }
 
     // Fast health check before attempting full calculation

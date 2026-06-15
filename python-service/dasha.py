@@ -96,12 +96,38 @@ def _antardasha(maha_lord: str, maha_start: date, maha_years: float) -> list:
         antar_lord = DASHA_SEQUENCE[(maha_idx + i) % 9]
         antar_years = (DASHA_YEARS[antar_lord] / TOTAL_YEARS) * maha_years
         end = current + timedelta(days=_years_to_days(antar_years))
+
+        # Calculate pratyantardashas (third level)
+        pratyantars = _pratyantardasha(antar_lord, current, antar_years)
+
         antars.append({
             "lord": antar_lord,
             "years": round(antar_years, 4),
             "start": str(current),
             "end": str(end),
+            "pratyantardashas": pratyantars,
         })
         current = end
 
     return antars
+
+
+def _pratyantardasha(antar_lord: str, antar_start: date, antar_years: float) -> list:
+    """Compute all pratyantardashas (third level) within an antardasha."""
+    antar_idx = DASHA_SEQUENCE.index(antar_lord)
+    pratyantars = []
+    current = antar_start
+
+    for i in range(9):
+        pratyantar_lord = DASHA_SEQUENCE[(antar_idx + i) % 9]
+        pratyantar_years = (DASHA_YEARS[pratyantar_lord] / TOTAL_YEARS) * antar_years
+        end = current + timedelta(days=_years_to_days(pratyantar_years))
+        pratyantars.append({
+            "lord": pratyantar_lord,
+            "years": round(pratyantar_years, 6),
+            "start": str(current),
+            "end": str(end),
+        })
+        current = end
+
+    return pratyantars

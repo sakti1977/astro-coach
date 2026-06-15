@@ -5,6 +5,8 @@ from kerykeion import AstrologicalSubject
 from datetime import datetime, date
 import math
 
+from yogas import detect_yogas
+
 HOUSE_MAP = {
     "First_House": 1, "Second_House": 2, "Third_House": 3,
     "Fourth_House": 4, "Fifth_House": 5, "Sixth_House": 6,
@@ -117,6 +119,7 @@ def calculate_chart(
         },
         "planets": planets,
         "moon_nakshatra": moon_nak,
+        "yogas": detect_yogas(planets, asc.sign_num),
         "birth_data": {
             "name": name, "year": year, "month": month, "day": day,
             "hour": hour, "minute": minute, "lat": lat, "lng": lng, "tz_str": tz_str,

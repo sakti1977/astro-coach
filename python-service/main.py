@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -9,11 +11,18 @@ from transits import calculate_transits
 
 app = FastAPI(title="Astro Coach Ephemeris Service")
 
+# SCALE-03: restrict CORS to known origins instead of wildcard.
+# In Railway → Variables set ALLOWED_ORIGINS to your Vercel domain,
+# e.g. "https://your-app.vercel.app" (comma-separated for multiple).
+# Defaults to localhost for local development.
+_raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001")
+ALLOWED_ORIGINS = [o.strip() for o in _raw.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST"],       # only what the service actually uses
+    allow_headers=["Content-Type"],      # only what clients need to send
 )
 
 
