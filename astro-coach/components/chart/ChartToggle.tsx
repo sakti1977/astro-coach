@@ -4,7 +4,7 @@ import { useState } from "react";
 import NorthIndianGrid from "./NorthIndianGrid";
 import SouthIndianGrid from "./SouthIndianGrid";
 import type { NatalChart, ChartDisplay } from "@/lib/profile";
-import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
+import { PLANET_META, SIGN_NAMES } from "@/lib/astrology/planets";
 
 interface Props {
   chart: NatalChart;
@@ -22,14 +22,14 @@ const VARGAS: { key: VargaKey; label: string; short: string; meaning: string; do
 ];
 
 function buildVargaChart(chart: NatalChart, varga: VargaKey): ChartDisplay {
-  if (varga === "d1") return chart;
-
   const field = `${varga}_sign_num` as "d9_sign_num" | "d10_sign_num" | "d7_sign_num";
-  const ascSignNum = chart.ascendant[field] ?? chart.ascendant.sign_num;
+  const ascSignNum = varga === "d1"
+    ? chart.ascendant.sign_num
+    : chart.ascendant[field] ?? chart.ascendant.sign_num;
 
   const planets: ChartDisplay["planets"] = {};
   for (const [key, planet] of Object.entries(chart.planets)) {
-    const pSignNum = planet[field] ?? planet.sign_num;
+    const pSignNum = varga === "d1" ? planet.sign_num : planet[field] ?? planet.sign_num;
     const house = ((pSignNum - ascSignNum + 12) % 12) + 1;
     planets[key] = {
       sign: SIGN_NAMES[pSignNum],
@@ -45,8 +45,8 @@ function buildVargaChart(chart: NatalChart, varga: VargaKey): ChartDisplay {
     ascendant: {
       sign: SIGN_NAMES[ascSignNum],
       sign_num: ascSignNum,
-      degree: 0,
-      abs_pos: ascSignNum * 30,
+      degree: varga === "d1" ? chart.ascendant.degree : 0,
+      abs_pos: varga === "d1" ? chart.ascendant.abs_pos : ascSignNum * 30,
     },
     planets,
   };

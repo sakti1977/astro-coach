@@ -1,4 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
+import {
+  MAX_TOKENS_VALIDATE,
+  MAX_TOKENS_COACH,
+  MAX_TOKENS_DASHA,
+  MAX_TOKENS_HABITS,
+  MAX_TOKENS_SUMMARISE,
+} from "@/lib/constants";
 
 let _client: Anthropic | null = null;
 
@@ -9,14 +16,14 @@ function getClient(): Anthropic {
   return _client;
 }
 
-export async function validateChartWithOpus(
+export async function validateChart(
   systemPrompt: string,
   userPrompt: string
 ): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
-    model: "claude-opus-4-7",
-    max_tokens: 2048,
+    model: "claude-sonnet-4-6",  // TOKEN-01: was claude-opus-4-7 (~80% cost reduction)
+    max_tokens: MAX_TOKENS_VALIDATE,
     system: [
       {
         type: "text",
@@ -35,25 +42,38 @@ export async function validateChartWithOpus(
 export async function* streamCoachResponse(
   systemPrompt: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>,
-  chartContext: string
+  profileContext: string   // dynamic observations — kept separate for cache efficiency
 ): AsyncGenerator<string> {
   const client = getClient();
 
+  // Block 1: large static prompt (chart data + all coaching instructions).
+  // This block NEVER changes within a user session → always gets a cache hit
+  // after the first call, dramatically cutting time-to-first-token.
+  //
+  // Block 2: small dynamic block (current observations / profile state).
+  // Changes occasionally as observations accumulate; kept separate so Block 1
+  // cache is not busted.
+  const systemBlocks: Anthropic.TextBlockParam[] = [
+    {
+      type: "text",
+      text: systemPrompt,
+      cache_control: { type: "ephemeral" },
+    },
+  ];
+
+  if (profileContext.trim()) {
+    systemBlocks.push({
+      type: "text",
+      text: profileContext,
+      // No cache_control — this block changes every time goals/phase/observations
+      // update. Block 1 carries the ephemeral cache; this block stays uncached.
+    });
+  }
+
   const stream = await client.messages.stream({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    system: [
-      {
-        type: "text",
-        text: systemPrompt,
-        cache_control: { type: "ephemeral" },
-      },
-      {
-        type: "text",
-        text: `\n\nCURRENT CONTEXT:\n${chartContext}`,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
+    model: "claude-haiku-4-5",   // 5–8× faster than Sonnet; ideal for real-time chat
+    max_tokens: MAX_TOKENS_COACH,
+    system: systemBlocks,
     messages,
   });
 
@@ -73,8 +93,12 @@ export async function generateDashaPrediction(
   const client = getClient();
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+    max_tokens: MAX_TOKENS_DASHA,
+    temperature: 0.1,
+    system: "You are a strict JSON-only API. Output EXACTLY one valid JSON object and nothing else. Do not add any explanation, greeting, or markdown. Do not wrap the JSON in code fences. The output must start with { and end with }.",
+    messages: [
+      { role: "user", content: prompt },
+    ],
   });
   const block = response.content[0];
   if (block.type !== "text") throw new Error("Unexpected response type");
@@ -85,7 +109,20 @@ export async function generateHabits(prompt: string): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 1024,
+    max_tokens: MAX_TOKENS_HABITS,
+    messages: [{ role: "user", content: prompt }],
+  });
+  const block = response.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response type");
+  return block.text;
+}
+
+/** PERF-01: compress accumulated observations into a compact profile summary. */
+export async function summariseObservations(prompt: string): Promise<string> {
+  const client = getClient();
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: MAX_TOKENS_SUMMARISE,
     messages: [{ role: "user", content: prompt }],
   });
   const block = response.content[0];

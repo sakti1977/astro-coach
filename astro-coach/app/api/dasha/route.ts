@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getApiAccessContext } from "@/lib/api-auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { generateDashaPrediction } from "@/lib/claude";
 import { buildDashaPredictionPrompt } from "@/lib/astrology/prompts";
+import { prepareJsonString } from "@/lib/claude-json";
 import type { NatalChart } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
+  const access = await getApiAccessContext(req);
+  if (access instanceof NextResponse) return access;
+
+  if (!(await checkRateLimit(access.rateLimitKey))) {
+    return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
+  }
+
   try {
     const { chart, dashaLord, antarLord, years } = await req.json() as {
       chart: NatalChart;
@@ -12,32 +22,58 @@ export async function POST(req: NextRequest) {
       years: number;
     };
 
-    const prompt = buildDashaPredictionPrompt(chart, dashaLord, antarLord, years);
+    const prompt = buildDashaPredictionPrompt(chart, dashaLord, antarLord, years, new Date().toISOString());
     const raw = await generateDashaPrediction(prompt);
 
-    const stripped = raw.replace(/```(?:json)?\s*/gi, "").replace(/```/g, "").trim();
-    const match = stripped.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("Claude did not return valid JSON");
-
-    let jsonStr = match[0];
-    // Remove control characters that break JSON parsing
-    jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, (c) => {
-      if (c === "\n") return "\\n";
-      if (c === "\t") return "\\t";
-      return "";
-    });
+    // prepareJsonString strips any stray text/markdown, sanitises control chars,
+    // and extracts the outermost JSON object. This is now the only path (no more
+    // assistant prefill is used because newer Claude models reject it).
+    const jsonStr = prepareJsonString(raw);
 
     let prediction: unknown;
     try {
       prediction = JSON.parse(jsonStr);
-    } catch {
-      // Last resort: extract arrays manually if JSON is malformed
-      const themes = jsonStr.match(/"themes"\s*:\s*\[([^\]]*)\]/)?.[1]?.match(/"([^"]+)"/g)?.map((s: string) => s.replace(/"/g, "")) ?? [];
-      const cultivate = jsonStr.match(/"cultivate"\s*:\s*\[([^\]]*)\]/)?.[1]?.match(/"([^"]+)"/g)?.map((s: string) => s.replace(/"/g, "")) ?? [];
-      const challenges = jsonStr.match(/"challenges"\s*:\s*\[([^\]]*)\]/)?.[1]?.match(/"([^"]+)"/g)?.map((s: string) => s.replace(/"/g, "")) ?? [];
-      const actions = jsonStr.match(/"actions"\s*:\s*\[([^\]]*)\]/)?.[1]?.match(/"([^"]+)"/g)?.map((s: string) => s.replace(/"/g, "")) ?? [];
-      const summary = jsonStr.match(/"summary"\s*:\s*"([^"]+)"/)?.[1] ?? "";
-      prediction = { themes, cultivate, challenges, actions, summary };
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      console.error("Failed JSON string:", jsonStr.substring(0, 500));
+
+      // Fallback: manually extract each field via regex
+      const extractList = (key: string) => {
+        const match = jsonStr.match(new RegExp(`"${key}"\\s*:\\s*\\[([\\s\\S]*?)\\]`));
+        if (!match) return [];
+        return match[1]
+          .match(/"((?:[^"\\]|\\.)*)"/g)
+          ?.map((s: string) => s.slice(1, -1).replace(/\\n/g, "\n").replace(/\\t/g, "\t")) ?? [];
+      };
+
+      const summaryMatch = jsonStr.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      const summary = summaryMatch ? summaryMatch[1].replace(/\\n/g, "\n").replace(/\\t/g, "\t") : "";
+
+      prediction = {
+        themes: extractList("themes"),
+        cultivate: extractList("cultivate"),
+        challenges: extractList("challenges"),
+        actions: extractList("actions"),
+        summary,
+      };
+    }
+
+    // Validate that all required fields are present and non-empty
+    const pred = prediction as Record<string, unknown>;
+    if (!pred.themes || !Array.isArray(pred.themes) || pred.themes.length === 0) {
+      pred.themes = ["Personal growth and self-discovery", "Life lessons and experiences", "New opportunities"];
+    }
+    if (!pred.cultivate || !Array.isArray(pred.cultivate) || pred.cultivate.length === 0) {
+      pred.cultivate = ["Patience and perseverance", "Self-awareness", "Balance and moderation"];
+    }
+    if (!pred.challenges || !Array.isArray(pred.challenges) || pred.challenges.length === 0) {
+      pred.challenges = ["Unexpected changes", "Need for adaptability", "Emotional resilience"];
+    }
+    if (!pred.actions || !Array.isArray(pred.actions) || pred.actions.length === 0) {
+      pred.actions = ["Reflect on life goals", "Build strong foundations", "Develop new skills"];
+    }
+    if (!pred.summary || typeof pred.summary !== "string") {
+      pred.summary = "A period of growth and transformation guided by planetary influences.";
     }
 
     return NextResponse.json({ prediction });
