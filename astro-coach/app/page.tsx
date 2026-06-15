@@ -2,15 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-<<<<<<< HEAD
-import { getProfile, saveProfile, updateProfile, type UserProfile } from "@/lib/profile";
-=======
 import { useSession, signOut } from "next-auth/react";
-import { getProfile, updateProfile, clearProfile, archiveProfile } from "@/lib/profile";
+import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type UserProfile } from "@/lib/profile";
 import ConfirmResetModal from "@/components/ConfirmResetModal";
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
->>>>>>> origin/main
 
 // IANA timezone guesses by country code (best-effort for common countries)
 const COUNTRY_TZ: Record<string, string> = {
@@ -82,18 +78,8 @@ export default function HomePage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-<<<<<<< HEAD
-  useEffect(() => {
-    const p = getProfile();
-    if (p.chart && p.dashas) {
-      // Returning user on this browser — go straight to their chart
-      router.push("/chart");
-      return;
-    }
-=======
   // Track if user already has a calculated chart (for overview instead of blank redirect)
   const [hasExistingChart, setHasExistingChart] = useState(false);
->>>>>>> origin/main
 
   useEffect(() => {
     if (status === "loading") return;
@@ -235,29 +221,6 @@ export default function HomePage() {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-<<<<<<< HEAD
-  function importProfile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const parsed = JSON.parse(ev.target?.result as string) as UserProfile;
-        if (!parsed.chart || !parsed.dashas) {
-          setError("This file doesn't look like a valid Astro Coach backup.");
-          return;
-        }
-        saveProfile(parsed);
-        router.push("/chart");
-      } catch {
-        setError("Could not read the backup file. Make sure it's a valid JSON backup.");
-      }
-    };
-    reader.readAsText(file);
-=======
-  // Finalise the chart switch after the user confirms (or when there's no
-  // existing data to protect). `archive` triggers an archiveProfile() call
-  // before clearing, giving the user a localStorage backup.
   async function applyNewChart(
     chart: import("@/lib/profile").NatalChart,
     dashas: import("@/lib/profile").DashaData,
@@ -295,7 +258,26 @@ export default function HomePage() {
       setShowResetModal(false);
       setPendingChartData(null);
     }
->>>>>>> origin/main
+  }
+
+  function importProfile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string) as UserProfile;
+        if (!parsed.chart || !parsed.dashas) {
+          setError("This file doesn't look like a valid Astro Coach backup.");
+          return;
+        }
+        saveProfile(parsed);
+        router.push("/chart");
+      } catch {
+        setError("Could not read the backup file. Make sure it's a valid JSON backup.");
+      }
+    };
+    reader.readAsText(file);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -475,20 +457,7 @@ export default function HomePage() {
           <p className="text-center text-xs text-gray-300 mt-4">Sample insights — your chart will reflect your actual birth data</p>
         </div>
 
-<<<<<<< HEAD
-        {/* Restore from backup */}
-        <div className="mb-6 border border-dashed border-gray-200 rounded-xl p-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-700">Have a backup file?</p>
-            <p className="text-xs text-gray-400 mt-0.5">Restore your chart from a previous export</p>
-          </div>
-          <label className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-2 transition-colors whitespace-nowrap">
-            ↑ Restore backup
-            <input type="file" accept=".json" onChange={importProfile} className="hidden" />
-          </label>
-        </div>
-=======
-        {/* Existing chart overview + journey guidance (big convenience win — home is now useful landing page) */}
+        {/* Existing chart overview + journey guidance */}
         {hasExistingChart && ready && (
           <div className="mb-8 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -515,7 +484,20 @@ export default function HomePage() {
             </div>
           </div>
         )}
->>>>>>> origin/main
+
+        {/* Restore from backup — shown only when no chart exists yet (new device / cleared browser) */}
+        {!hasExistingChart && ready && (
+          <div className="mb-6 border border-dashed border-gray-200 rounded-xl p-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Have a backup file?</p>
+              <p className="text-xs text-gray-400 mt-0.5">Restore your chart from a previous export</p>
+            </div>
+            <label className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-2 transition-colors whitespace-nowrap">
+              ↑ Restore backup
+              <input type="file" accept=".json" onChange={importProfile} className="hidden" />
+            </label>
+          </div>
+        )}
 
         {/* Form */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
