@@ -26,8 +26,10 @@ export default function ValidatePage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart) { router.push("/"); return; }
-    setProfile(p);
-    if (p.validation.isValidated) setAccuracyScore(p.validation.accuracyScore);
+    queueMicrotask(() => {
+      setProfile(p);
+      if (p.validation.isValidated) setAccuracyScore(p.validation.accuracyScore);
+    });
   }, [router]);
 
   async function startValidation() {
@@ -82,28 +84,39 @@ export default function ValidatePage() {
     setPhase("result");
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-400">Loading validation…</p>
+        </div>
+      </div>
+    );
+  }
 
   const alreadyValidated = profile.validation.isValidated;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
       <NavBar />
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Chart Validation</h1>
+      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+        <div className="max-w-2xl mx-auto px-4 py-5">
+          <h1 className="text-xl font-bold text-gray-900">Chart Validation</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Claude Opus analyzes your chart and asks questions to confirm accuracy
+            Claude analyzes your chart and asks questions to confirm accuracy
           </p>
         </div>
+      </div>
+      <div className="max-w-2xl mx-auto px-4 py-8">
 
         {phase === "intro" && (
           <div className="space-y-6">
             {alreadyValidated && (
-              <div className="bg-gray-50 border border-gray-100 rounded-xl p-5">
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
                 <p className="text-sm font-medium text-gray-700">Previous validation</p>
                 <div className="mt-2 flex items-center gap-3">
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-3xl font-bold text-indigo-700">
                     {Math.round(profile.validation.accuracyScore * 100)}%
                   </div>
                   <div>
@@ -117,7 +130,7 @@ export default function ValidatePage() {
             <div className="border border-gray-100 rounded-xl p-6">
               <h2 className="font-semibold text-gray-900 mb-2">How validation works</h2>
               <ol className="space-y-2 text-sm text-gray-600">
-                <li className="flex gap-2"><span className="font-mono text-gray-400">1.</span>Claude Opus (Anthropic&apos;s most capable model) analyzes your birth chart</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-400">1.</span>Claude analyzes your birth chart</li>
                 <li className="flex gap-2"><span className="font-mono text-gray-400">2.</span>It generates 10 yes/no questions about life events derived from your chart</li>
                 <li className="flex gap-2"><span className="font-mono text-gray-400">3.</span>Your answers calibrate the chart interpretation accuracy</li>
                 <li className="flex gap-2"><span className="font-mono text-gray-400">4.</span>Future predictions are weighted by this accuracy score</li>
@@ -132,7 +145,7 @@ export default function ValidatePage() {
 
             <button
               onClick={startValidation}
-              className="w-full bg-gray-900 text-white py-4 rounded-xl font-medium text-sm hover:bg-gray-700 transition-colors"
+              className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold text-sm hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
             >
               {alreadyValidated ? "Run Validation Again →" : "Start Chart Validation →"}
             </button>
@@ -142,7 +155,7 @@ export default function ValidatePage() {
         {phase === "loading" && (
           <div className="text-center py-20">
             <p className="text-4xl mb-4 animate-pulse">✦</p>
-            <p className="text-gray-500">Claude Opus is reading your chart...</p>
+            <p className="text-gray-500">Claude is reading your chart...</p>
             <p className="text-xs text-gray-400 mt-2">This takes about 10–15 seconds</p>
           </div>
         )}
@@ -154,7 +167,7 @@ export default function ValidatePage() {
         {phase === "result" && (
           <div className="text-center py-12 space-y-6">
             <div>
-              <p className="text-6xl font-bold text-gray-900">
+              <p className="text-6xl font-bold text-indigo-700">
                 {Math.round(accuracyScore * 100)}%
               </p>
               <p className="text-gray-500 mt-2">Chart accuracy score</p>
@@ -181,7 +194,7 @@ export default function ValidatePage() {
               </button>
               <button
                 onClick={() => router.push("/coach")}
-                className="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
               >
                 Talk to Coach →
               </button>

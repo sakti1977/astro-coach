@@ -9,7 +9,6 @@ interface Props {
 }
 
 const SIZE = 400;
-const CELL = SIZE / 4;
 
 // South Indian chart: signs are FIXED in a 4x4 grid (12 outer cells, 4 center empty)
 // Sign numbers mapped to grid positions [row, col]
@@ -75,7 +74,6 @@ export default function SouthIndianGrid({ chart, size }: Props) {
         const x = col * cell;
         const y = row * cell;
         const cx = x + cell / 2;
-        const cy = y + cell / 2;
         const isAsc = signNum === ascSignNum;
         const planets = getPlanetsInSign(chart, signNum);
 

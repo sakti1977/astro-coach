@@ -2,10 +2,20 @@
 
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase } from "@/lib/profile";
+import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CachedTransits } from "@/lib/profile";
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile } from "@/lib/profile";
-import { storage } from "@/lib/storage";
+import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
+import { buildTransitContext } from "@/lib/astrology/prompts";
+import {
+  CHAT_HISTORY_DISPLAY,
+  CHAT_WINDOW_API,
+  OBS_CAP,
+  OBS_SUMMARISE_EVERY,
+  EXTRACT_MIN_USER_CHARS,
+  EXTRACT_MIN_ASST_CHARS,
+  TRANSIT_TTL_MS,
+} from "@/lib/constants";
 
 interface Props {
   chart: NatalChart;
@@ -14,22 +24,112 @@ interface Props {
 
 export default function ChatInterface({ chart, dashas }: Props) {
   const profile = getProfile();
-  const [messages, setMessages] = useState<ChatMessage[]>(profile.chatHistory.slice(-20));
+  const [messages, setMessages] = useState<ChatMessage[]>(profile.chatHistory.slice(-CHAT_HISTORY_DISPLAY));
   const [observations, setObservations] = useState<CoachingObservation[]>([]);
   const [phase, setPhase] = useState<CoachingPhase>(profile.coaching.phase ?? "gathering");
   const [exchangeCount, setExchangeCount] = useState(profile.coaching.exchangeCount ?? 0);
+  const [includeReligiousSolutions, setIncludeReligiousSolutions] = useState(
+    profile.coaching.includeReligiousSolutions ?? false
+  );
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [transitContext, setTransitContext] = useState<string>("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Load observations from IndexedDB on mount
   useEffect(() => {
     storage.getObservations().then(setObservations);
   }, []);
 
+  // Fetch or restore cached transits (2hr TTL)
+  useEffect(() => {
+    async function loadTransits() {
+      const p = getProfile();
+      const cached = p.cachedTransits;
+      const natalMoonSign = chart.planets.moon?.sign_num ?? 0;
+      const tzStr = p.birthData?.timezone ?? "UTC";
+
+      if (cached && cached.tzStr === tzStr && Date.now() - new Date(cached.cachedAt).getTime() < TRANSIT_TTL_MS) {
+        setTransitContext(buildTransitContext(cached.data, natalMoonSign));
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/transits", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ natal_asc_sign_num: chart.ascendant.sign_num, tz_str: tzStr }),
+        });
+        if (!res.ok) return;
+        const data: CachedTransits["data"] = await res.json();
+        const fresh: CachedTransits = { data, cachedAt: new Date().toISOString(), tzStr };
+        const current = getProfile();
+        saveProfile({ ...current, cachedTransits: fresh });
+        setTransitContext(buildTransitContext(data, natalMoonSign));
+      } catch {
+        // Non-critical — coaching works without transit context
+      }
+    }
+    loadTransits();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  function toggleReligiousSolutions() {
+    const newValue = !includeReligiousSolutions;
+    setIncludeReligiousSolutions(newValue);
+    const current = getProfile();
+    saveProfile({
+      ...current,
+      coaching: {
+        ...current.coaching,
+        includeReligiousSolutions: newValue,
+      },
+    });
+  }
+
+  function startNewTopic() {
+    // Reset conversation state — keep chart, profile, and observations (accumulated context)
+    setMessages([]);
+    setPhase("gathering");
+    setExchangeCount(0);
+    const current = getProfile();
+    saveProfile({
+      ...current,
+      chatHistory: [],
+      coaching: {
+        ...current.coaching,
+        phase: "gathering",
+        exchangeCount: 0,
+        lastUpdated: new Date().toISOString(),
+      },
+    });
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
+  /** PERF-01: compress all stored observations into a compact summary set. */
+  async function compressObservations(allObs: CoachingObservation[], currentExchangeCount: number) {
+    try {
+      const res = await fetch("/api/coach/summarise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ observations: allObs, exchangeCount: currentExchangeCount }),
+      });
+      if (!res.ok) return;
+      const { summaryObservations } = (await res.json()) as { summaryObservations: CoachingObservation[] };
+      if (!summaryObservations.length) return; // keep originals on empty response
+
+      await storage.clearObservations();
+      for (const o of summaryObservations) await storage.addObservation(o);
+      setObservations(summaryObservations);
+    } catch {
+      // summarisation errors are non-fatal; keep existing observations
+    }
+  }
 
   async function extractAndSave(userMessage: string, assistantResponse: string, currentExchangeCount: number) {
     try {
@@ -59,9 +159,28 @@ export default function ChatInterface({ chart, dashas }: Props) {
         newObs.push(obs);
       }
 
+      // PERF-01: fetch updated list and apply cap / summarisation
+      const allObs = await storage.getObservations();
+
+      // Hard cap — trim oldest beyond OBS_CAP
+      if (allObs.length > OBS_CAP) {
+        const trimmed = allObs.slice(-OBS_CAP);
+        await storage.clearObservations();
+        for (const o of trimmed) await storage.addObservation(o);
+        setObservations(trimmed);
+      } else if (newObs.length > 0) {
+        setObservations((prev) => [...prev, ...newObs]);
+      }
+
+      // Summarise every OBS_SUMMARISE_EVERY exchanges (fire-and-forget)
+      if (currentExchangeCount > 0 && currentExchangeCount % OBS_SUMMARISE_EVERY === 0) {
+        compressObservations(allObs, currentExchangeCount);
+      }
+
       // Update phase + exchange count in profile (localStorage)
+      // Hard fallback: force recommending at exchange 8 if extraction hasn't fired
       const newPhase: CoachingPhase =
-        shouldTransitionToRecommending ? "recommending" : phase;
+        shouldTransitionToRecommending || currentExchangeCount >= 8 ? "recommending" : phase;
       const current = getProfile();
       saveProfile({
         ...current,
@@ -75,7 +194,6 @@ export default function ChatInterface({ chart, dashas }: Props) {
 
       setPhase(newPhase);
       setExchangeCount(currentExchangeCount);
-      if (newObs.length > 0) setObservations((prev) => [...prev, ...newObs]);
     } catch {
       // extraction errors are non-fatal; coaching continues
     }
@@ -135,7 +253,16 @@ export default function ChatInterface({ chart, dashas }: Props) {
           profileContext: buildCoachingContext(currentProfile, observations),
           vargaContext,
           phase,
-          messages: newMessages.slice(-12).map((m) => ({ role: m.role, content: m.content })),
+          includeReligiousSolutions,
+          transitContext: transitContext || undefined,
+          messages: (() => {
+            // Keep up to 20 messages, but the Anthropic API requires the first
+            // message to be a user turn. A slice of an odd-length array can
+            // start with an assistant message, which causes API errors.
+            const window = newMessages.slice(-20).map((m) => ({ role: m.role, content: m.content }));
+            const firstUser = window.findIndex((m) => m.role === "user");
+            return firstUser > 0 ? window.slice(firstUser) : window;
+          })(),
         }),
       });
 
@@ -175,9 +302,27 @@ export default function ChatInterface({ chart, dashas }: Props) {
       };
       addChatMessage(finalMsg);
 
-      // Extract observations in background — non-blocking, errors are silent
+      // TOKEN-05: skip extraction for short exchanges — not enough signal
+      // But still count the exchange and apply the hard phase cap
       const nextExchangeCount = exchangeCount + 1;
-      extractAndSave(capturedInput, accumulated, nextExchangeCount);
+      if (capturedInput.length >= EXTRACT_MIN_USER_CHARS && accumulated.length >= EXTRACT_MIN_ASST_CHARS) {
+        extractAndSave(capturedInput, accumulated, nextExchangeCount);
+      } else {
+        // Short exchange — update count and check hard cap without calling Claude
+        const newPhase: CoachingPhase = nextExchangeCount >= 8 ? "recommending" : phase;
+        const current = getProfile();
+        saveProfile({
+          ...current,
+          coaching: {
+            ...current.coaching,
+            exchangeCount: nextExchangeCount,
+            phase: newPhase,
+            lastUpdated: new Date().toISOString(),
+          },
+        });
+        setPhase(newPhase);
+        setExchangeCount(nextExchangeCount);
+      }
     } catch {
       const errMsg: ChatMessage = {
         role: "assistant",
@@ -188,6 +333,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
       setMessages((prev) => [...prev.slice(0, -1), errMsg]);
     } finally {
       setStreaming(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }
 
@@ -203,6 +349,31 @@ export default function ChatInterface({ chart, dashas }: Props) {
           <span className="font-medium text-gray-900">{dashas.current_antar}</span> Antar
         </span>
         <span className="ml-auto flex items-center gap-2 text-gray-400">
+          {/* New Topic */}
+          <button
+            type="button"
+            onClick={startNewTopic}
+            className="text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+            title="Clear conversation and start a new topic (keeps your chart and profile)"
+          >
+            ↺ New Topic
+          </button>
+          {/* Religious solutions toggle */}
+          <button
+            onClick={toggleReligiousSolutions}
+            className={`text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
+              includeReligiousSolutions
+                ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+            }`}
+            title={
+              includeReligiousSolutions
+                ? "Religious remedies enabled - Click to disable"
+                : "Religious remedies disabled - Click to enable"
+            }
+          >
+            {includeReligiousSolutions ? "🕉 Religious" : "⚛ Behavioral"}
+          </button>
           {observations.length > 0 && (
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -254,15 +425,17 @@ export default function ChatInterface({ chart, dashas }: Props) {
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-gray-900 text-white rounded-br-sm"
+                  ? "bg-indigo-600 text-white rounded-br-sm"
                   : "bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm"
               }`}
             >
               {msg.role === "assistant" && msg.content === "" ? (
-                <span className="inline-flex gap-1">
-                  <span className="animate-bounce">●</span>
-                  <span className="animate-bounce" style={{ animationDelay: "0.1s" }}>●</span>
-                  <span className="animate-bounce" style={{ animationDelay: "0.2s" }}>●</span>
+                <span className="inline-flex items-center gap-1.5 text-gray-400">
+                  <svg className="w-3 h-3 animate-spin text-indigo-400" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  <span className="text-xs">Thinking…</span>
                 </span>
               ) : msg.role === "assistant" ? (
                 <div className="chat-markdown text-sm leading-relaxed">
@@ -281,18 +454,19 @@ export default function ChatInterface({ chart, dashas }: Props) {
       <div className="p-4 border-t border-gray-100">
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
             placeholder={phase === "recommending" ? "Ask for recommendations..." : "Tell me about yourself..."}
             disabled={streaming}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:opacity-50"
+            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
           />
           <button
             onClick={send}
             disabled={!input.trim() || streaming}
-            className="bg-gray-900 text-white rounded-xl px-4 py-2.5 text-sm font-medium disabled:opacity-40 hover:bg-gray-700 transition-colors"
+            className="bg-indigo-600 text-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-40 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
           >
             {streaming ? "..." : "Send"}
           </button>

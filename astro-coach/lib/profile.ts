@@ -1,6 +1,15 @@
 "use client";
 
+import { CHAT_HISTORY_MAX, MAX_ARCHIVES } from "@/lib/constants";
+
 const PROFILE_KEY = "astro_coach_profile";
+
+export interface Yoga {
+  name: string;
+  planets: string[];
+  description: string;
+  strength: "strong" | "moderate" | "challenging";
+}
 
 export interface PlanetData {
   sign: string;
@@ -28,13 +37,17 @@ export interface NatalChart extends ChartDisplay {
   ascendant: { sign: string; sign_num: number; degree: number; abs_pos: number; d9_sign_num?: number; d10_sign_num?: number; d7_sign_num?: number };
   planets: Record<string, PlanetData>;
   moon_nakshatra: { num: number; name: string; pada: number; lord: string };
+  yogas?: Yoga[];
 }
 
 export interface DashaData {
   mahadashas: Array<{
     lord: string; years: number; balance_years: number;
     start: string; end: string;
-    antardashas: Array<{ lord: string; years: number; start: string; end: string }>;
+    antardashas: Array<{
+      lord: string; years: number; start: string; end: string;
+      pratyantardashas?: Array<{ lord: string; years: number; start: string; end: string }>;
+    }>;
   }>;
   current_maha: string;
   current_antar: string;
@@ -85,6 +98,19 @@ export interface CoachingObservation {
   exchangeIndex: number;
 }
 
+/** Cached transit data with a timestamp for TTL checks (PERF-03). */
+export interface CachedTransits {
+  data: {
+    planets: Record<string, {
+      sign: string; sign_num: number; degree: number; abs_pos: number;
+      house: number; retrograde: boolean; house_from_natal_lagna: number;
+    }>;
+    calculated_at: string;
+  };
+  cachedAt: string; // ISO timestamp of when we stored this
+  tzStr?: string;
+}
+
 export interface UserProfile {
   birthData: {
     name: string; date: string; time: string;
@@ -106,7 +132,10 @@ export interface UserProfile {
     lastUpdated: string;
     phase: CoachingPhase;
     exchangeCount: number;
+    includeReligiousSolutions: boolean;
   };
+  /** PERF-03: cached planetary transits with a 2-hour TTL. */
+  cachedTransits?: CachedTransits;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -127,6 +156,7 @@ const DEFAULT_PROFILE: UserProfile = {
     lastUpdated: new Date().toISOString(),
     phase: "gathering" as CoachingPhase,
     exchangeCount: 0,
+    includeReligiousSolutions: false,
   },
 };
 
@@ -163,9 +193,37 @@ export function clearProfile(): void {
   localStorage.removeItem(PROFILE_KEY);
 }
 
+/**
+ * Save the current profile under a timestamped archive key before clearing.
+ * Archives are stored as `astro_coach_profile_archive_{timestamp}` so they
+ * do not interfere with the live profile key. Up to 5 archives are kept;
+ * older ones are pruned to avoid filling localStorage.
+ */
+export function archiveProfile(): void {
+  if (typeof window === "undefined") return;
+  const profile = getProfile();
+  if (!profile.chart) return; // nothing worth archiving
+
+  const archiveKey = `${PROFILE_KEY}_archive_${Date.now()}`;
+  try {
+    localStorage.setItem(archiveKey, JSON.stringify(profile));
+  } catch {
+    // localStorage quota exceeded — skip archive silently
+    return;
+  }
+
+  // Prune oldest archives so we keep at most 5
+  const archiveKeys = Object.keys(localStorage)
+    .filter((k) => k.startsWith(`${PROFILE_KEY}_archive_`))
+    .sort(); // lexicographic sort is chronological for timestamp keys
+  while (archiveKeys.length > MAX_ARCHIVES) {
+    localStorage.removeItem(archiveKeys.shift()!);
+  }
+}
+
 export function addChatMessage(message: ChatMessage): void {
   const profile = getProfile();
-  const history = [...profile.chatHistory, message].slice(-100); // keep last 100
+  const history = [...profile.chatHistory, message].slice(-CHAT_HISTORY_MAX);
   saveProfile({ ...profile, chatHistory: history });
 }
 
@@ -186,9 +244,18 @@ export function addValidationAnswer(entry: ValidationEntry): number {
   return score;
 }
 
-export function buildCoachingContext(profile: UserProfile, observations: CoachingObservation[] = []): string {
+export function buildCoachingContext(
+  profile: UserProfile,
+  observations: CoachingObservation[] = [],
+  todayIso?: string
+): string {
   const { validation, goals, coaching } = profile;
   const lines: string[] = [];
+
+  // Always anchor with current date so Claude knows "now"
+  const now = todayIso ? new Date(todayIso) : new Date();
+  lines.push(`Current date: ${now.toDateString()} (${now.toISOString()})`);
+
   if (validation.confirmedThemes.length > 0)
     lines.push(`Confirmed life themes: ${validation.confirmedThemes.join(", ")}`);
   if (goals.length > 0)

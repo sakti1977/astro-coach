@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
-import { getProfile, type UserProfile } from "@/lib/profile";
+import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
+import { TRANSIT_TTL_MS } from "@/lib/constants";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 
 interface TransitPlanet {
@@ -54,8 +55,22 @@ export default function TransitsPage() {
   useEffect(() => {
     const p = getProfile();
     if (!p.chart) { router.push("/"); return; }
-    setProfile(p);
-    fetchTransits(p.chart.ascendant.sign_num, p.birthData?.timezone ?? "UTC");
+    queueMicrotask(() => setProfile(p));
+
+    // PERF-03: serve from profile cache if < 2 hours old
+    const tzStr = p.birthData?.timezone ?? "UTC";
+    if (p.cachedTransits?.tzStr === tzStr) {
+      const ageMs = Date.now() - new Date(p.cachedTransits.cachedAt).getTime();
+      if (ageMs < TRANSIT_TTL_MS) {
+        queueMicrotask(() => {
+          setTransits(p.cachedTransits!.data as TransitData);
+          setLoading(false);
+        });
+        return;
+      }
+    }
+
+    fetchTransits(p.chart.ascendant.sign_num, tzStr);
   }, [router]);
 
   async function fetchTransits(natalAscSignNum: number, tzStr: string) {
@@ -67,9 +82,11 @@ export default function TransitsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ natal_asc_sign_num: natalAscSignNum, tz_str: tzStr }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Transit fetch failed");
+      const data = await res.json() as TransitData;
+      if (!res.ok) throw new Error((data as unknown as { error?: string }).error ?? "Transit fetch failed");
       setTransits(data);
+      // PERF-03: persist to profile cache
+      updateProfile({ cachedTransits: { data, cachedAt: new Date().toISOString(), tzStr } });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load transits");
     } finally {
@@ -77,19 +94,28 @@ export default function TransitsPage() {
     }
   }
 
-  if (!profile?.chart) return null;
+  if (!profile?.chart) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-400">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   const calcTime = transits?.calculated_at
     ? new Date(transits.calculated_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
     : null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
       <NavBar />
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-6 flex items-start justify-between">
+      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+        <div className="max-w-3xl mx-auto px-4 py-5 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Current Transits</h1>
+            <h1 className="text-xl font-bold text-gray-900">Current Transits</h1>
             <p className="text-sm text-gray-400 mt-1">
               Gochar — planetary positions today relative to your natal chart
             </p>
@@ -100,11 +126,13 @@ export default function TransitsPage() {
           <button
             onClick={() => fetchTransits(profile.chart!.ascendant.sign_num, profile.birthData?.timezone ?? "UTC")}
             disabled={loading}
-            className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            className="text-xs text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 disabled:opacity-40 transition-colors font-medium"
           >
             {loading ? "Refreshing…" : "↻ Refresh"}
           </button>
         </div>
+      </div>
+      <div className="max-w-3xl mx-auto px-4 py-8">
 
         {error && (
           <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-700 mb-6">
@@ -140,7 +168,7 @@ export default function TransitsPage() {
               return (
                 <div
                   key={key}
-                  className={`rounded-xl border p-4 transition-all ${isKeyHouse ? "border-gray-300 bg-gray-50" : "border-gray-100 bg-white"}`}
+                  className={`rounded-xl border p-4 transition-all ${isKeyHouse ? "border-indigo-100 bg-indigo-50/50" : "border-gray-100 bg-white"}`}
                 >
                   <div className="flex items-center gap-3">
                     {/* Planet */}
@@ -174,7 +202,7 @@ export default function TransitsPage() {
 
                     {/* House badge */}
                     <div className={`flex-shrink-0 w-12 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
-                      isKeyHouse ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600"
+                      isKeyHouse ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"
                     }`}>
                       {houseSuffix(h)}
                     </div>
