@@ -93,16 +93,12 @@ await signIn("credentials", {
 
 #### Protected Routes
 
-Wrap any page that requires authentication:
+Protected app routes are enforced by NextAuth middleware in [proxy.ts](/Users/saktibagchi/Astro_Coach/astro-coach/proxy.ts). Pages under `/chart`, `/coach`, `/dasha`, `/habits`, `/transits`, and `/validate` do not need an extra client-side wrapper.
 
 ```tsx
-import ProtectedRoute from "@/components/ProtectedRoute"
-
 export default function MyPage() {
   return (
-    <ProtectedRoute>
-      {/* Your protected content */}
-    </ProtectedRoute>
+    <div>{/* Your protected content */}</div>
   )
 }
 ```

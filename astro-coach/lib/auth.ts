@@ -44,12 +44,12 @@ export const authOptions: NextAuthOptions = {
         email:       { label: "Email",        type: "email" },
         password:    { label: "Password",     type: "password" },
         phone:       { label: "Phone",        type: "text" },
-        accessToken: { label: "Access Token", type: "text" },
+        otp:         { label: "OTP",          type: "text" },
         mode:        { label: "Mode",         type: "text" },
         // mode values:
         //   "signin"     — email + password sign-in
         //   "signup"     — email + password sign-up
-        //   "phone-otp"  — phone OTP (Supabase access token passed after client-side OTP verify)
+        //   "phone-otp"  — phone OTP verified once on the server
       },
       async authorize(credentials: Record<string, string> | undefined) {
         if (!supabase) {
@@ -63,14 +63,17 @@ export const authOptions: NextAuthOptions = {
 
         // ── Phone OTP ────────────────────────────────────────────────────────
         if (credentials.mode === "phone-otp") {
-          if (!credentials.accessToken) {
-            throw new Error("Access token is required for phone authentication")
+          if (!credentials.phone || !credentials.otp) {
+            throw new Error("Phone number and OTP are required for phone authentication")
           }
 
-          // Validate the Supabase access token server-side
-          const { data: { user }, error } = await supabase.auth.getUser(
-            credentials.accessToken
-          )
+          const { data, error } = await supabase.auth.verifyOtp({
+            phone: credentials.phone,
+            token: credentials.otp,
+            type: "sms",
+          })
+
+          const user = data.user
           if (error || !user) {
             throw new Error("Invalid or expired OTP session. Please try again.")
           }

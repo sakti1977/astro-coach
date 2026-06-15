@@ -1,7 +1,5 @@
 "use client";
 
-import ProtectedRoute from "@/components/ProtectedRoute";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -21,7 +19,6 @@ export default function DashaPage() {
   if (!profile?.dashas || !profile?.birthData) return null;
 
   return (
-    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
       <NavBar />
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
@@ -36,6 +33,5 @@ export default function DashaPage() {
         <DashaTimeline dashas={profile.dashas} birthDate={profile.birthData.date} />
       </div>
     </div>
-    </ProtectedRoute>
   );
 }

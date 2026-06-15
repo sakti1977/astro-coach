@@ -387,10 +387,6 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
   }
 
   async function verifyOtp() {
-    if (!supabase) {
-      setError("Supabase is not configured.");
-      return;
-    }
     if (otp.length !== 6) {
       setError("Please enter the 6-digit code");
       return;
@@ -399,22 +395,11 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
     setLoading(true);
     setError("");
     try {
-      // Verify OTP with Supabase client-side
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        phone: fullPhone,
-        token: otp,
-        type: "sms",
-      });
-
-      if (verifyError) throw verifyError;
-      if (!data.session) throw new Error("No session returned after OTP verification");
-
-      // Hand the Supabase access token to NextAuth so it creates a JWT session
       const result = await signIn("credentials", {
         redirect: false,
         mode: "phone-otp",
         phone: fullPhone,
-        accessToken: data.session.access_token,
+        otp,
       });
 
       if (result?.error) {

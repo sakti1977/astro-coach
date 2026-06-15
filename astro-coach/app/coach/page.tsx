@@ -1,7 +1,5 @@
 "use client";
 
-import ProtectedRoute from "@/components/ProtectedRoute";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -21,7 +19,6 @@ export default function CoachPage() {
   if (!profile?.chart || !profile?.dashas) return null;
 
   return (
-    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white flex flex-col">
       <NavBar />
 
@@ -50,14 +47,12 @@ export default function CoachPage() {
 
       {/* Chat area */}
       <div
-        className="flex-1 max-w-3xl mx-auto w-full flex flex-col px-4 pb-0"
-        style={{ height: "calc(100vh - 112px)" }}
+        className="flex-1 max-w-3xl mx-auto w-full flex flex-col px-4 pb-0 h-[calc(100vh-112px)]"
       >
         <div className="flex-1 overflow-hidden bg-white rounded-t-2xl border border-gray-100 border-b-0 shadow-sm mt-4">
           <ChatInterface chart={profile.chart} dashas={profile.dashas} />
         </div>
       </div>
     </div>
-    </ProtectedRoute>
   );
 }
