@@ -1,11 +1,22 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-function ResetPasswordContent() {
+function LoadingScreen() {
+  return (
+    <main className="min-h-screen bg-white flex items-center justify-center px-6">
+      <div className="text-center">
+        <div className="text-3xl mb-4">✦</div>
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    </main>
+  );
+}
+
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -199,15 +210,8 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={(
-      <main className="min-h-screen bg-white flex items-center justify-center px-6">
-        <div className="text-center">
-          <div className="text-3xl mb-4">✦</div>
-          <p className="text-gray-500">Loading...</p>
-        </div>
-      </main>
-    )}>
-      <ResetPasswordContent />
+    <Suspense fallback={<LoadingScreen />}>
+      <ResetPasswordForm />
     </Suspense>
   );
 }
