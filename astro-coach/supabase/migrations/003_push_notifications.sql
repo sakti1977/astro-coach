@@ -2,7 +2,14 @@
 -- notifications on. Writes go through server-side API routes using the
 -- service-role key (same pattern as user_profiles sync), so RLS here is
 -- defense-in-depth rather than the primary access-control path.
-CREATE TABLE IF NOT EXISTS push_subscriptions (
+--
+-- DROP + CREATE (rather than IF NOT EXISTS) so this migration is safe to
+-- re-run after a partial failure — this table carries no data worth
+-- preserving across a re-run (it's just device push-subscription pointers,
+-- trivially re-populated the next time each browser re-subscribes).
+DROP TABLE IF EXISTS push_subscriptions CASCADE;
+
+CREATE TABLE push_subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   endpoint TEXT NOT NULL UNIQUE,
