@@ -26,19 +26,26 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(
 
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 
+-- DROP + CREATE (rather than bare CREATE POLICY) so this migration is safe
+-- to re-run after a partial failure, matching the IF NOT EXISTS/OR REPLACE
+-- idempotency of the rest of this file.
+DROP POLICY IF EXISTS "Users can view their own push subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can view their own push subscriptions"
   ON push_subscriptions FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own push subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can insert their own push subscriptions"
   ON push_subscriptions FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own push subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can update their own push subscriptions"
   ON push_subscriptions FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own push subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can delete their own push subscriptions"
   ON push_subscriptions FOR DELETE
   USING (auth.uid() = user_id);
