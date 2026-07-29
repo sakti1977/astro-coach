@@ -325,7 +325,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
       // Update phase + exchange count in profile (localStorage)
       // Hard fallback: force recommending at exchange 8 if extraction hasn't fired
       const newPhase: CoachingPhase =
-        shouldTransitionToRecommending || currentExchangeCount >= 8 ? "recommending" : phase;
+        shouldTransitionToRecommending || currentExchangeCount >= 6 ? "recommending" : phase;
       const current = getProfile();
       saveProfile({
         ...current,
@@ -482,7 +482,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
         extractAndSave(capturedInput, accumulated, nextExchangeCount);
       } else {
         // Short exchange — update count and check hard cap without calling Claude
-        const newPhase: CoachingPhase = nextExchangeCount >= 8 ? "recommending" : phase;
+        const newPhase: CoachingPhase = nextExchangeCount >= 6 ? "recommending" : phase;
         const current = getProfile();
         saveProfile({
           ...current,
@@ -607,7 +607,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+              className={`max-w-[85%] rounded-2xl px-4 py-3 text-base leading-relaxed ${
                 msg.role === "user"
                   ? "bg-indigo-600 text-white rounded-br-sm"
                   : "bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm"
@@ -623,7 +623,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
                 </span>
               ) : msg.role === "assistant" ? (
                 <>
-                  <div className="chat-markdown text-sm leading-relaxed">
+                  <div className="chat-markdown text-base leading-relaxed">
                     <ReactMarkdown>{msg.displayContent ?? msg.content}</ReactMarkdown>
                   </div>
                   <button
@@ -669,7 +669,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
             placeholder={phase === "recommending" ? "Ask for recommendations..." : "Tell me about yourself..."}
             disabled={streaming}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
           />
           <button
             onClick={send}

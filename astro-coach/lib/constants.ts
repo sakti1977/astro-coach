@@ -26,8 +26,11 @@ export const OBS_CAP = 30;
 export const OBS_SUMMARISE_EVERY = 20;
 
 // ── Extraction heuristic (TOKEN-05) ───────────────────────────────────────────
-/** Skip observation extraction if user message is shorter than this (chars). */
-export const EXTRACT_MIN_USER_CHARS = 30;
+/** Skip observation extraction if user message is shorter than this (chars).
+ * Kept low deliberately — short factual replies ("60-70k per month", "1.5 cr")
+ * are exactly the high-signal disclosures that should count toward moving
+ * into recommendations; a higher threshold was silently skipping them. */
+export const EXTRACT_MIN_USER_CHARS = 10;
 /** Skip observation extraction if assistant reply is shorter than this (chars). */
 export const EXTRACT_MIN_ASST_CHARS = 50;
 

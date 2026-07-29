@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getApiAccessContext } from "@/lib/api-auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
+  const access = await getApiAccessContext(req);
+  if (access instanceof NextResponse) return access;
+
+  if (!(await checkRateLimit(access.rateLimitKey))) {
+    return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
+  }
+
   const q = req.nextUrl.searchParams.get("q");
   if (!q || q.trim().length < 2) {
     return NextResponse.json({ results: [] });
