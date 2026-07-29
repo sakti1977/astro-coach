@@ -44,7 +44,12 @@ def _window(period, notes: dict) -> dict | None:
     if item is None:
         return None
     data = _jsonable(item)
-    data["note"] = notes.get(data.get("name", ""), "")
+    # kaalavidya sometimes suffixes the name with an ordinal, e.g.
+    # "Durmuhurta (4/15)" for one of several Durmuhurta windows in a day —
+    # match on the part before that suffix so the note lookup doesn't
+    # silently miss.
+    base_name = data.get("name", "").split(" (")[0]
+    data["note"] = notes.get(base_name, "")
     return data
 
 

@@ -9,6 +9,8 @@ python-service/__pycache__/
 python-service/*.pyc
 python-service/.venv/
 python-service/venv/
+python-service/.pytest_cache/
+python-service/.pylibs/
 
 # OS
 .DS_Store
