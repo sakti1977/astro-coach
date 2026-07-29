@@ -75,3 +75,16 @@ export async function checkEphemerisHealth(): Promise<boolean> {
     return false;
   }
 }
+
+// Ephemeris errors can contain internal infra details (service URL, start
+// commands). Those are useful in local dev but must never reach a
+// production client — log the full detail server-side and return a generic
+// message instead.
+export function ephemerisClientErrorMessage(err: unknown, fallback: string): string {
+  const detail = err instanceof Error ? err.message : String(err);
+  console.error(`[ephemeris] ${detail}`);
+  if (process.env.NODE_ENV !== "production") {
+    return detail;
+  }
+  return fallback;
+}

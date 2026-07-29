@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiAccessContext } from "@/lib/api-auth";
-import { fetchTransits } from "@/lib/ephemeris";
+import { fetchTransits, ephemerisClientErrorMessage } from "@/lib/ephemeris";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const data = await fetchTransits({ natal_asc_sign_num, natal_moon_sign_num, tz_str });
     return NextResponse.json(data);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Transit fetch failed";
+    const msg = ephemerisClientErrorMessage(err, "Transit fetch failed. Please try again shortly.");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

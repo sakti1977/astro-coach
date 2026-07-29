@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiAccessContext } from "@/lib/api-auth";
-import { fetchChart, fetchDashas, checkEphemerisHealth } from "@/lib/ephemeris";
+import { fetchChart, fetchDashas, checkEphemerisHealth, ephemerisClientErrorMessage } from "@/lib/ephemeris";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -28,8 +28,9 @@ export async function POST(req: NextRequest) {
     // Fast health check before attempting full calculation
     const healthy = await checkEphemerisHealth();
     if (!healthy) {
+      const devHint = "Ephemeris service is not running. Open a terminal and run:\n\ncd python-service && uvicorn main:app --port 8000";
       return NextResponse.json({
-        error: "Ephemeris service is not running. Open a terminal and run:\n\ncd python-service && uvicorn main:app --port 8000",
+        error: process.env.NODE_ENV !== "production" ? devHint : "Chart calculation is temporarily unavailable. Please try again shortly.",
       }, { status: 503 });
     }
 
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ chart, dashas });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Chart calculation failed";
+    const msg = ephemerisClientErrorMessage(err, "Chart calculation failed. Please try again shortly.");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
