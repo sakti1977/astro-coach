@@ -7,6 +7,7 @@ import NavBar from "@/components/NavBar";
 import { getProfile, updateProfile, clearProfile, archiveProfile, type UserProfile } from "@/lib/profile";
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
+import NotificationSettings from "@/components/NotificationSettings";
 
 const ALL_TIMEZONES = [
   "Asia/Kolkata", "Asia/Karachi", "Asia/Dhaka", "Asia/Colombo",
@@ -363,6 +364,8 @@ export default function ProfilePage() {
             <button onClick={() => manualSync("pull")} disabled={isSyncing || !session} className="text-sm bg-white border border-gray-200 px-4 py-2 rounded-lg disabled:opacity-50">Pull from cloud</button>
           </div>
         </div>
+
+        <NotificationSettings />
 
         {/* Data Management */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6">
