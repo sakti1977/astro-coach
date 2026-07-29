@@ -53,6 +53,11 @@ export interface TransitRequest {
   tz_str?: string;
 }
 
+export interface MuhurtaRequest {
+  year: number; month: number; day: number;
+  lat: number; lng: number; tz_str: string; city?: string;
+}
+
 export async function fetchChart(req: ChartRequest) {
   return post("/calculate", req);
 }
@@ -63,6 +68,10 @@ export async function fetchDashas(req: DashaRequest) {
 
 export async function fetchTransits(req: TransitRequest) {
   return post("/transits", req);
+}
+
+export async function fetchMuhurta(req: MuhurtaRequest) {
+  return post("/muhurta", req);
 }
 
 export async function checkEphemerisHealth(): Promise<boolean> {

@@ -14,5 +14,6 @@ export const config = {
     "/habits/:path*",
     "/transits/:path*",
     "/validate/:path*",
+    "/muhurta/:path*",
   ],
 }

@@ -10,6 +10,7 @@ from typing import Optional
 from chart import calculate_chart
 from dasha import calculate_dashas
 from transits import calculate_transits
+from muhurta import calculate_muhurta
 
 app = FastAPI(title="Astro Coach Ephemeris Service")
 
@@ -68,6 +69,16 @@ class TransitRequest(BaseModel):
     natal_moon_sign_num: Optional[int] = None
 
 
+class MuhurtaRequest(BaseModel):
+    year: int
+    month: int
+    day: int
+    lat: float
+    lng: float
+    tz_str: str
+    city: str = ""
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -97,5 +108,13 @@ def dasha(req: DashaRequest):
 def transits(req: TransitRequest):
     try:
         return calculate_transits(req.natal_asc_sign_num, req.tz_str, req.natal_moon_sign_num)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/muhurta", dependencies=[Depends(_verify_secret)])
+def muhurta(req: MuhurtaRequest):
+    try:
+        return calculate_muhurta(req.year, req.month, req.day, req.lat, req.lng, req.tz_str, req.city)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

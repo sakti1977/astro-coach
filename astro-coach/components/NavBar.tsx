@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/chart",    label: "Chart",    icon: "⬡" },
   { href: "/dasha",    label: "Dasha",    icon: "◉" },
   { href: "/transits", label: "Transits", icon: "⊕" },
+  { href: "/muhurta",  label: "Muhurta",  icon: "◐" },
   { href: "/validate", label: "Validate", icon: "◎" },
   { href: "/coach",    label: "Guidance", icon: "✦" },
   { href: "/habits",   label: "Sadhana",  icon: "◈" },
