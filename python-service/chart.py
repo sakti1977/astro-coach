@@ -6,6 +6,8 @@ from datetime import datetime, date
 import math
 
 from yogas import detect_yogas
+from doshas import detect_doshas
+from remedies import attach_remedies
 
 HOUSE_MAP = {
     "First_House": 1, "Second_House": 2, "Third_House": 3,
@@ -55,6 +57,30 @@ def _varga_sign(abs_pos: float, varga: int) -> int:
     return (start + pada) % 12
 
 
+def _trimshamsha_sign(abs_pos: float) -> int:
+    """D30 (Trimshamsha) sign — classically read for misfortune, hardship, and
+    the nature of difficulties a person faces. Unlike the even-division vargas
+    (D9/D10/D7), Parashari Trimshamsha maps unequal degree-bands within each
+    sign directly to five planetary rulers (Mars/Saturn/Jupiter/Mercury/Venus),
+    with the band order reversed for odd vs even signs."""
+    sign_num = int(abs_pos / 30) % 12
+    deg = abs_pos % 30
+    is_odd_sign = sign_num % 2 == 0  # sign_num is 0-indexed; Aries(0) is classically "odd"
+
+    if is_odd_sign:
+        if deg < 5:  return 0   # Mars -> Aries
+        if deg < 10: return 10  # Saturn -> Aquarius
+        if deg < 18: return 8   # Jupiter -> Sagittarius
+        if deg < 25: return 2   # Mercury -> Gemini
+        return 6                # Venus -> Libra
+    else:
+        if deg < 5:  return 1   # Venus -> Taurus
+        if deg < 12: return 5   # Mercury -> Virgo
+        if deg < 20: return 11  # Jupiter -> Pisces
+        if deg < 25: return 9   # Saturn -> Capricorn
+        return 7                # Mars -> Scorpio
+
+
 def _nakshatra(abs_pos: float) -> dict:
     nak_size = 360 / 27
     idx = int(abs_pos / nak_size) % 27
@@ -76,6 +102,7 @@ def _planet_data(p, subject) -> dict:
         "d9_sign_num":  _varga_sign(p.abs_pos, 9),
         "d10_sign_num": _varga_sign(p.abs_pos, 10),
         "d7_sign_num":  _varga_sign(p.abs_pos, 7),
+        "d30_sign_num": _trimshamsha_sign(p.abs_pos),
     }
 
 
@@ -107,6 +134,12 @@ def calculate_chart(
     asc = s.first_house
     moon_nak = _nakshatra(s.moon.abs_pos)
 
+    # Remedies always include both `traditional` (mantra/gemstone/dana) and
+    # `behavioral` fields — the coaching layer decides which to surface based
+    # on the user's own preference, rather than recomputing the chart per toggle.
+    yogas = attach_remedies(detect_yogas(planets, asc.sign_num), include_traditional=True)
+    doshas = attach_remedies(detect_doshas(planets, asc.sign_num), include_traditional=True)
+
     return {
         "ascendant": {
             "sign": asc.sign,
@@ -116,10 +149,12 @@ def calculate_chart(
             "d9_sign_num":  _varga_sign(asc.abs_pos, 9),
             "d10_sign_num": _varga_sign(asc.abs_pos, 10),
             "d7_sign_num":  _varga_sign(asc.abs_pos, 7),
+            "d30_sign_num": _trimshamsha_sign(asc.abs_pos),
         },
         "planets": planets,
         "moon_nakshatra": moon_nak,
-        "yogas": detect_yogas(planets, asc.sign_num),
+        "yogas": yogas,
+        "doshas": doshas,
         "birth_data": {
             "name": name, "year": year, "month": month, "day": day,
             "hour": hour, "minute": minute, "lat": lat, "lng": lng, "tz_str": tz_str,

@@ -39,9 +39,9 @@ export default function CoachPage() {
               <span className="text-white text-base">✦</span>
             </div>
             <div>
-              <h1 className="text-base font-bold text-gray-900">Your Vedic Coach</h1>
+              <h1 className="text-base font-bold text-gray-900">Your Jyotish Guidance</h1>
               <p className="text-[11px] text-gray-400 leading-none mt-0.5">
-                Grounded in your natal chart · Powered by Claude
+                Remedy and practice, grounded in your natal chart
               </p>
             </div>
           </div>

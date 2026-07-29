@@ -597,7 +597,7 @@ function SignInForm() {
 
         {/* Privacy note */}
         <p className="text-center text-xs text-gray-400 mt-6">
-          🔒 Your data is encrypted and stored securely
+          🔒 Signing in syncs your chart across devices, in an access-controlled database scoped to your account only
         </p>
       </div>
     </main>

@@ -4,11 +4,51 @@ import { CHAT_HISTORY_MAX, MAX_ARCHIVES } from "@/lib/constants";
 
 const PROFILE_KEY = "astro_coach_profile";
 
+/** A single concrete remedy tied to one planet — deterministic, computed by the
+ * ephemeris service from remedies.py's table, never improvised per-conversation.
+ * `behavioral` is always present; the traditional fields are present whenever
+ * the service was asked to include them (currently: always — the coaching
+ * layer decides which fields to surface based on the user's own preference). */
+export interface Remedy {
+  planet: string;
+  behavioral: string;
+  deity?: string;
+  mantra?: string;
+  gemstone?: string;
+  dana?: string;
+  vrata_day?: string;
+}
+
 export interface Yoga {
   name: string;
   planets: string[];
   description: string;
   strength: "strong" | "moderate" | "challenging";
+  remedies?: Remedy[];
+}
+
+/** A classical affliction (Manglik, Kaal Sarp, Pitru Dosha) detected in the
+ * natal chart — kept distinct from Yoga because doshas are specifically what
+ * remedial coaching targets. */
+export interface Dosha {
+  name: string;
+  planets: string[];
+  houses_involved: string[];
+  description: string;
+  strength: "moderate" | "challenging";
+  remedies?: Remedy[];
+}
+
+/** Sade Sati — transit-dependent, so it lives on CachedTransits rather than
+ * the natal chart's static doshas list. */
+export interface SadeSati {
+  name: "Sade Sati";
+  phase: "first" | "peak" | "final";
+  house_from_natal_moon: number;
+  planets: string[];
+  strength: "moderate" | "challenging";
+  description: string;
+  remedies?: Remedy[];
 }
 
 export interface PlanetData {
@@ -22,6 +62,7 @@ export interface PlanetData {
   d9_sign_num?: number;
   d10_sign_num?: number;
   d7_sign_num?: number;
+  d30_sign_num?: number;
 }
 
 // Minimal interface used by chart grid components — satisfied by NatalChart and varga charts
@@ -34,10 +75,11 @@ export interface ChartDisplay {
 }
 
 export interface NatalChart extends ChartDisplay {
-  ascendant: { sign: string; sign_num: number; degree: number; abs_pos: number; d9_sign_num?: number; d10_sign_num?: number; d7_sign_num?: number };
+  ascendant: { sign: string; sign_num: number; degree: number; abs_pos: number; d9_sign_num?: number; d10_sign_num?: number; d7_sign_num?: number; d30_sign_num?: number };
   planets: Record<string, PlanetData>;
   moon_nakshatra: { num: number; name: string; pada: number; lord: string };
   yogas?: Yoga[];
+  doshas?: Dosha[];
 }
 
 export interface DashaData {
@@ -84,7 +126,12 @@ export interface Habit {
 
 export interface ChatMessage {
   role: "user" | "assistant";
+  /** Canonical English text — always what's sent to Claude and stored/synced,
+   * regardless of the user's chosen coaching language. */
   content: string;
+  /** Localized text for display only (Sarvam-translated), when preferredLanguage
+   * isn't English. Falls back to `content` when absent. */
+  displayContent?: string;
   timestamp: string;
 }
 
@@ -106,6 +153,9 @@ export interface CachedTransits {
       house: number; retrograde: boolean; house_from_natal_lagna: number;
     }>;
     calculated_at: string;
+    /** Computed server-side (single source of truth) — null when Saturn isn't
+     * currently in a Sade Sati house from natal Moon. */
+    sade_sati?: SadeSati | null;
   };
   cachedAt: string; // ISO timestamp of when we stored this
   tzStr?: string;
@@ -133,6 +183,9 @@ export interface UserProfile {
     phase: CoachingPhase;
     exchangeCount: number;
     includeReligiousSolutions: boolean;
+    /** Sarvam BCP-47 language code (e.g. "hi-IN"). "en-IN" means English —
+     * no translation layer is invoked. */
+    preferredLanguage: string;
   };
   /** PERF-03: cached planetary transits with a 2-hour TTL. */
   cachedTransits?: CachedTransits;
@@ -156,7 +209,12 @@ const DEFAULT_PROFILE: UserProfile = {
     lastUpdated: new Date().toISOString(),
     phase: "gathering" as CoachingPhase,
     exchangeCount: 0,
-    includeReligiousSolutions: false,
+    // Vedic remedies (mantra/gemstone/dana alongside behavioral practice) are
+    // the default — this app's premise is remedying astrological affliction
+    // through Jyotish itself, not generic self-help with a chart attached.
+    // Users who prefer behavioral-only guidance can turn this off in Coach.
+    includeReligiousSolutions: true,
+    preferredLanguage: "en-IN",
   },
 };
 

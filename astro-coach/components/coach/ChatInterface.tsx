@@ -7,6 +7,7 @@ import { addChatMessage, buildCoachingContext, getProfile, saveProfile } from "@
 import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 import { buildTransitContext } from "@/lib/astrology/prompts";
+import { SARVAM_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "@/lib/languages";
 import {
   CHAT_HISTORY_DISPLAY,
   CHAT_WINDOW_API,
@@ -16,6 +17,18 @@ import {
   EXTRACT_MIN_ASST_CHARS,
   TRANSIT_TTL_MS,
 } from "@/lib/constants";
+
+async function translateViaApi(text: string, sourceLanguageCode: string, targetLanguageCode: string): Promise<string> {
+  if (!text.trim() || sourceLanguageCode === targetLanguageCode) return text;
+  const res = await fetch("/api/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, sourceLanguageCode, targetLanguageCode }),
+  });
+  if (!res.ok) throw new Error(`Translation failed (${res.status})`);
+  const { translatedText } = await res.json();
+  return translatedText as string;
+}
 
 interface Props {
   chart: NatalChart;
@@ -29,13 +42,34 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [phase, setPhase] = useState<CoachingPhase>(profile.coaching.phase ?? "gathering");
   const [exchangeCount, setExchangeCount] = useState(profile.coaching.exchangeCount ?? 0);
   const [includeReligiousSolutions, setIncludeReligiousSolutions] = useState(
-    profile.coaching.includeReligiousSolutions ?? false
+    profile.coaching.includeReligiousSolutions ?? true
+  );
+  const [preferredLanguage, setPreferredLanguage] = useState(
+    profile.coaching.preferredLanguage ?? DEFAULT_LANGUAGE_CODE
   );
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [transitContext, setTransitContext] = useState<string>("");
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [loadingAudioIndex, setLoadingAudioIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const audioQueueRef = useRef<string[]>([]);
+
+  function changeLanguage(code: string) {
+    setPreferredLanguage(code);
+    const current = getProfile();
+    saveProfile({
+      ...current,
+      coaching: { ...current.coaching, preferredLanguage: code },
+    });
+  }
 
   // Load observations from IndexedDB on mount
   useEffect(() => {
@@ -51,7 +85,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
       const tzStr = p.birthData?.timezone ?? "UTC";
 
       if (cached && cached.tzStr === tzStr && Date.now() - new Date(cached.cachedAt).getTime() < TRANSIT_TTL_MS) {
-        setTransitContext(buildTransitContext(cached.data, natalMoonSign));
+        setTransitContext(buildTransitContext(cached.data));
         return;
       }
 
@@ -59,14 +93,18 @@ export default function ChatInterface({ chart, dashas }: Props) {
         const res = await fetch("/api/transits", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ natal_asc_sign_num: chart.ascendant.sign_num, tz_str: tzStr }),
+          body: JSON.stringify({
+            natal_asc_sign_num: chart.ascendant.sign_num,
+            natal_moon_sign_num: natalMoonSign,
+            tz_str: tzStr,
+          }),
         });
         if (!res.ok) return;
         const data: CachedTransits["data"] = await res.json();
         const fresh: CachedTransits = { data, cachedAt: new Date().toISOString(), tzStr };
         const current = getProfile();
         saveProfile({ ...current, cachedTransits: fresh });
-        setTransitContext(buildTransitContext(data, natalMoonSign));
+        setTransitContext(buildTransitContext(data));
       } catch {
         // Non-critical — coaching works without transit context
       }
@@ -109,6 +147,113 @@ export default function ChatInterface({ chart, dashas }: Props) {
       },
     });
     setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
+  async function toggleRecording() {
+    setVoiceError("");
+
+    if (recording) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+        setTranscribing(true);
+        try {
+          const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
+          const form = new FormData();
+          form.append("audio", blob, "recording.webm");
+          form.append("languageCode", preferredLanguage === DEFAULT_LANGUAGE_CODE ? "unknown" : preferredLanguage);
+
+          const res = await fetch("/api/speech-to-text", { method: "POST", body: form });
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.error ?? "Could not transcribe audio");
+          }
+          const { transcript } = await res.json();
+          if (transcript?.trim()) {
+            setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+          }
+        } catch (e: unknown) {
+          setVoiceError(e instanceof Error ? e.message : "Voice input failed");
+        } finally {
+          setTranscribing(false);
+          setTimeout(() => inputRef.current?.focus(), 50);
+        }
+      };
+
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setRecording(true);
+    } catch {
+      setVoiceError("Microphone access denied or unavailable");
+    }
+  }
+
+  function stopPlayback() {
+    audioPlayerRef.current?.pause();
+    audioQueueRef.current = [];
+    setPlayingIndex(null);
+  }
+
+  function playNextClip(index: number) {
+    const next = audioQueueRef.current.shift();
+    if (!next) {
+      setPlayingIndex(null);
+      return;
+    }
+    if (!audioPlayerRef.current) audioPlayerRef.current = new Audio();
+    const player = audioPlayerRef.current;
+    player.src = `data:audio/mp3;base64,${next}`;
+    player.onended = () => playNextClip(index);
+    player.play().catch(() => setPlayingIndex(null));
+  }
+
+  async function toggleListen(index: number, text: string) {
+    setVoiceError("");
+
+    if (playingIndex === index) {
+      stopPlayback();
+      return;
+    }
+    stopPlayback();
+    setLoadingAudioIndex(index);
+    try {
+      const res = await fetch("/api/text-to-speech", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, targetLanguageCode: preferredLanguage }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Could not generate audio");
+      }
+      const { audioClips } = (await res.json()) as { audioClips: string[] };
+      if (!audioClips?.length) throw new Error("No audio returned");
+      audioQueueRef.current = audioClips.slice(1);
+      setPlayingIndex(index);
+      if (!audioPlayerRef.current) audioPlayerRef.current = new Audio();
+      const player = audioPlayerRef.current;
+      player.src = `data:audio/mp3;base64,${audioClips[0]}`;
+      player.onended = () => playNextClip(index);
+      await player.play();
+    } catch (e: unknown) {
+      setVoiceError(e instanceof Error ? e.message : "Voice output failed");
+      setPlayingIndex(null);
+    } finally {
+      setLoadingAudioIndex(null);
+    }
   }
 
   /** PERF-01: compress all stored observations into a compact summary set. */
@@ -201,18 +346,32 @@ export default function ChatInterface({ chart, dashas }: Props) {
 
   async function send() {
     if (!input.trim() || streaming) return;
+    const rawInput = input.trim();
+    const isNonEnglish = preferredLanguage !== DEFAULT_LANGUAGE_CODE;
 
+    // Optimistic bubble shows the user's own words immediately; `content`
+    // (the canonical English text sent to Claude) is filled in just below.
     const userMsg: ChatMessage = {
       role: "user",
-      content: input.trim(),
+      content: rawInput,
+      displayContent: isNonEnglish ? rawInput : undefined,
       timestamp: new Date().toISOString(),
     };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    addChatMessage(userMsg);
-    const capturedInput = input.trim();
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setStreaming(true);
+
+    if (isNonEnglish) {
+      try {
+        userMsg.content = await translateViaApi(rawInput, preferredLanguage, DEFAULT_LANGUAGE_CODE);
+      } catch {
+        // Claude often understands common Indian languages directly — degrade gracefully
+      }
+    }
+
+    const newMessages = [...messages, userMsg];
+    addChatMessage(userMsg);
+    const capturedInput = userMsg.content;
 
     const assistantMsg: ChatMessage = {
       role: "assistant",
@@ -300,6 +459,20 @@ export default function ChatInterface({ chart, dashas }: Props) {
         content: accumulated,
         timestamp: new Date().toISOString(),
       };
+
+      if (isNonEnglish) {
+        try {
+          finalMsg.displayContent = await translateViaApi(accumulated, DEFAULT_LANGUAGE_CODE, preferredLanguage);
+          setMessages((prev) => {
+            const copy = [...prev];
+            copy[copy.length - 1] = { ...copy[copy.length - 1], displayContent: finalMsg.displayContent };
+            return copy;
+          });
+        } catch {
+          // Display falls back to the English reply — non-fatal
+        }
+      }
+
       addChatMessage(finalMsg);
 
       // TOKEN-05: skip extraction for short exchanges — not enough signal
@@ -358,7 +531,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           >
             ↺ New Topic
           </button>
-          {/* Religious solutions toggle */}
+          {/* Vedic remedies toggle */}
           <button
             onClick={toggleReligiousSolutions}
             className={`text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
@@ -368,12 +541,23 @@ export default function ChatInterface({ chart, dashas }: Props) {
             }`}
             title={
               includeReligiousSolutions
-                ? "Religious remedies enabled - Click to disable"
-                : "Religious remedies disabled - Click to enable"
+                ? "Vedic remedies (mantra, gemstone, dana) included alongside behavioral practice — click for behavioral-only"
+                : "Behavioral-only mode — click to include traditional Vedic remedies"
             }
           >
-            {includeReligiousSolutions ? "🕉 Religious" : "⚛ Behavioral"}
+            {includeReligiousSolutions ? "🕉 Vedic Remedies" : "⚛ Behavioral Only"}
           </button>
+          {/* Language selector */}
+          <select
+            value={preferredLanguage}
+            onChange={(e) => changeLanguage(e.target.value)}
+            title="Coaching language — your messages and the coach's replies are translated"
+            className="text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 focus:outline-none"
+          >
+            {SARVAM_LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>{l.label}</option>
+            ))}
+          </select>
           {observations.length > 0 && (
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -438,11 +622,22 @@ export default function ChatInterface({ chart, dashas }: Props) {
                   <span className="text-xs">Thinking…</span>
                 </span>
               ) : msg.role === "assistant" ? (
-                <div className="chat-markdown text-sm leading-relaxed">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
-                </div>
+                <>
+                  <div className="chat-markdown text-sm leading-relaxed">
+                    <ReactMarkdown>{msg.displayContent ?? msg.content}</ReactMarkdown>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleListen(i, msg.displayContent ?? msg.content)}
+                    disabled={loadingAudioIndex === i}
+                    className="mt-2 text-xs text-indigo-500 hover:text-indigo-700 disabled:opacity-50 inline-flex items-center gap-1"
+                    title="Hear this reply spoken aloud"
+                  >
+                    {loadingAudioIndex === i ? "⟳ Loading…" : playingIndex === i ? "⏸ Stop" : "🔊 Listen"}
+                  </button>
+                </>
               ) : (
-                <p className="whitespace-pre-wrap">{msg.content}</p>
+                <p className="whitespace-pre-wrap">{msg.displayContent ?? msg.content}</p>
               )}
             </div>
           </div>
@@ -453,6 +648,19 @@ export default function ChatInterface({ chart, dashas }: Props) {
       {/* Input */}
       <div className="p-4 border-t border-gray-100">
         <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={toggleRecording}
+            disabled={streaming || transcribing}
+            title={recording ? "Stop recording" : "Speak your message"}
+            className={`rounded-xl px-3 py-2.5 text-sm font-medium border transition-colors disabled:opacity-50 ${
+              recording
+                ? "bg-red-50 border-red-200 text-red-600 animate-pulse"
+                : "border-gray-200 text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            {transcribing ? "⟳" : recording ? "⏺" : "🎤"}
+          </button>
           <input
             ref={inputRef}
             type="text"
@@ -471,6 +679,12 @@ export default function ChatInterface({ chart, dashas }: Props) {
             {streaming ? "..." : "Send"}
           </button>
         </div>
+        {voiceError && (
+          <p className="text-xs text-red-500 text-center mt-1.5">{voiceError}</p>
+        )}
+        <p className="text-[10px] text-gray-300 text-center mt-2">
+          Jyotish guidance for reflection and remedial practice — not a substitute for professional medical, mental health, legal, or financial advice.
+        </p>
       </div>
     </div>
   );

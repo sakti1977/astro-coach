@@ -401,12 +401,12 @@ export default function HomePage() {
             <span>✦</span> Vedic Jyotish · Swiss Ephemeris Precision
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
-            Your Personal<br />Vedic Astrology Coach
+            Your Personal<br />Jyotish Remedy Guide
           </h1>
           <p className="text-gray-500 leading-relaxed max-w-lg mx-auto text-base">
             Built on Jyotish — the ancient Indian science of light. Your chart calculated with
-            Swiss Ephemeris precision, validated against your real life, and translated into
-            practical guidance.
+            Swiss Ephemeris precision, validated against your real life, and worked through with
+            mantra, practice, and dharma.
           </p>
         </div>
       </div>
@@ -417,7 +417,7 @@ export default function HomePage() {
           {[
             { icon: "⬡", label: "Accurate Chart", desc: "Swiss Ephemeris + Lahiri ayanamsha", color: "bg-blue-50 text-blue-600" },
             { icon: "◎", label: "Life Validated", desc: "Yes/no questions calibrate accuracy", color: "bg-violet-50 text-violet-600" },
-            { icon: "✦", label: "AI Coached", desc: "Behavioral guidance, not superstition", color: "bg-indigo-50 text-indigo-600" },
+            { icon: "✦", label: "Remedy & Sadhana", desc: "Mantra, gemstone, and dana matched to your chart", color: "bg-indigo-50 text-indigo-600" },
           ].map((f) => (
             <div key={f.label} className="border border-gray-100 rounded-2xl p-5 text-center hover:shadow-md hover:border-gray-200 transition-all">
               <div className={`w-10 h-10 ${f.color} rounded-xl flex items-center justify-center mx-auto mb-3 text-lg`}>
@@ -468,7 +468,7 @@ export default function HomePage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => router.push("/chart")} className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">Open Chart</button>
-                <button onClick={() => router.push("/coach")} className="px-4 py-2 text-sm font-medium border border-indigo-200 text-indigo-700 rounded-xl hover:bg-indigo-50">Talk to Coach</button>
+                <button onClick={() => router.push("/coach")} className="px-4 py-2 text-sm font-medium border border-indigo-200 text-indigo-700 rounded-xl hover:bg-indigo-50">Get Guidance</button>
                 <button onClick={() => router.push("/profile")} className="px-4 py-2 text-sm font-medium border border-gray-200 rounded-xl hover:bg-gray-50">Profile &amp; Edit Data</button>
               </div>
             </div>
@@ -478,7 +478,7 @@ export default function HomePage() {
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Recommended next steps</p>
               <div className="flex flex-wrap gap-2 text-sm">
                 <button onClick={() => router.push("/validate")} className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100">Validate chart accuracy</button>
-                <button onClick={() => router.push("/habits")} className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">Generate habits for current dasha</button>
+                <button onClick={() => router.push("/habits")} className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">Generate sadhana for current dasha</button>
                 <button onClick={() => router.push("/dasha")} className="px-3 py-1.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100">Explore your dasha timeline</button>
               </div>
             </div>
@@ -645,7 +645,9 @@ export default function HomePage() {
             </button>
 
             <p className="text-center text-xs text-gray-400">
-              🔒 Data stored locally · Nothing shared except chart calculation
+              {session
+                ? "🔒 Synced to your account · Nothing shared except chart calculation"
+                : "🔒 Data stored locally on this device · Nothing shared except chart calculation · Sign in to sync across devices"}
             </p>
           </form>
         </div>

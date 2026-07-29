@@ -157,9 +157,9 @@ export default function HabitsPage() {
       <NavBar />
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 py-5">
-          <h1 className="text-xl font-bold text-gray-900">Habits & Behavior</h1>
+          <h1 className="text-xl font-bold text-gray-900">Sadhana — Daily Practice</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Grounded in your {dashas?.current_maha} Maha Dasha · {dashas?.current_antar} Antardasha
+            Practices aligned to your {dashas?.current_maha} Maha Dasha · {dashas?.current_antar} Antardasha
           </p>
         </div>
       </div>

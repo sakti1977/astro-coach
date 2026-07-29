@@ -11,8 +11,8 @@ const NAV_ITEMS = [
   { href: "/dasha",    label: "Dasha",    icon: "◉" },
   { href: "/transits", label: "Transits", icon: "⊕" },
   { href: "/validate", label: "Validate", icon: "◎" },
-  { href: "/coach",    label: "Coach",    icon: "✦" },
-  { href: "/habits",   label: "Habits",   icon: "◈" },
+  { href: "/coach",    label: "Guidance", icon: "✦" },
+  { href: "/habits",   label: "Sadhana",  icon: "◈" },
 ];
 
 export default function NavBar() {

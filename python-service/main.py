@@ -1,15 +1,32 @@
 import os
+import hmac
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import date
+from typing import Optional
 
 from chart import calculate_chart
 from dasha import calculate_dashas
 from transits import calculate_transits
 
 app = FastAPI(title="Astro Coach Ephemeris Service")
+
+# SEC-01: shared-secret auth so anyone who learns the deployed URL can't call
+# /calculate, /dasha, /transits directly and bypass the Next.js rate limiter.
+# Set EPHEMERIS_SHARED_SECRET the same in both this service (Railway/Render)
+# and the Next.js app (server-only env var, never NEXT_PUBLIC_*). If unset,
+# auth is skipped — this keeps local dev (`./start.sh`) working with zero
+# extra setup, but MUST be set in any deployment reachable from the internet.
+_SHARED_SECRET = os.getenv("EPHEMERIS_SHARED_SECRET", "")
+
+
+def _verify_secret(x_ephemeris_secret: Optional[str] = Header(default=None)) -> None:
+    if not _SHARED_SECRET:
+        return
+    if not x_ephemeris_secret or not hmac.compare_digest(x_ephemeris_secret, _SHARED_SECRET):
+        raise HTTPException(status_code=401, detail="Invalid or missing service credentials")
 
 # SCALE-03: restrict CORS to known origins instead of wildcard.
 # In Railway → Variables set ALLOWED_ORIGINS to your Vercel domain,
@@ -22,7 +39,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST"],       # only what the service actually uses
-    allow_headers=["Content-Type"],      # only what clients need to send
+    allow_headers=["Content-Type", "X-Ephemeris-Secret"],
 )
 
 
@@ -48,6 +65,7 @@ class DashaRequest(BaseModel):
 class TransitRequest(BaseModel):
     natal_asc_sign_num: int
     tz_str: str = "UTC"
+    natal_moon_sign_num: Optional[int] = None
 
 
 @app.get("/health")
@@ -55,7 +73,7 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/calculate")
+@app.post("/calculate", dependencies=[Depends(_verify_secret)])
 def calculate(req: ChartRequest):
     try:
         return calculate_chart(
@@ -66,7 +84,7 @@ def calculate(req: ChartRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.post("/dasha")
+@app.post("/dasha", dependencies=[Depends(_verify_secret)])
 def dasha(req: DashaRequest):
     try:
         birth = date(req.birth_year, req.birth_month, req.birth_day)
@@ -75,9 +93,9 @@ def dasha(req: DashaRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.post("/transits")
+@app.post("/transits", dependencies=[Depends(_verify_secret)])
 def transits(req: TransitRequest):
     try:
-        return calculate_transits(req.natal_asc_sign_num, req.tz_str)
+        return calculate_transits(req.natal_asc_sign_num, req.tz_str, req.natal_moon_sign_num)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
