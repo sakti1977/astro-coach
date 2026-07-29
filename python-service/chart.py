@@ -131,7 +131,14 @@ def calculate_chart(
         "ketu":    _planet_data(s.true_south_node, s),
     }
 
-    asc = s.first_house
+    # BUGFIX: s.first_house is the whole-sign house-1 CUSP, which by
+    # definition of the whole-sign system sits at exactly 0 degrees of the
+    # rising sign — it is not the true Ascendant/Lagna degree. s.ascendant is
+    # the actual rising point (e.g. Scorpio 9.69 degrees, not Scorpio 0.0
+    # degrees). The sign/sign_num are identical between the two either way,
+    # but degree/abs_pos (and everything derived from abs_pos: the D9/D10/D7/
+    # D30 ascendant vargas) were silently wrong when read from first_house.
+    asc = s.ascendant
     moon_nak = _nakshatra(s.moon.abs_pos)
 
     # Remedies always include both `traditional` (mantra/gemstone/dana) and
