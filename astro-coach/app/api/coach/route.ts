@@ -37,8 +37,9 @@ export async function POST(req: NextRequest) {
     chart,
     dashas,
     todayIso,
-    includeReligiousSolutions ?? false,
-    chart.yogas ?? []
+    includeReligiousSolutions ?? true,
+    chart.yogas ?? [],
+    chart.doshas ?? []
   );
 
   // Block 2 (uncached) — everything that can change mid-session.

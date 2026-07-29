@@ -21,7 +21,8 @@ const DEFAULT_PROFILE = {
     lastUpdated: new Date().toISOString(),
     phase: "gathering",
     exchangeCount: 0,
-    includeReligiousSolutions: false,
+    includeReligiousSolutions: true,
+    preferredLanguage: "en-IN",
   },
 }
 

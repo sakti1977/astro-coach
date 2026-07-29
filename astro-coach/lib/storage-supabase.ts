@@ -3,7 +3,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { UserProfile, CoachingObservation } from "./profile";
 import { getProfile, saveProfile } from "./profile";
-import { supabase } from "./supabase";
 
 // ─── Storage Adapter Interface ────────────────────────────────────────────────
 export interface StorageAdapter {
@@ -74,55 +73,26 @@ class SupabaseStorageAdapter implements StorageAdapter {
   }
 
   // ─── Supabase Sync Methods ────────────────────────────────────────────────
-  async syncToServer(userId: string): Promise<void> {
-    if (!supabase) {
-      console.warn("Supabase not configured. Skipping server sync.");
-      return;
-    }
-
+  // Both methods go through /api/sync rather than talking to Supabase directly
+  // from the browser. The browser's Supabase client is never authenticated
+  // (NextAuth signs in to Supabase server-side, inside authorize()), so any
+  // direct browser -> Supabase call runs as `auth.uid() = NULL` and RLS
+  // rejects it silently. The server route re-derives the user id from the
+  // verified NextAuth session and uses the service-role key there instead.
+  async syncToServer(_userId: string): Promise<void> {
     try {
       const profile = getProfile();
       const observations = await this.getObservations();
 
-      // Upsert user profile
-      const { error: profileError } = await supabase
-        .from("user_profiles")
-        .upsert({
-          user_id: userId,
-          birth_data: profile.birthData as unknown as Record<string, unknown>,
-          chart: profile.chart as unknown as Record<string, unknown>,
-          dashas: profile.dashas as unknown as Record<string, unknown>,
-          validation: profile.validation as unknown as Record<string, unknown>,
-          goals: profile.goals as unknown as Record<string, unknown>,
-          habits: profile.habits as unknown as Record<string, unknown>,
-          chat_history: profile.chatHistory as unknown as Record<string, unknown>,
-          coaching: profile.coaching as unknown as Record<string, unknown>,
-          updated_at: new Date().toISOString(),
-        });
+      const res = await fetch("/api/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile, observations }),
+      });
 
-      if (profileError) throw profileError;
-
-      // Delete existing observations and insert new ones
-      await supabase
-        .from("coaching_observations")
-        .delete()
-        .eq("user_id", userId);
-
-      if (observations.length > 0) {
-        const { error: obsError } = await supabase
-          .from("coaching_observations")
-          .insert(
-            observations.map((obs) => ({
-              user_id: userId,
-              observation_id: obs.id,
-              timestamp: obs.timestamp,
-              text: obs.text,
-              category: obs.category,
-              exchange_index: obs.exchangeIndex,
-            }))
-          );
-
-        if (obsError) throw obsError;
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Sync failed (${res.status})`);
       }
     } catch (error) {
       console.error("Error syncing to server:", error);
@@ -130,23 +100,14 @@ class SupabaseStorageAdapter implements StorageAdapter {
     }
   }
 
-  async syncFromServer(userId: string): Promise<void> {
-    if (!supabase) {
-      console.warn("Supabase not configured. Skipping server sync.");
-      return;
-    }
-
+  async syncFromServer(_userId: string): Promise<void> {
     try {
-      // Fetch user profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (profileError && profileError.code !== "PGRST116") {
-        throw profileError;
+      const res = await fetch("/api/sync", { method: "GET" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Sync failed (${res.status})`);
       }
+      const { profile: profileData, observations: obsData } = await res.json();
 
       if (profileData) {
         const profile: UserProfile = {
@@ -167,21 +128,13 @@ class SupabaseStorageAdapter implements StorageAdapter {
             lastUpdated: new Date().toISOString(),
             phase: "gathering",
             exchangeCount: 0,
-            includeReligiousSolutions: false,
+            includeReligiousSolutions: true,
+            preferredLanguage: "en-IN",
           },
         };
 
         saveProfile(profile);
       }
-
-      // Fetch observations
-      const { data: obsData, error: obsError } = await supabase
-        .from("coaching_observations")
-        .select("*")
-        .eq("user_id", userId)
-        .order("timestamp", { ascending: true });
-
-      if (obsError) throw obsError;
 
       if (obsData && obsData.length > 0) {
         const db = await this.open();

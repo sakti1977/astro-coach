@@ -1,4 +1,5 @@
 const EPHEMERIS_URL = process.env.EPHEMERIS_SERVICE_URL ?? "http://localhost:8000";
+const EPHEMERIS_SHARED_SECRET = process.env.EPHEMERIS_SHARED_SECRET ?? "";
 const TIMEOUT_MS = 20_000; // 20 seconds max per call
 
 function withTimeout(ms: number): AbortSignal {
@@ -10,7 +11,10 @@ async function post(path: string, body: unknown) {
   try {
     res = await fetch(`${EPHEMERIS_URL}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(EPHEMERIS_SHARED_SECRET ? { "X-Ephemeris-Secret": EPHEMERIS_SHARED_SECRET } : {}),
+      },
       body: JSON.stringify(body),
       signal: withTimeout(TIMEOUT_MS),
     });
@@ -45,6 +49,7 @@ export interface DashaRequest {
 
 export interface TransitRequest {
   natal_asc_sign_num: number;
+  natal_moon_sign_num?: number;
   tz_str?: string;
 }
 

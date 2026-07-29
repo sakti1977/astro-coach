@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
-import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
+import { getProfile, updateProfile, type UserProfile, type SadeSati } from "@/lib/profile";
 import { TRANSIT_TTL_MS } from "@/lib/constants";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 
@@ -20,6 +20,7 @@ interface TransitPlanet {
 interface TransitData {
   planets: Record<string, TransitPlanet>;
   calculated_at: string;
+  sade_sati?: SadeSati | null;
 }
 
 // Brief interpretive keywords for transit house positions
@@ -70,17 +71,21 @@ export default function TransitsPage() {
       }
     }
 
-    fetchTransits(p.chart.ascendant.sign_num, tzStr);
+    fetchTransits(p.chart.ascendant.sign_num, p.chart.planets.moon?.sign_num, tzStr);
   }, [router]);
 
-  async function fetchTransits(natalAscSignNum: number, tzStr: string) {
+  async function fetchTransits(natalAscSignNum: number, natalMoonSignNum: number | undefined, tzStr: string) {
     setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/transits", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ natal_asc_sign_num: natalAscSignNum, tz_str: tzStr }),
+        body: JSON.stringify({
+          natal_asc_sign_num: natalAscSignNum,
+          natal_moon_sign_num: natalMoonSignNum,
+          tz_str: tzStr,
+        }),
       });
       const data = await res.json() as TransitData;
       if (!res.ok) throw new Error((data as unknown as { error?: string }).error ?? "Transit fetch failed");
@@ -124,7 +129,7 @@ export default function TransitsPage() {
             )}
           </div>
           <button
-            onClick={() => fetchTransits(profile.chart!.ascendant.sign_num, profile.birthData?.timezone ?? "UTC")}
+            onClick={() => fetchTransits(profile.chart!.ascendant.sign_num, profile.chart!.planets.moon?.sign_num, profile.birthData?.timezone ?? "UTC")}
             disabled={loading}
             className="text-xs text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 disabled:opacity-40 transition-colors font-medium"
           >
@@ -144,6 +149,20 @@ export default function TransitsPage() {
           <div className="text-center py-20">
             <p className="text-3xl animate-pulse mb-3">◉</p>
             <p className="text-gray-400 text-sm">Calculating planetary positions…</p>
+          </div>
+        )}
+
+        {transits?.sade_sati && (
+          <div className="mb-6 border border-amber-200 bg-amber-50 rounded-2xl p-5">
+            <p className="text-sm font-semibold text-amber-900">
+              ⚠ Sade Sati — {transits.sade_sati.phase} phase
+            </p>
+            <p className="text-sm text-amber-800 mt-1.5 leading-relaxed">{transits.sade_sati.description}</p>
+            {transits.sade_sati.remedies?.[0] && (
+              <p className="text-xs text-amber-700 mt-3 leading-relaxed">
+                <span className="font-medium">Practice:</span> {transits.sade_sati.remedies[0].behavioral}
+              </p>
+            )}
           </div>
         )}
 

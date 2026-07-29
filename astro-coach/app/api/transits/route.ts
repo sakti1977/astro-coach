@@ -12,11 +12,11 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { natal_asc_sign_num, tz_str } = await req.json();
+    const { natal_asc_sign_num, natal_moon_sign_num, tz_str } = await req.json();
     if (natal_asc_sign_num == null) {
       return NextResponse.json({ error: "natal_asc_sign_num required" }, { status: 400 });
     }
-    const data = await fetchTransits({ natal_asc_sign_num, tz_str });
+    const data = await fetchTransits({ natal_asc_sign_num, natal_moon_sign_num, tz_str });
     return NextResponse.json(data);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Transit fetch failed";
