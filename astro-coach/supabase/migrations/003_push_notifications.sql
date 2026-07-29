@@ -2,7 +2,14 @@
 -- notifications on. Writes go through server-side API routes using the
 -- service-role key (same pattern as user_profiles sync), so RLS here is
 -- defense-in-depth rather than the primary access-control path.
-CREATE TABLE IF NOT EXISTS push_subscriptions (
+--
+-- DROP + CREATE (rather than IF NOT EXISTS) so this migration is safe to
+-- re-run after a partial failure — this table carries no data worth
+-- preserving across a re-run (it's just device push-subscription pointers,
+-- trivially re-populated the next time each browser re-subscribes).
+DROP TABLE IF EXISTS push_subscriptions CASCADE;
+
+CREATE TABLE push_subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   endpoint TEXT NOT NULL UNIQUE,
@@ -26,19 +33,26 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(
 
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 
+-- DROP + CREATE (rather than bare CREATE POLICY) so this migration is safe
+-- to re-run after a partial failure, matching the IF NOT EXISTS/OR REPLACE
+-- idempotency of the rest of this file.
+DROP POLICY IF EXISTS "Users can view their own push subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can view their own push subscriptions"
   ON push_subscriptions FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own push subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can insert their own push subscriptions"
   ON push_subscriptions FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own push subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can update their own push subscriptions"
   ON push_subscriptions FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own push subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can delete their own push subscriptions"
   ON push_subscriptions FOR DELETE
   USING (auth.uid() = user_id);
