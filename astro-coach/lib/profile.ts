@@ -137,6 +137,11 @@ export interface ChatMessage {
 
 export type CoachingPhase = "gathering" | "recommending";
 
+/** "jyotish": traditional Jyotish vocabulary throughout. "skeptic": the same
+ * chart/analysis/remedies, translated into plain psychological/behavioral
+ * language — see SPEC.md §3. */
+export type CoachTonePreference = "jyotish" | "skeptic";
+
 export interface CoachingObservation {
   id: string;
   timestamp: string;
@@ -188,6 +193,12 @@ export interface UserProfile {
      * full plan now"; after, it means "answer follow-ups only — don't restate
      * the plan or ask a new question." Resets to false on New Topic. */
     planDelivered: boolean;
+    /** "jyotish" (default): traditional Jyotish vocabulary throughout
+     * (karma/dharma/guna/upaya). "skeptic": the SAME chart, chain-analysis,
+     * and deterministic remedy table, translated into plain psychological/
+     * behavioral language for a user who doesn't want mystical framing to
+     * get value — see SPEC.md §3. Only the voice layer changes. */
+    tonePreference: CoachTonePreference;
     /** Sarvam BCP-47 language code (e.g. "hi-IN"). "en-IN" means English —
      * no translation layer is invoked. */
     preferredLanguage: string;
@@ -215,6 +226,7 @@ const DEFAULT_PROFILE: UserProfile = {
     phase: "gathering" as CoachingPhase,
     exchangeCount: 0,
     planDelivered: false,
+    tonePreference: "jyotish" as const,
     // Vedic remedies (mantra/gemstone/dana alongside behavioral practice) are
     // the default — this app's premise is remedying astrological affliction
     // through Jyotish itself, not generic self-help with a chart attached.

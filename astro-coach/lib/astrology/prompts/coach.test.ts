@@ -1,5 +1,25 @@
 import { describe, it, expect } from "vitest";
-import { buildCoachDynamicBlock } from "./coach";
+import { buildCoachDynamicBlock, buildCoachSystemPrompt } from "./coach";
+import type { NatalChart, DashaData } from "@/lib/profile";
+
+const CHART: NatalChart = {
+  ascendant: { sign: "Leo", sign_num: 4, degree: 12.5, abs_pos: 132.5 },
+  planets: {
+    sun: { sign: "Leo", sign_num: 4, house: 1, degree: 10.0, abs_pos: 130.0, retrograde: false, nakshatra: { num: 10, name: "Magha", pada: 1, lord: "Ketu" } },
+    moon: { sign: "Cancer", sign_num: 3, house: 12, degree: 5.0, abs_pos: 95.0, retrograde: false, nakshatra: { num: 7, name: "Pushya", pada: 1, lord: "Saturn" } },
+  },
+  moon_nakshatra: { num: 7, name: "Pushya", pada: 1, lord: "Saturn" },
+};
+
+const DASHAS: DashaData = {
+  mahadashas: [
+    { lord: "Saturn", years: 19, balance_years: 19, start: "2020-01-01", end: "2039-01-01", antardashas: [] },
+  ],
+  current_maha: "Saturn",
+  current_antar: "Saturn",
+  current_maha_end: "2039-01-01",
+  current_antar_end: "2027-01-01",
+};
 
 // Regression coverage for the "endless questions, never concludes" fix:
 // gathering must stay short, the first recommending turn must be a single
@@ -59,5 +79,37 @@ describe("buildCoachDynamicBlock", () => {
     expect(block).toContain("Get promoted, Save more");
     expect(block).toContain("D9 Navamsa Ascendant");
     expect(block).toContain("CURRENT TRANSITS");
+  });
+});
+
+// SPEC.md §3 — skeptic-friendly voice. Same chart data, same chain-analysis
+// method, same deterministic remedy table; only the vocabulary layer differs.
+describe("buildCoachSystemPrompt tonePreference", () => {
+  it("defaults to the traditional Jyotish persona when tonePreference is omitted", () => {
+    const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z");
+    expect(prompt).toContain("You are a Jyotish practitioner");
+    expect(prompt).not.toContain("VOICE OVERRIDE");
+  });
+
+  it("uses the plain-language persona and voice override in skeptic mode", () => {
+    const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z", true, [], [], "skeptic");
+    expect(prompt).not.toContain("You are a Jyotish practitioner");
+    expect(prompt).toContain("precise behavioral coach");
+    expect(prompt).toContain("VOICE OVERRIDE");
+  });
+
+  it("keeps the same chain-analysis method and chart grounding regardless of tone", () => {
+    const jyotish = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z", true, [], [], "jyotish");
+    const skeptic = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z", true, [], [], "skeptic");
+    for (const prompt of [jyotish, skeptic]) {
+      expect(prompt).toContain("DEEP CHART SYNTHESIS — MANDATORY METHOD");
+      expect(prompt).toContain("Ascendant (Lagna): Leo");
+      expect(prompt).toContain("Never invent a remedy");
+    }
+  });
+
+  it("skeptic mode still instructs the model to use the same deterministic remedy data, not skip it", () => {
+    const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z", true, [], [], "skeptic");
+    expect(prompt).toContain("do not skip or weaken the analysis itself");
   });
 });

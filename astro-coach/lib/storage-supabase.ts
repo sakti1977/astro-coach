@@ -129,6 +129,7 @@ class SupabaseStorageAdapter implements StorageAdapter {
             phase: "gathering",
             exchangeCount: 0,
             planDelivered: false,
+            tonePreference: "jyotish",
             includeReligiousSolutions: true,
             preferredLanguage: "en-IN",
           },

@@ -52,6 +52,13 @@ export default function NavBar() {
         {/* User menu */}
         {session && (
           <div className="flex items-center gap-2.5 ml-3 flex-shrink-0">
+            <Link
+              href="/trust"
+              className="hidden sm:inline text-xs text-gray-400 hover:text-gray-700 transition-colors"
+              title="How we calculate your chart, and why we never upsell remedies"
+            >
+              How we work
+            </Link>
             <SyncStatus />
             <Link
               href="/profile"

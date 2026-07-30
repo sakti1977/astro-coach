@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type UserProfile } from "@/lib/profile";
+import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type UserProfile, type CoachTonePreference } from "@/lib/profile";
 import ConfirmResetModal from "@/components/ConfirmResetModal";
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
@@ -69,6 +69,9 @@ export default function HomePage() {
     name: "", date: "", time: "", city: "",
     lat: "", lng: "", timezone: "Asia/Kolkata",
   });
+  // SPEC.md §3 — asked once, at onboarding, for first-time charts only.
+  // Existing users keep whatever they already chose (changeable in Coach).
+  const [tonePreference, setTonePreference] = useState<CoachTonePreference>("jyotish");
 
   // Geocode state
   const [geoResults, setGeoResults] = useState<GeoResult[]>([]);
@@ -235,6 +238,14 @@ export default function HomePage() {
       const lat = parseFloat(form.lat);
       const lng = parseFloat(form.lng);
 
+      // Tone preference is only set from this form on a genuinely first-time
+      // chart — clearProfile() just reset `current` to DEFAULT_PROFILE, so
+      // spreading its coaching object here is safe either way, but we only
+      // override tonePreference/includeReligiousSolutions when this wasn't
+      // an existing user recalculating (their prior choice should stick).
+      const current = getProfile();
+      const isFirstTimeChart = !hasExistingChart;
+
       updateProfile({
         birthData: {
           name: form.name, date: form.date, time: form.time,
@@ -242,6 +253,16 @@ export default function HomePage() {
         },
         chart,
         dashas,
+        ...(isFirstTimeChart && {
+          coaching: {
+            ...current.coaching,
+            tonePreference,
+            // "Never require ritual buy-in for value" (SPEC.md §3) — skeptic-
+            // path users land in behavioral-only by default, not a toggle
+            // they have to discover. Still changeable anytime in Coach.
+            includeReligiousSolutions: tonePreference === "skeptic" ? false : current.coaching.includeReligiousSolutions,
+          },
+        }),
       });
 
       if (session?.user?.id) {
@@ -362,6 +383,8 @@ export default function HomePage() {
             <span className="font-bold text-gray-900 tracking-tight">Astro Coach</span>
           </div>
           <div className="flex items-center gap-3">
+            <button onClick={() => router.push("/trust")}
+              className="text-xs text-gray-400 hover:text-gray-700 hidden sm:inline">How we work</button>
             <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
               serviceStatus === "ok" ? "bg-green-50 border-green-200 text-green-700"
               : serviceStatus === "down" ? "bg-red-50 border-red-200 text-red-700"
@@ -511,6 +534,34 @@ export default function HomePage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {!hasExistingChart && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">How would you like this framed?</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setTonePreference("jyotish")}
+                    className={`text-left border rounded-xl px-4 py-3 transition-colors ${
+                      tonePreference === "jyotish" ? "border-purple-300 bg-purple-50" : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-gray-900">🕉 Traditional Jyotish</p>
+                    <p className="text-xs text-gray-500 mt-1">Karma, dharma, mantra — the full tradition</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTonePreference("skeptic")}
+                    className={`text-left border rounded-xl px-4 py-3 transition-colors ${
+                      tonePreference === "skeptic" ? "border-sky-300 bg-sky-50" : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-gray-900">🎯 Just tell me about myself</p>
+                    <p className="text-xs text-gray-500 mt-1">Same chart, plain language, no belief required</p>
+                  </button>
+                </div>
+                <p className="text-xs text-gray-300 mt-2">You can switch this anytime from the Coach screen.</p>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
               <input

@@ -22,6 +22,7 @@ const DEFAULT_PROFILE = {
     phase: "gathering",
     exchangeCount: 0,
     planDelivered: false,
+    tonePreference: "jyotish",
     includeReligiousSolutions: true,
     preferredLanguage: "en-IN",
   },

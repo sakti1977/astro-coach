@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CachedTransits } from "@/lib/profile";
+import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits } from "@/lib/profile";
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile } from "@/lib/profile";
 import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
@@ -44,6 +45,9 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [planDelivered, setPlanDelivered] = useState(profile.coaching.planDelivered ?? false);
   const [includeReligiousSolutions, setIncludeReligiousSolutions] = useState(
     profile.coaching.includeReligiousSolutions ?? true
+  );
+  const [tonePreference, setTonePreference] = useState<CoachTonePreference>(
+    profile.coaching.tonePreference ?? "jyotish"
   );
   const [preferredLanguage, setPreferredLanguage] = useState(
     profile.coaching.preferredLanguage ?? DEFAULT_LANGUAGE_CODE
@@ -127,6 +131,19 @@ export default function ChatInterface({ chart, dashas }: Props) {
       coaching: {
         ...current.coaching,
         includeReligiousSolutions: newValue,
+      },
+    });
+  }
+
+  function toggleTonePreference() {
+    const newValue: CoachTonePreference = tonePreference === "jyotish" ? "skeptic" : "jyotish";
+    setTonePreference(newValue);
+    const current = getProfile();
+    saveProfile({
+      ...current,
+      coaching: {
+        ...current.coaching,
+        tonePreference: newValue,
       },
     });
   }
@@ -440,6 +457,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           phase: requestPhase,
           planDelivered: requestPlanDelivered,
           includeReligiousSolutions,
+          tonePreference,
           transitContext: transitContext || undefined,
           messages: (() => {
             // Keep up to 20 messages, but the Anthropic API requires the first
@@ -590,6 +608,22 @@ export default function ChatInterface({ chart, dashas }: Props) {
           >
             {includeReligiousSolutions ? "🕉 Vedic Remedies" : "⚛ Behavioral Only"}
           </button>
+          {/* Voice/framing toggle — see SPEC.md §3 */}
+          <button
+            onClick={toggleTonePreference}
+            className={`text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
+              tonePreference === "skeptic"
+                ? "bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100"
+                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+            }`}
+            title={
+              tonePreference === "skeptic"
+                ? "Plain-language mode — same chart and analysis, no mystical framing. Click for traditional Jyotish voice"
+                : "Traditional Jyotish voice — click for plain psychological/behavioral language instead"
+            }
+          >
+            {tonePreference === "skeptic" ? "🎯 Plain Language" : "🕉 Traditional Voice"}
+          </button>
           {/* Language selector */}
           <select
             value={preferredLanguage}
@@ -620,6 +654,9 @@ export default function ChatInterface({ chart, dashas }: Props) {
             </span>
           )}
           <span>Lagna: {SIGN_NAMES[chart.ascendant.sign_num]}</span>
+          <Link href="/trust" className="hover:text-gray-600 underline decoration-dotted underline-offset-2" title="How we calculate your chart, and why we never upsell remedies">
+            How we work
+          </Link>
         </span>
       </div>
 

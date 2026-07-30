@@ -4,7 +4,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { streamCoachResponse } from "@/lib/claude";
 import { buildCoachSystemPrompt, buildCoachDynamicBlock } from "@/lib/astrology/prompts";
 import { safeClientErrorMessage } from "@/lib/safe-error";
-import type { NatalChart, DashaData, ChatMessage, CoachingPhase } from "@/lib/profile";
+import type { NatalChart, DashaData, ChatMessage, CoachingPhase, CoachTonePreference } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
-  const { chart, dashas, goals, profileContext, vargaContext, messages, phase, planDelivered, includeReligiousSolutions, transitContext } =
+  const { chart, dashas, goals, profileContext, vargaContext, messages, phase, planDelivered, includeReligiousSolutions, transitContext, tonePreference } =
     (await req.json()) as {
       chart: NatalChart;
       dashas: DashaData;
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
       planDelivered?: boolean;
       includeReligiousSolutions?: boolean;
       transitContext?: string;
+      tonePreference?: CoachTonePreference;
     };
 
   // Authoritative current date/time — always computed server-side so Claude
@@ -41,7 +42,8 @@ export async function POST(req: NextRequest) {
     todayIso,
     includeReligiousSolutions ?? true,
     chart.yogas ?? [],
-    chart.doshas ?? []
+    chart.doshas ?? [],
+    tonePreference ?? "jyotish"
   );
 
   // Block 2 (uncached) — everything that can change mid-session.
