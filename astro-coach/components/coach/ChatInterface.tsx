@@ -13,8 +13,6 @@ import { SARVAM_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "@/lib/languages";
 import {
   CHAT_HISTORY_DISPLAY,
   CHAT_WINDOW_API,
-  OBS_CAP,
-  OBS_SUMMARISE_EVERY,
   EXTRACT_MIN_USER_CHARS,
   EXTRACT_MIN_ASST_CHARS,
   TRANSIT_TTL_MS,
@@ -277,26 +275,14 @@ export default function ChatInterface({ chart, dashas }: Props) {
     }
   }
 
-  /** PERF-01: compress all stored observations into a compact summary set. */
-  async function compressObservations(allObs: CoachingObservation[], currentExchangeCount: number) {
-    try {
-      const res = await fetch("/api/coach/summarise", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ observations: allObs, exchangeCount: currentExchangeCount }),
-      });
-      if (!res.ok) return;
-      const { summaryObservations } = (await res.json()) as { summaryObservations: CoachingObservation[] };
-      if (!summaryObservations.length) return; // keep originals on empty response
-
-      await storage.clearObservations();
-      for (const o of summaryObservations) await storage.addObservation(o);
-      setObservations(summaryObservations);
-    } catch {
-      // summarisation errors are non-fatal; keep existing observations
-    }
-  }
-
+  /**
+   * Post-turn reflection: hands the exchange to the server-side orchestrator
+   * (app/api/coach/reflect), which coordinates the extraction and (every
+   * OBS_SUMMARISE_EVERY exchanges) summarisation agents and returns the
+   * observation list this client should persist as-is. Replaces the old
+   * client-driven extract-then-fire-and-forget-summarise chain — failures
+   * are now logged instead of silently swallowed (see CODE_REVIEW.md).
+   */
   async function extractAndSave(
     userMessage: string,
     assistantResponse: string,
@@ -305,56 +291,42 @@ export default function ChatInterface({ chart, dashas }: Props) {
     requestPlanDelivered: boolean
   ) {
     try {
-      const res = await fetch("/api/coach/extract", {
+      const res = await fetch("/api/coach/reflect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userMessage, assistantResponse, exchangeCount: currentExchangeCount }),
+        body: JSON.stringify({
+          userMessage,
+          assistantResponse,
+          exchangeCount: currentExchangeCount,
+          existingObservations: observations,
+        }),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.error(`[coach/reflect] request failed with status ${res.status}`);
+        return;
+      }
 
-      const { observations: extracted, shouldTransitionToRecommending } = (await res.json()) as {
-        observations: Array<{ text: string; category: string }>;
+      const result = (await res.json()) as {
+        finalObservations: CoachingObservation[];
         shouldTransitionToRecommending: boolean;
+        degraded: boolean;
+        error?: string;
       };
 
-      // Persist new observations to IndexedDB
-      const newObs: CoachingObservation[] = [];
-      for (const o of extracted) {
-        const obs: CoachingObservation = {
-          id: crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
-          text: o.text,
-          category: o.category as CoachingObservation["category"],
-          exchangeIndex: currentExchangeCount,
-        };
-        await storage.addObservation(obs);
-        newObs.push(obs);
+      if (result.degraded) {
+        console.error(`[coach/reflect] degraded: ${result.error ?? "unknown failure"}`);
       }
 
-      // PERF-01: fetch updated list and apply cap / summarisation
-      const allObs = await storage.getObservations();
-
-      // Hard cap — trim oldest beyond OBS_CAP
-      if (allObs.length > OBS_CAP) {
-        const trimmed = allObs.slice(-OBS_CAP);
-        await storage.clearObservations();
-        for (const o of trimmed) await storage.addObservation(o);
-        setObservations(trimmed);
-      } else if (newObs.length > 0) {
-        setObservations((prev) => [...prev, ...newObs]);
-      }
-
-      // Summarise every OBS_SUMMARISE_EVERY exchanges (fire-and-forget)
-      if (currentExchangeCount > 0 && currentExchangeCount % OBS_SUMMARISE_EVERY === 0) {
-        compressObservations(allObs, currentExchangeCount);
-      }
+      await storage.clearObservations();
+      for (const o of result.finalObservations) await storage.addObservation(o);
+      setObservations(result.finalObservations);
 
       // Update phase + exchange count in profile (localStorage)
       // Hard fallback: force recommending at exchange 3 if extraction hasn't fired.
       // Once a turn has actually run in "recommending" phase, planDelivered flips
       // true — the NEXT turn is a follow-up, not another full plan delivery.
       const newPhase: CoachingPhase =
-        requestPhase === "recommending" || shouldTransitionToRecommending || currentExchangeCount >= 3
+        requestPhase === "recommending" || result.shouldTransitionToRecommending || currentExchangeCount >= 3
           ? "recommending"
           : "gathering";
       const newPlanDelivered = requestPhase === "recommending" ? true : requestPlanDelivered;
@@ -373,8 +345,8 @@ export default function ChatInterface({ chart, dashas }: Props) {
       setPhase(newPhase);
       setPlanDelivered(newPlanDelivered);
       setExchangeCount(currentExchangeCount);
-    } catch {
-      // extraction errors are non-fatal; coaching continues
+    } catch (e: unknown) {
+      console.error(`[coach/reflect] ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 

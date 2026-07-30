@@ -4,7 +4,9 @@ import {
   MAX_TOKENS_COACH,
   MAX_TOKENS_DASHA,
   MAX_TOKENS_HABITS,
+  MAX_TOKENS_EXTRACT,
   MAX_TOKENS_SUMMARISE,
+  MAX_TOKENS_FOUNDATION,
 } from "@/lib/constants";
 
 let _client: Anthropic | null = null;
@@ -87,6 +89,43 @@ export async function* streamCoachResponse(
   }
 }
 
+/**
+ * "Your Foundation" — a generated-once, re-readable personality profile.
+ * Reuses the exact same system prompt as the coaching chat (buildCoachSystemPrompt
+ * — see foundation.ts) rather than a separate prompt, per NON_NEGOTIABLES.md #13
+ * (no second, ungrounded advice pathway). Sonnet, not Haiku: this is a one-time,
+ * higher-scrutiny artifact (people reread and share it), not a real-time chat
+ * reply, so quality matters more than latency here.
+ */
+export async function* streamFoundationProfile(
+  systemPrompt: string,
+  task: string
+): AsyncGenerator<string> {
+  const client = getClient();
+
+  const stream = await client.messages.stream({
+    model: "claude-sonnet-4-6",
+    max_tokens: MAX_TOKENS_FOUNDATION,
+    system: [
+      {
+        type: "text",
+        text: systemPrompt,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [{ role: "user", content: task }],
+  });
+
+  for await (const chunk of stream) {
+    if (
+      chunk.type === "content_block_delta" &&
+      chunk.delta.type === "text_delta"
+    ) {
+      yield chunk.delta.text;
+    }
+  }
+}
+
 export async function generateDashaPrediction(
   prompt: string
 ): Promise<string> {
@@ -110,6 +149,19 @@ export async function generateHabits(prompt: string): Promise<string> {
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: MAX_TOKENS_HABITS,
+    messages: [{ role: "user", content: prompt }],
+  });
+  const block = response.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response type");
+  return block.text;
+}
+
+/** Observation extraction agent — pulls structured observations out of one chat exchange. */
+export async function extractObservations(prompt: string): Promise<string> {
+  const client = getClient();
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: MAX_TOKENS_EXTRACT,
     messages: [{ role: "user", content: prompt }],
   });
   const block = response.content[0];

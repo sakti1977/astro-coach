@@ -1,3 +1,64 @@
+import type { CoachingObservation } from "@/lib/profile";
+
+/**
+ * Handoff contract between the extraction agent and the summarisation agent
+ * (orchestrated in app/api/coach/reflect/route.ts). Parsing goes through
+ * these instead of a bare `as` cast on extractJsonObject's output, so a
+ * malformed/partial model response degrades gracefully field-by-field
+ * rather than corrupting the observation list downstream.
+ */
+export interface ExtractedObservation {
+  text: string;
+  category: CoachingObservation["category"];
+}
+
+export interface ExtractionResult {
+  observations: ExtractedObservation[];
+  shouldTransitionToRecommending: boolean;
+}
+
+export interface SummarisationResult {
+  summaryObservations: ExtractedObservation[];
+}
+
+const VALID_CATEGORIES = new Set<CoachingObservation["category"]>([
+  "behavior",
+  "emotion",
+  "pattern",
+  "goal",
+  "block",
+]);
+
+function isExtractedObservation(value: unknown): value is ExtractedObservation {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.text === "string" &&
+    v.text.trim().length > 0 &&
+    typeof v.category === "string" &&
+    VALID_CATEGORIES.has(v.category as CoachingObservation["category"])
+  );
+}
+
+/** Validate the extraction agent's raw parsed JSON into a trustworthy contract. */
+export function parseExtractionResult(raw: Record<string, unknown>): ExtractionResult {
+  const observations = Array.isArray(raw.observations)
+    ? raw.observations.filter(isExtractedObservation)
+    : [];
+  return {
+    observations,
+    shouldTransitionToRecommending: Boolean(raw.shouldTransitionToRecommending),
+  };
+}
+
+/** Validate the summarisation agent's raw parsed JSON into a trustworthy contract. */
+export function parseSummarisationResult(raw: Record<string, unknown>): SummarisationResult {
+  const summaryObservations = Array.isArray(raw.summaryObservations)
+    ? raw.summaryObservations.filter(isExtractedObservation)
+    : [];
+  return { summaryObservations };
+}
+
 export function buildObservationExtractionPrompt(
   userMessage: string,
   assistantResponse: string,
