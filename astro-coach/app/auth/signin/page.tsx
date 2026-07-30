@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Sparkles, Mail, Smartphone, Lock } from "lucide-react";
 
 // ── Country code list ──────────────────────────────────────────────────────
 const COUNTRY_CODES = [
@@ -40,7 +41,7 @@ function LoadingScreen() {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
       <div className="text-center">
-        <div className="text-3xl mb-4">✦</div>
+        <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
         <p className="text-gray-500">Loading…</p>
       </div>
     </div>
@@ -149,7 +150,7 @@ function EmailAuthForm({
     return (
       <div className="space-y-4">
         <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
-          <div className="text-3xl mb-2">📬</div>
+          <Mail className="w-7 h-7 mb-2 mx-auto text-green-600" />
           <p className="text-sm font-medium text-green-800 mb-1">Check your inbox!</p>
           <p className="text-sm text-green-700">{info}</p>
         </div>
@@ -550,7 +551,7 @@ function SignInForm() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2.5 mb-5">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
-              <span className="text-white text-lg">✦</span>
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-gray-900 text-xl tracking-tight">Astro Coach</span>
           </div>
@@ -578,9 +579,9 @@ function SignInForm() {
               }`}
             >
               {t === "email" ? (
-                <><span>✉️</span> Email</>
+                <><Mail className="w-3.5 h-3.5" /> Email</>
               ) : (
-                <><span>📱</span> Phone OTP</>
+                <><Smartphone className="w-3.5 h-3.5" /> Phone OTP</>
               )}
             </button>
           ))}
@@ -596,8 +597,9 @@ function SignInForm() {
         </div>
 
         {/* Privacy note */}
-        <p className="text-center text-xs text-gray-400 mt-6">
-          🔒 Signing in syncs your chart across devices, in an access-controlled database scoped to your account only
+        <p className="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-1">
+          <Lock className="w-3 h-3 flex-shrink-0" />
+          Signing in syncs your chart across devices, in an access-controlled database scoped to your account only
         </p>
       </div>
     </main>

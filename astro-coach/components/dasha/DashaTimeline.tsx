@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import type { DashaData } from "@/lib/profile";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
 
@@ -168,7 +169,7 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
                     {" · "}{Math.round((new Date(maha.end).getTime() - new Date(maha.start).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years
                   </p>
                 </div>
-                <span className="text-gray-300 text-lg">{isSelected ? "▲" : "▼"}</span>
+                <span className="text-gray-300">{isSelected ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</span>
               </button>
 
               {/* Prediction panel */}
@@ -233,8 +234,8 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
                                     {isCurrentAntar && <span className="ml-1 text-[10px]">● Now</span>}
                                   </span>
                                   {hasPratyantars && (
-                                    <span className={`text-xs ${isCurrentAntar ? "text-white" : "text-gray-400"}`}>
-                                      {isAntarExpanded ? "▲" : "▼"}
+                                    <span className={isCurrentAntar ? "text-white" : "text-gray-400"}>
+                                      {isAntarExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                     </span>
                                   )}
                                 </button>

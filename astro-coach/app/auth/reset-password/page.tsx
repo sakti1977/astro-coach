@@ -4,12 +4,13 @@ import { FormEvent, useEffect, useMemo, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Sparkles } from "lucide-react";
 
 function LoadingScreen() {
   return (
     <main className="min-h-screen bg-white flex items-center justify-center px-6">
       <div className="text-center">
-        <div className="text-3xl mb-4">✦</div>
+        <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
         <p className="text-gray-500">Loading...</p>
       </div>
     </main>
@@ -110,7 +111,7 @@ function ResetPasswordForm() {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center px-6">
         <div className="text-center">
-          <div className="text-3xl mb-4">✦</div>
+          <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
           <p className="text-gray-500">Verifying reset link...</p>
         </div>
       </main>
@@ -123,7 +124,7 @@ function ResetPasswordForm() {
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2.5 mb-4">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
-              <span className="text-white text-lg">✦</span>
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-gray-900 text-xl tracking-tight">Astro Coach</span>
           </div>

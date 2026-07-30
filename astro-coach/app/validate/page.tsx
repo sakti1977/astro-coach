@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 import YesNoQuestion from "@/components/validate/YesNoQuestion";
 import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
+import { Sparkles } from "lucide-react";
 
 interface Question {
   question: string;
@@ -154,7 +155,7 @@ export default function ValidatePage() {
 
         {phase === "loading" && (
           <div className="text-center py-20">
-            <p className="text-4xl mb-4 animate-pulse">✦</p>
+            <Sparkles className="w-10 h-10 mb-4 mx-auto text-indigo-300 animate-pulse" />
             <p className="text-gray-500">Claude is reading your chart...</p>
             <p className="text-xs text-gray-400 mt-2">This takes about 10–15 seconds</p>
           </div>

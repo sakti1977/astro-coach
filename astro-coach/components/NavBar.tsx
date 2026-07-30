@@ -4,16 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
+import { Sparkles, Hexagon, CircleDot, Orbit, Clock, Target, MessageCircle, Sprout } from "lucide-react";
 import SyncStatus from "@/components/SyncStatus";
 
 const NAV_ITEMS = [
-  { href: "/chart",    label: "Chart",    icon: "⬡" },
-  { href: "/dasha",    label: "Dasha",    icon: "◉" },
-  { href: "/transits", label: "Transits", icon: "⊕" },
-  { href: "/muhurta",  label: "Muhurta",  icon: "◐" },
-  { href: "/validate", label: "Validate", icon: "◎" },
-  { href: "/coach",    label: "Guidance", icon: "✦" },
-  { href: "/habits",   label: "Sadhana",  icon: "◈" },
+  { href: "/chart",    label: "Chart",    icon: Hexagon },
+  { href: "/dasha",    label: "Dasha",    icon: CircleDot },
+  { href: "/transits", label: "Transits", icon: Orbit },
+  { href: "/muhurta",  label: "Muhurta",  icon: Clock },
+  { href: "/validate", label: "Validate", icon: Target },
+  { href: "/coach",    label: "Guidance", icon: MessageCircle },
+  { href: "/habits",   label: "Sadhana",  icon: Sprout },
 ];
 
 export default function NavBar() {
@@ -26,7 +27,7 @@ export default function NavBar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 mr-6 flex-shrink-0">
           <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <span className="text-white text-xs">✦</span>
+            <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="font-semibold text-gray-900 text-sm tracking-tight">Astro Coach</span>
         </Link>
@@ -43,7 +44,7 @@ export default function NavBar() {
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
-              <span className="text-xs">{item.icon}</span>
+              <item.icon className="w-3.5 h-3.5" />
               {item.label}
             </Link>
           ))}

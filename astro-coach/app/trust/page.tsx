@@ -1,5 +1,6 @@
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
+import { Hexagon, Compass, LayoutGrid, Orbit, Lock, Sprout, Target } from "lucide-react";
 
 export const metadata = {
   title: "How We Work — Astro Coach",
@@ -29,13 +30,13 @@ export default function TrustPage() {
           </h2>
           <div className="space-y-3">
             {[
-              { icon: "⬡", title: "Swiss Ephemeris (swe)", body: "Planetary longitudes are computed using the Swiss Ephemeris library — the same engine used by professional Jyotish software. It models gravitational interactions to sub-arc-second precision." },
-              { icon: "◎", title: "Lahiri Ayanamsha", body: "Vedic astrology uses a sidereal zodiac. The Lahiri ayanamsha (~24°) is subtracted from tropical positions to align planets with their actual constellations — the Government of India's official standard." },
-              { icon: "✦", title: "Whole-sign houses", body: "Each house spans exactly one sign (30°). The ascendant sign becomes house 1, and houses proceed clockwise — the dominant system in classical Jyotish texts." },
-              { icon: "◑", title: "Vimshottari Dasha, verified to the day", body: "Timing is calculated from the Moon's nakshatra at birth across a 120-year cycle. Every Mahadasha, Antardasha, and Pratyantardasha period is checked at calculation time — each level's sub-periods must sum in days exactly to their parent period, with no gaps. If that check ever fails, we refuse to show you a date rather than show you a wrong one." },
+              { icon: Hexagon, title: "Swiss Ephemeris (swe)", body: "Planetary longitudes are computed using the Swiss Ephemeris library — the same engine used by professional Jyotish software. It models gravitational interactions to sub-arc-second precision." },
+              { icon: Compass, title: "Lahiri Ayanamsha", body: "Vedic astrology uses a sidereal zodiac. The Lahiri ayanamsha (~24°) is subtracted from tropical positions to align planets with their actual constellations — the Government of India's official standard." },
+              { icon: LayoutGrid, title: "Whole-sign houses", body: "Each house spans exactly one sign (30°). The ascendant sign becomes house 1, and houses proceed clockwise — the dominant system in classical Jyotish texts." },
+              { icon: Orbit, title: "Vimshottari Dasha, verified to the day", body: "Timing is calculated from the Moon's nakshatra at birth across a 120-year cycle. Every Mahadasha, Antardasha, and Pratyantardasha period is checked at calculation time — each level's sub-periods must sum in days exactly to their parent period, with no gaps. If that check ever fails, we refuse to show you a date rather than show you a wrong one." },
             ].map((item) => (
               <div key={item.title} className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-3">
-                <span className="text-lg flex-shrink-0">{item.icon}</span>
+                <item.icon className="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" />
                 <div>
                   <p className="font-medium text-gray-800 text-sm">{item.title}</p>
                   <p className="text-xs text-gray-500 mt-1 leading-relaxed">{item.body}</p>
@@ -52,7 +53,7 @@ export default function TrustPage() {
           </h2>
           <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-4">
             <div className="flex gap-3">
-              <span className="text-lg flex-shrink-0">🔒</span>
+              <Lock className="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">One deterministic table, not a sales conversation</p>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
@@ -65,7 +66,7 @@ export default function TrustPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-lg flex-shrink-0">🌱</span>
+              <Sprout className="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">Behavioral practice is never optional</p>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
@@ -77,7 +78,7 @@ export default function TrustPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-lg flex-shrink-0">🎯</span>
+              <Target className="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">Tendencies, never verdicts</p>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">

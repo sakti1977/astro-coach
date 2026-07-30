@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { Sparkles, Hexagon, Target, Orbit, Lock, Check, Loader2, MapPin, ChevronRight, Compass, LayoutGrid, Lightbulb, AlertTriangle } from "lucide-react";
 import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type UserProfile, type CoachTonePreference } from "@/lib/profile";
 import ConfirmResetModal from "@/components/ConfirmResetModal";
 import { storage } from "@/lib/storage-supabase";
@@ -357,7 +358,7 @@ export default function HomePage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="text-3xl mb-4 text-indigo-400">✦</div>
+          <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
           <p className="text-sm text-gray-400">Loading…</p>
         </div>
       </div>
@@ -378,7 +379,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-sm">✦</span>
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-gray-900 tracking-tight">Astro Coach</span>
           </div>
@@ -421,7 +422,7 @@ export default function HomePage() {
       <div className="bg-gradient-to-b from-indigo-50/60 to-white border-b border-indigo-100/50">
         <div className="max-w-2xl mx-auto px-6 py-16 text-center">
           <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-            <span>✦</span> Vedic Jyotish · Swiss Ephemeris Precision
+            <Sparkles className="w-3.5 h-3.5" /> Vedic Jyotish · Swiss Ephemeris Precision
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
             Your Personal<br />Jyotish Remedy Guide
@@ -438,13 +439,13 @@ export default function HomePage() {
         {/* Features */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           {[
-            { icon: "⬡", label: "Accurate Chart", desc: "Swiss Ephemeris + Lahiri ayanamsha", color: "bg-blue-50 text-blue-600" },
-            { icon: "◎", label: "Life Validated", desc: "Yes/no questions calibrate accuracy", color: "bg-violet-50 text-violet-600" },
-            { icon: "✦", label: "Remedy & Sadhana", desc: "Mantra, gemstone, and dana matched to your chart", color: "bg-indigo-50 text-indigo-600" },
+            { icon: Hexagon, label: "Accurate Chart", desc: "Swiss Ephemeris + Lahiri ayanamsha", color: "bg-blue-50 text-blue-600" },
+            { icon: Target, label: "Life Validated", desc: "Yes/no questions calibrate accuracy", color: "bg-violet-50 text-violet-600" },
+            { icon: Sparkles, label: "Remedy & Sadhana", desc: "Mantra, gemstone, and dana matched to your chart", color: "bg-indigo-50 text-indigo-600" },
           ].map((f) => (
             <div key={f.label} className="border border-gray-100 rounded-2xl p-5 text-center hover:shadow-md hover:border-gray-200 transition-all">
-              <div className={`w-10 h-10 ${f.color} rounded-xl flex items-center justify-center mx-auto mb-3 text-lg`}>
-                {f.icon}
+              <div className={`w-10 h-10 ${f.color} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                <f.icon className="w-5 h-5" />
               </div>
               <p className="font-semibold text-gray-900 text-sm">{f.label}</p>
               <p className="text-xs text-gray-400 mt-1">{f.desc}</p>
@@ -610,17 +611,17 @@ export default function HomePage() {
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   {geoLoading ? (
-                    <span className="text-gray-400 text-sm animate-spin inline-block">⟳</span>
+                    <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
                   ) : citySelected ? (
-                    <span className="text-green-500">✓</span>
+                    <Check className="w-4 h-4 text-green-500" />
                   ) : null}
                   <button
                     type="button"
                     onClick={useCurrentLocation}
-                    className="text-[10px] px-2 py-0.5 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 active:bg-gray-100"
+                    className="text-[10px] px-2 py-0.5 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-1"
                     title="Use your device's current location for coordinates"
                   >
-                    📍 Current
+                    <MapPin className="w-2.5 h-2.5" /> Current
                   </button>
                 </div>
                 {showDropdown && geoResults.length > 0 && (
@@ -662,14 +663,14 @@ export default function HomePage() {
             </div>
 
             {!citySelected && form.lat === "" && (
-              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
-                💡 Type your birth city above — coordinates and timezone fill automatically.
+              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700 flex items-center gap-1.5">
+                <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" /> Type your birth city above — coordinates and timezone fill automatically.
               </div>
             )}
 
             {serviceStatus === "down" && (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-                <p className="font-medium mb-1">⚠ Ephemeris service is not running</p>
+                <p className="font-medium mb-1 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> Ephemeris service is not running</p>
                 <p className="text-xs mb-2">The Python calculation service must be running for chart generation.</p>
                 <div className="flex gap-2">
                   <button
@@ -695,10 +696,11 @@ export default function HomePage() {
               {loading ? "Calculating your chart…" : "Calculate My Birth Chart →"}
             </button>
 
-            <p className="text-center text-xs text-gray-400">
+            <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1">
+              <Lock className="w-3 h-3 flex-shrink-0" />
               {session
-                ? "🔒 Synced to your account · Nothing shared except chart calculation"
-                : "🔒 Data stored locally on this device · Nothing shared except chart calculation · Sign in to sync across devices"}
+                ? "Synced to your account · Nothing shared except chart calculation"
+                : "Data stored locally on this device · Nothing shared except chart calculation · Sign in to sync across devices"}
             </p>
           </form>
         </div>
@@ -706,12 +708,12 @@ export default function HomePage() {
         {/* Technical transparency */}
         <details className="mt-12 group">
           <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-600 text-center list-none flex items-center justify-center gap-1 select-none">
-            <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+            <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
             How the chart is calculated
           </summary>
           <div className="mt-4 border border-gray-100 rounded-xl p-5 space-y-3 text-sm text-gray-600">
             <div className="flex gap-3">
-              <span className="text-base flex-shrink-0">⬡</span>
+              <Hexagon className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
               <div>
                 <p className="font-medium text-gray-800">Swiss Ephemeris (swe)</p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -720,7 +722,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-base flex-shrink-0">◎</span>
+              <Compass className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
               <div>
                 <p className="font-medium text-gray-800">Lahiri Ayanamsha</p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -729,7 +731,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-base flex-shrink-0">✦</span>
+              <LayoutGrid className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
               <div>
                 <p className="font-medium text-gray-800">Whole-sign houses</p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -738,7 +740,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <span className="text-base flex-shrink-0">◑</span>
+              <Orbit className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
               <div>
                 <p className="font-medium text-gray-800">Vimshottari Dasha</p>
                 <p className="text-xs text-gray-500 mt-0.5">

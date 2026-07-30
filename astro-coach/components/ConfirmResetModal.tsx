@@ -1,5 +1,7 @@
 "use client";
 
+import { AlertTriangle } from "lucide-react";
+
 interface Props {
   onArchiveAndReplace: () => void;
   onReplaceOnly: () => void;
@@ -16,7 +18,7 @@ export default function ConfirmResetModal({ onArchiveAndReplace, onReplaceOnly, 
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-100">
         {/* Icon */}
         <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mx-auto mb-4">
-          <span className="text-amber-500 text-2xl">⚠</span>
+          <AlertTriangle className="w-6 h-6 text-amber-500" />
         </div>
 
         <h2 className="text-lg font-bold text-gray-900 text-center mb-2">

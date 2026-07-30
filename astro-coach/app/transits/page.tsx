@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import { getProfile, updateProfile, type UserProfile, type SadeSati } from "@/lib/profile";
 import { TRANSIT_TTL_MS } from "@/lib/constants";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
+import { RotateCw, Orbit, AlertTriangle } from "lucide-react";
 
 interface TransitPlanet {
   sign: string;
@@ -131,9 +132,9 @@ export default function TransitsPage() {
           <button
             onClick={() => fetchTransits(profile.chart!.ascendant.sign_num, profile.chart!.planets.moon?.sign_num, profile.birthData?.timezone ?? "UTC")}
             disabled={loading}
-            className="text-xs text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 disabled:opacity-40 transition-colors font-medium"
+            className="inline-flex items-center gap-1 text-xs text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 disabled:opacity-40 transition-colors font-medium"
           >
-            {loading ? "Refreshing…" : "↻ Refresh"}
+            {loading ? "Refreshing…" : <><RotateCw className="w-3 h-3" /> Refresh</>}
           </button>
         </div>
       </div>
@@ -147,15 +148,15 @@ export default function TransitsPage() {
 
         {loading && !transits && (
           <div className="text-center py-20">
-            <p className="text-3xl animate-pulse mb-3">◉</p>
+            <Orbit className="w-9 h-9 mb-3 mx-auto text-indigo-300 animate-pulse" />
             <p className="text-gray-400 text-sm">Calculating planetary positions…</p>
           </div>
         )}
 
         {transits?.sade_sati && (
           <div className="mb-6 border border-amber-200 bg-amber-50 rounded-2xl p-5">
-            <p className="text-sm font-semibold text-amber-900">
-              ⚠ Sade Sati — {transits.sade_sati.phase} phase
+            <p className="text-sm font-semibold text-amber-900 inline-flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4" /> Sade Sati — {transits.sade_sati.phase} phase
             </p>
             <p className="text-sm text-amber-800 mt-1.5 leading-relaxed">{transits.sade_sati.description}</p>
             {transits.sade_sati.remedies?.[0] && (

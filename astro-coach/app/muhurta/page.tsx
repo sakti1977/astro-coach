@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 import { getProfile, type UserProfile } from "@/lib/profile";
+import { Clock } from "lucide-react";
 
 interface PanchangEntry {
   name: string;
@@ -135,7 +136,7 @@ export default function MuhurtaPage() {
 
         {loading && !data && (
           <div className="text-center py-20">
-            <p className="text-3xl animate-pulse mb-3">◎</p>
+            <Clock className="w-9 h-9 mb-3 mx-auto text-indigo-300 animate-pulse" />
             <p className="text-gray-400 text-sm">Calculating panchang…</p>
           </div>
         )}

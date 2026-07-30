@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
+import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square } from "lucide-react";
 import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits } from "@/lib/profile";
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile } from "@/lib/profile";
 import { storage } from "@/lib/storage-supabase";
@@ -575,10 +576,10 @@ export default function ChatInterface({ chart, dashas }: Props) {
           <button
             type="button"
             onClick={startNewTopic}
-            className="text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+            className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
             title="Clear conversation and start a new topic (keeps your chart and profile)"
           >
-            ↺ New Topic
+            <RotateCcw className="w-3 h-3" /> New Topic
           </button>
           {/* Skip discovery, get the plan immediately */}
           {phase === "gathering" && (
@@ -586,10 +587,10 @@ export default function ChatInterface({ chart, dashas }: Props) {
               type="button"
               onClick={() => send("Please give me my complete plan now, based on everything so far.", true)}
               disabled={streaming}
-              className="text-xs px-2 py-0.5 rounded-full font-medium border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 transition-colors disabled:opacity-40"
+              className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 transition-colors disabled:opacity-40"
               title="Skip ahead — get your complete plan now instead of continuing discovery"
             >
-              ⚡ Get My Plan Now
+              <Zap className="w-3 h-3" /> Get My Plan Now
             </button>
           )}
           {/* Vedic remedies toggle */}
@@ -637,7 +638,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           </select>
           {observations.length > 0 && (
             <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
                 phase === "recommending"
                   ? "bg-green-50 text-green-700 border border-green-200"
                   : "bg-amber-50 text-amber-700 border border-amber-200"
@@ -650,7 +651,13 @@ export default function ChatInterface({ chart, dashas }: Props) {
                   : `${observations.length} observations gathered — still learning`
               }
             >
-              {planDelivered ? "✓ Plan delivered" : phase === "recommending" ? "▶ Recommending" : `◎ Gathering (${observations.length})`}
+              {planDelivered ? (
+                <><CheckCircle2 className="w-3 h-3" /> Plan delivered</>
+              ) : phase === "recommending" ? (
+                <><PlayCircle className="w-3 h-3" /> Recommending</>
+              ) : (
+                <><CircleDot className="w-3 h-3" /> Gathering ({observations.length})</>
+              )}
             </span>
           )}
           <span>Lagna: {SIGN_NAMES[chart.ascendant.sign_num]}</span>
@@ -664,7 +671,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-4xl mb-3">✦</p>
+            <Sparkles className="w-9 h-9 mb-3 mx-auto text-indigo-300" />
             <p className="text-gray-500 text-sm max-w-xs mx-auto">
               Your personal Vedic astrology coach is ready. Ask anything about your chart, current period, goals, or life direction.
             </p>
@@ -715,7 +722,13 @@ export default function ChatInterface({ chart, dashas }: Props) {
                     className="mt-2 text-xs text-indigo-500 hover:text-indigo-700 disabled:opacity-50 inline-flex items-center gap-1"
                     title="Hear this reply spoken aloud"
                   >
-                    {loadingAudioIndex === i ? "⟳ Loading…" : playingIndex === i ? "⏸ Stop" : "🔊 Listen"}
+                    {loadingAudioIndex === i ? (
+                      <><Loader2 className="w-3 h-3 animate-spin" /> Loading…</>
+                    ) : playingIndex === i ? (
+                      <><Pause className="w-3 h-3" /> Stop</>
+                    ) : (
+                      <><Volume2 className="w-3 h-3" /> Listen</>
+                    )}
                   </button>
                 </>
               ) : (
@@ -741,7 +754,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
                 : "border-gray-200 text-gray-500 hover:bg-gray-50"
             }`}
           >
-            {transcribing ? "⟳" : recording ? "⏺" : "🎤"}
+            {transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           </button>
           <input
             ref={inputRef}

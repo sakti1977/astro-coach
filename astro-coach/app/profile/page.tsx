@@ -8,6 +8,7 @@ import { getProfile, updateProfile, clearProfile, archiveProfile, type UserProfi
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
 import NotificationSettings from "@/components/NotificationSettings";
+import { Sparkles } from "lucide-react";
 
 const ALL_TIMEZONES = [
   "Asia/Kolkata", "Asia/Karachi", "Asia/Dhaka", "Asia/Colombo",
@@ -206,7 +207,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="text-3xl mb-4 text-indigo-400">✦</div>
+          <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
           <p className="text-sm text-gray-400">Loading profile…</p>
         </div>
       </div>

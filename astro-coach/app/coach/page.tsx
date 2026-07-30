@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 import ChatInterface from "@/components/coach/ChatInterface";
 import { getProfile, type UserProfile } from "@/lib/profile";
+import { Sparkles, Hexagon } from "lucide-react";
 
 export default function CoachPage() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function CoachPage() {
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-sm shadow-indigo-200">
-              <span className="text-white text-base">✦</span>
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
               <h1 className="text-base font-bold text-gray-900">Your Jyotish Guidance</h1>
@@ -49,7 +50,7 @@ export default function CoachPage() {
             onClick={() => router.push("/chart")}
             className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
           >
-            <span>⬡</span> View Chart
+            <Hexagon className="w-3.5 h-3.5" /> View Chart
           </button>
         </div>
       </div>

@@ -7,6 +7,7 @@ import NavBar from "@/components/NavBar";
 import ChartToggle from "@/components/chart/ChartToggle";
 import { getProfile, saveProfile, type UserProfile } from "@/lib/profile";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
+import { Hexagon, Download, Trash2 } from "lucide-react";
 
 // Color palette for houses
 const HOUSE_COLORS: Record<number, string> = {
@@ -87,7 +88,7 @@ export default function ChartPage() {
             </div>
             <div className="text-right flex flex-col items-end gap-1">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold">
-                <span>⬡</span> {SIGN_NAMES[chart.ascendant.sign_num]} Lagna
+                <Hexagon className="w-3.5 h-3.5" /> {SIGN_NAMES[chart.ascendant.sign_num]} Lagna
               </span>
               <Link href="/profile" className="text-xs text-indigo-600 hover:underline">Edit birth data →</Link>
             </div>
@@ -192,17 +193,17 @@ export default function ChartPage() {
             <div className="flex gap-3 pt-1">
               <button
                 onClick={exportProfile}
-                className="flex-1 text-xs text-gray-400 hover:text-gray-700 py-2 border border-gray-100 rounded-xl transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-gray-700 py-2 border border-gray-100 rounded-xl transition-colors"
                 title="Download your chart data as a JSON backup"
               >
-                ↓ Backup data
+                <Download className="w-3.5 h-3.5" /> Backup data
               </button>
               <button
                 onClick={resetChart}
-                className="flex-1 text-xs text-gray-400 hover:text-red-600 py-2 border border-gray-100 rounded-xl transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-red-600 py-2 border border-gray-100 rounded-xl transition-colors"
                 title="Clear chart and start over"
               >
-                ✕ Reset chart
+                <Trash2 className="w-3.5 h-3.5" /> Reset chart
               </button>
             </div>
           </div>

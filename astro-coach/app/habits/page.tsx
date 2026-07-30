@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import BehaviorRadar from "@/components/habits/BehaviorRadar";
 import { getProfile, updateProfile, type UserProfile, type Habit, type Goal } from "@/lib/profile";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
+import { X, Check, Flame, Sprout } from "lucide-react";
 
 const GOAL_CATEGORIES = ["career", "health", "relationship", "finance", "spiritual", "creative"] as const;
 
@@ -229,7 +230,7 @@ export default function HabitsPage() {
                       </span>
                       <p className="text-sm text-gray-700 flex-1">{g.description}</p>
                       <button onClick={() => removeGoal(g.id)}
-                        className="text-gray-300 hover:text-gray-500 text-xs flex-shrink-0">✕</button>
+                        className="text-gray-300 hover:text-gray-500 flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
                 </div>
@@ -263,7 +264,7 @@ export default function HabitsPage() {
 
             {habits.length === 0 ? (
               <div className="border border-dashed border-gray-200 rounded-xl p-12 text-center">
-                <p className="text-4xl mb-3">◈</p>
+                <Sprout className="w-9 h-9 mb-3 mx-auto text-indigo-300" />
                 <p className="text-gray-500 text-sm mb-4">
                   No habits yet. Generate personalized habits based on your {dashas?.current_maha} Dasha and goals.
                 </p>
@@ -290,7 +291,7 @@ export default function HabitsPage() {
                             done ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-300 hover:border-indigo-500"
                           }`}
                         >
-                          {done && <span className="text-xs">✓</span>}
+                          {done && <Check className="w-3.5 h-3.5" />}
                         </button>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -306,7 +307,9 @@ export default function HabitsPage() {
                           </div>
                           <p className="text-xs text-gray-400 mt-1">{h.why}</p>
                           {h.streak > 0 && (
-                            <p className="text-xs text-gray-500 mt-1">🔥 {h.streak}-day streak</p>
+                            <p className="text-xs text-gray-500 mt-1 inline-flex items-center gap-1">
+                              <Flame className="w-3 h-3 text-orange-500" /> {h.streak}-day streak
+                            </p>
                           )}
                         </div>
                         <span className="text-xs text-gray-400 flex-shrink-0 mt-1 capitalize">{h.category}</span>
