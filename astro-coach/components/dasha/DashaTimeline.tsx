@@ -65,7 +65,6 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
         body: JSON.stringify({
           chart: profile.chart,
           dashaLord: maha.lord,
-          antarLord: maha.antardashas?.[0]?.lord ?? "",
           years: maha.balance_years,
         }),
       });

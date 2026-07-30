@@ -16,14 +16,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { chart, dashaLord, antarLord, years } = await req.json() as {
+    const { chart, dashaLord, years } = await req.json() as {
       chart: NatalChart;
       dashaLord: string;
-      antarLord: string;
       years: number;
     };
 
-    const prompt = buildDashaPredictionPrompt(chart, dashaLord, antarLord, years, new Date().toISOString());
+    const prompt = buildDashaPredictionPrompt(chart, dashaLord, years, new Date().toISOString());
     const raw = await generateDashaPrediction(prompt);
 
     // prepareJsonString strips any stray text/markdown, sanitises control chars,
@@ -59,22 +58,29 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // Validate that all required fields are present and non-empty
+    // Validate that all required fields are present and non-empty. These
+    // fallbacks only fire if Claude's response didn't parse — they used to
+    // be 100% generic strings, which combined with NON_NEGOTIABLES.md #10's
+    // grounding concern, meant a parse failure for two different users could
+    // render identical placeholder text. Interpolating dashaLord/house keeps
+    // even the degraded path chart-specific rather than fully generic.
+    const dashaLordPlanet = chart.planets[dashaLord.toLowerCase() as keyof typeof chart.planets];
+    const houseNote = dashaLordPlanet ? ` (House ${dashaLordPlanet.house})` : "";
     const pred = prediction as Record<string, unknown>;
     if (!pred.themes || !Array.isArray(pred.themes) || pred.themes.length === 0) {
-      pred.themes = ["Personal growth and self-discovery", "Life lessons and experiences", "New opportunities"];
+      pred.themes = [`${dashaLord}'s themes${houseNote}`, "Personal growth and self-discovery", "New opportunities"];
     }
     if (!pred.cultivate || !Array.isArray(pred.cultivate) || pred.cultivate.length === 0) {
-      pred.cultivate = ["Patience and perseverance", "Self-awareness", "Balance and moderation"];
+      pred.cultivate = [`Qualities ${dashaLord} rewards this period`, "Self-awareness", "Balance and moderation"];
     }
     if (!pred.challenges || !Array.isArray(pred.challenges) || pred.challenges.length === 0) {
-      pred.challenges = ["Unexpected changes", "Need for adaptability", "Emotional resilience"];
+      pred.challenges = [`Tests typical of ${dashaLord}${houseNote}`, "Need for adaptability", "Emotional resilience"];
     }
     if (!pred.actions || !Array.isArray(pred.actions) || pred.actions.length === 0) {
-      pred.actions = ["Reflect on life goals", "Build strong foundations", "Develop new skills"];
+      pred.actions = [`Work consciously with ${dashaLord}'s placement`, "Build strong foundations", "Develop new skills"];
     }
     if (!pred.summary || typeof pred.summary !== "string") {
-      pred.summary = "A period of growth and transformation guided by planetary influences.";
+      pred.summary = `A ${dashaLord} Maha Dasha${houseNote} — a period shaped by this planet's placement in your chart.`;
     }
 
     return NextResponse.json({ prediction });
