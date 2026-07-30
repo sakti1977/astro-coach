@@ -25,7 +25,13 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
   const [predictionError, setPredictionError] = useState("");
 
   const today = new Date().toISOString().split("T")[0];
-  const birthYear = new Date(birthDate).getFullYear();
+  // Parsed manually (not `new Date(birthDate).getFullYear()`) to avoid the
+  // UTC-midnight-vs-local-getter shift that can misread a Jan 1/Dec 31 birth
+  // date as the wrong year in some timezones. Note: the `pct()` calculation
+  // below is safe as-is even with `new Date(dateStr)` — every date string it
+  // touches (including birthDate) gets the same UTC-parse shift, which
+  // cancels out in the subtraction.
+  const birthYear = Number(birthDate.split("-")[0]);
   const totalSpan = new Date(dashas.mahadashas[dashas.mahadashas.length - 1].end).getTime()
     - new Date(birthDate).getTime();
 

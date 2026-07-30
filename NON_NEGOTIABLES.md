@@ -78,6 +78,28 @@ other real secret values are committed to the repo or shipped into the client bu
 **Check:** `git diff` for literal secret-shaped values; confirm any new server-only env var is not
 read from a `"use client"` file or `NEXT_PUBLIC_*`-prefixed.
 
+### 9. Dasha/age calculation correctness
+**Rule:** Every dasha level (Mahadasha/Antardasha/Pratyantardasha) must be internally consistent —
+each level's sub-periods must sum in days EXACTLY to their parent's own span, and periods at each
+level must be contiguous (no gaps/overlaps). Age-from-birthdate calculations must never parse a
+date-only string via `new Date(dateString)` — parse "YYYY-MM-DD" manually into integer components.
+**Why:** `python-service/dasha.py` shipped a silent bug where `date + timedelta(days=x.y)` drops
+the fractional-day remainder on every addition (`date` has no sub-day resolution); with 729 chained
+additions across all three levels, this compounded into multi-day drift, reported by a user as
+"pratyantardasha not accurate." Separately, `new Date("YYYY-MM-DD")` parses as UTC midnight, and
+reading it back with local getters (`getMonth()`/`getDate()`) silently shifts the date in timezones
+behind UTC, causing an intermittent wrong age. Fixed by accumulating dasha dates in `datetime` (not
+`date`) throughout and only formatting to a date string at output time, and by parsing birth-date
+strings via `.split("-").map(Number)` instead of `new Date(...)`. Inaccurate timing or age directly
+undermines trust in a coaching app whose entire premise is precise chart-grounded guidance.
+**Check:** Run `pytest python-service/test_dasha.py` — `TestDayLevelPrecision` asserts exact
+day-sums at every level for multiple birth-moon positions including nakshatra-boundary edge cases,
+and `TestConsistencyGuardCatchesRealBreakage` proves the runtime guard (`_verify_consistency` in
+`dasha.py`, called inside `calculate_dashas` itself) actually fails loudly on broken input rather
+than silently serving wrong dates. Also run `npm test -- validator.test.ts` for the age-boundary
+cases. For any new code that parses a birth-date string, grep for `new Date(` applied to a
+date-only string variable rather than a fresh `new Date()`.
+
 ---
 
 ## Pending additions

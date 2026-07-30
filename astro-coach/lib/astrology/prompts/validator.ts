@@ -39,10 +39,18 @@ export function buildValidatorUserPrompt(chart: NatalChart, birthDate?: string):
 
   let ageContext = "";
   if (birthDate) {
-    const birth = new Date(birthDate);
+    // HARNESS-01: parse the "YYYY-MM-DD" string manually rather than via
+    // `new Date(birthDate)`. Date-only ISO strings are parsed as UTC
+    // midnight; reading them back with local getters (getMonth/getDate) then
+    // silently shifts the date by a day in any timezone behind UTC,
+    // producing an intermittent off-by-one age — exactly the kind of bug
+    // that undermines trust in age-gated question generation.
+    const [birthYear, birthMonth, birthDay] = birthDate.split("-").map(Number);
     const today = new Date();
-    const ageYears = today.getFullYear() - birth.getFullYear() -
-      (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
+    const hasHadBirthdayThisYear =
+      today.getMonth() + 1 > birthMonth ||
+      (today.getMonth() + 1 === birthMonth && today.getDate() >= birthDay);
+    const ageYears = today.getFullYear() - birthYear - (hasHadBirthdayThisYear ? 0 : 1);
     ageContext = `\nPerson's current age: ${ageYears} years old (born ${birthDate})`;
   }
 
