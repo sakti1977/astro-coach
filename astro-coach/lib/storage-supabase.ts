@@ -128,6 +128,7 @@ class SupabaseStorageAdapter implements StorageAdapter {
             lastUpdated: new Date().toISOString(),
             phase: "gathering",
             exchangeCount: 0,
+            planDelivered: false,
             includeReligiousSolutions: true,
             preferredLanguage: "en-IN",
           },

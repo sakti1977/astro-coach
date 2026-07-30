@@ -51,7 +51,7 @@ export default function ChartPage() {
       birthData: null, chart: null, dashas: null,
       validation: { questions: [], accuracyScore: 0, confirmedThemes: [], isValidated: false },
       goals: [], habits: [], chatHistory: [],
-      coaching: { behaviorProfile: [], lastUpdated: new Date().toISOString(), phase: "gathering", exchangeCount: 0, includeReligiousSolutions: true, preferredLanguage: "en-IN" },
+      coaching: { behaviorProfile: [], lastUpdated: new Date().toISOString(), phase: "gathering", exchangeCount: 0, planDelivered: false, includeReligiousSolutions: true, preferredLanguage: "en-IN" },
     });
     router.push("/");
   }

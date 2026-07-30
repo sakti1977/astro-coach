@@ -41,6 +41,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [observations, setObservations] = useState<CoachingObservation[]>([]);
   const [phase, setPhase] = useState<CoachingPhase>(profile.coaching.phase ?? "gathering");
   const [exchangeCount, setExchangeCount] = useState(profile.coaching.exchangeCount ?? 0);
+  const [planDelivered, setPlanDelivered] = useState(profile.coaching.planDelivered ?? false);
   const [includeReligiousSolutions, setIncludeReligiousSolutions] = useState(
     profile.coaching.includeReligiousSolutions ?? true
   );
@@ -135,6 +136,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
     setMessages([]);
     setPhase("gathering");
     setExchangeCount(0);
+    setPlanDelivered(false);
     const current = getProfile();
     saveProfile({
       ...current,
@@ -143,6 +145,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
         ...current.coaching,
         phase: "gathering",
         exchangeCount: 0,
+        planDelivered: false,
         lastUpdated: new Date().toISOString(),
       },
     });
@@ -276,7 +279,13 @@ export default function ChatInterface({ chart, dashas }: Props) {
     }
   }
 
-  async function extractAndSave(userMessage: string, assistantResponse: string, currentExchangeCount: number) {
+  async function extractAndSave(
+    userMessage: string,
+    assistantResponse: string,
+    currentExchangeCount: number,
+    requestPhase: CoachingPhase,
+    requestPlanDelivered: boolean
+  ) {
     try {
       const res = await fetch("/api/coach/extract", {
         method: "POST",
@@ -323,9 +332,14 @@ export default function ChatInterface({ chart, dashas }: Props) {
       }
 
       // Update phase + exchange count in profile (localStorage)
-      // Hard fallback: force recommending at exchange 8 if extraction hasn't fired
+      // Hard fallback: force recommending at exchange 3 if extraction hasn't fired.
+      // Once a turn has actually run in "recommending" phase, planDelivered flips
+      // true — the NEXT turn is a follow-up, not another full plan delivery.
       const newPhase: CoachingPhase =
-        shouldTransitionToRecommending || currentExchangeCount >= 6 ? "recommending" : phase;
+        requestPhase === "recommending" || shouldTransitionToRecommending || currentExchangeCount >= 3
+          ? "recommending"
+          : "gathering";
+      const newPlanDelivered = requestPhase === "recommending" ? true : requestPlanDelivered;
       const current = getProfile();
       saveProfile({
         ...current,
@@ -333,20 +347,25 @@ export default function ChatInterface({ chart, dashas }: Props) {
           ...current.coaching,
           exchangeCount: currentExchangeCount,
           phase: newPhase,
+          planDelivered: newPlanDelivered,
           lastUpdated: new Date().toISOString(),
         },
       });
 
       setPhase(newPhase);
+      setPlanDelivered(newPlanDelivered);
       setExchangeCount(currentExchangeCount);
     } catch {
       // extraction errors are non-fatal; coaching continues
     }
   }
 
-  async function send() {
-    if (!input.trim() || streaming) return;
-    const rawInput = input.trim();
+  // overrideText/forcePlanNow power the "Get my plan now" button — it bypasses
+  // the textbox entirely and forces this one turn to be treated as the (still
+  // ungrounded-in-nothing-new) plan-delivery turn, skipping remaining discovery.
+  async function send(overrideText?: string, forcePlanNow?: boolean) {
+    const rawInput = (overrideText ?? input).trim();
+    if (!rawInput || streaming) return;
     const isNonEnglish = preferredLanguage !== DEFAULT_LANGUAGE_CODE;
 
     // Optimistic bubble shows the user's own words immediately; `content`
@@ -358,8 +377,15 @@ export default function ChatInterface({ chart, dashas }: Props) {
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMsg]);
-    setInput("");
+    if (overrideText === undefined) setInput("");
     setStreaming(true);
+
+    // Phase/planDelivered actually used for THIS request — read explicitly
+    // rather than from the `phase`/`planDelivered` state closures, since a
+    // forced call can happen in the same tick as the state update that set
+    // them, before this component has re-rendered with the new values.
+    const requestPhase: CoachingPhase = forcePlanNow ? "recommending" : phase;
+    const requestPlanDelivered = forcePlanNow ? false : planDelivered;
 
     if (isNonEnglish) {
       try {
@@ -411,7 +437,8 @@ export default function ChatInterface({ chart, dashas }: Props) {
           // Observations injected here — survive regardless of message window truncation
           profileContext: buildCoachingContext(currentProfile, observations),
           vargaContext,
-          phase,
+          phase: requestPhase,
+          planDelivered: requestPlanDelivered,
           includeReligiousSolutions,
           transitContext: transitContext || undefined,
           messages: (() => {
@@ -479,10 +506,12 @@ export default function ChatInterface({ chart, dashas }: Props) {
       // But still count the exchange and apply the hard phase cap
       const nextExchangeCount = exchangeCount + 1;
       if (capturedInput.length >= EXTRACT_MIN_USER_CHARS && accumulated.length >= EXTRACT_MIN_ASST_CHARS) {
-        extractAndSave(capturedInput, accumulated, nextExchangeCount);
+        extractAndSave(capturedInput, accumulated, nextExchangeCount, requestPhase, requestPlanDelivered);
       } else {
         // Short exchange — update count and check hard cap without calling Claude
-        const newPhase: CoachingPhase = nextExchangeCount >= 6 ? "recommending" : phase;
+        const newPhase: CoachingPhase =
+          requestPhase === "recommending" || nextExchangeCount >= 3 ? "recommending" : "gathering";
+        const newPlanDelivered = requestPhase === "recommending" ? true : requestPlanDelivered;
         const current = getProfile();
         saveProfile({
           ...current,
@@ -490,10 +519,12 @@ export default function ChatInterface({ chart, dashas }: Props) {
             ...current.coaching,
             exchangeCount: nextExchangeCount,
             phase: newPhase,
+            planDelivered: newPlanDelivered,
             lastUpdated: new Date().toISOString(),
           },
         });
         setPhase(newPhase);
+        setPlanDelivered(newPlanDelivered);
         setExchangeCount(nextExchangeCount);
       }
     } catch {
@@ -531,6 +562,18 @@ export default function ChatInterface({ chart, dashas }: Props) {
           >
             ↺ New Topic
           </button>
+          {/* Skip discovery, get the plan immediately */}
+          {phase === "gathering" && (
+            <button
+              type="button"
+              onClick={() => send("Please give me my complete plan now, based on everything so far.", true)}
+              disabled={streaming}
+              className="text-xs px-2 py-0.5 rounded-full font-medium border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 transition-colors disabled:opacity-40"
+              title="Skip ahead — get your complete plan now instead of continuing discovery"
+            >
+              ⚡ Get My Plan Now
+            </button>
+          )}
           {/* Vedic remedies toggle */}
           <button
             onClick={toggleReligiousSolutions}
@@ -566,12 +609,14 @@ export default function ChatInterface({ chart, dashas }: Props) {
                   : "bg-amber-50 text-amber-700 border border-amber-200"
               }`}
               title={
-                phase === "recommending"
+                planDelivered
+                  ? "Plan delivered — ask follow-ups anytime, or start a New Topic"
+                  : phase === "recommending"
                   ? `${observations.length} observations gathered — giving recommendations`
                   : `${observations.length} observations gathered — still learning`
               }
             >
-              {phase === "recommending" ? "▶ Recommending" : `◎ Gathering (${observations.length})`}
+              {planDelivered ? "✓ Plan delivered" : phase === "recommending" ? "▶ Recommending" : `◎ Gathering (${observations.length})`}
             </span>
           )}
           <span>Lagna: {SIGN_NAMES[chart.ascendant.sign_num]}</span>
@@ -672,7 +717,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
             className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
           />
           <button
-            onClick={send}
+            onClick={() => send()}
             disabled={!input.trim() || streaming}
             className="bg-indigo-600 text-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-40 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
           >

@@ -244,23 +244,32 @@ export function buildCoachDynamicBlock(
   goals: string[],
   vargaContext: string | undefined,
   profileContext: string,
-  transitContext?: string
+  transitContext?: string,
+  planDelivered: boolean = false
 ): string {
-  const phaseInstructions =
-    phase === "recommending"
-      ? `COACHING PHASE — ACTIVE RECOMMENDATIONS:
-You now have enough context about this person. Shift into recommendation mode.
-For each topic, provide specific, concrete guidance across four domains:
-1. **UPAYA**: The specific remedy attached to the relevant yoga/dosha/Sade Sati — lead with this, not last. Name the exact mantra/gemstone/dana/vrata (or behavioral sadhana in behavioral-only mode) already provided in the chart data.
+  const groundingRule = `GROUNDING — NON-NEGOTIABLE: Every recommendation must trace to a placement, dasha period, yoga/dosha, or transit that is ACTUALLY present in the chart data above, or to something the user actually said in this conversation. Never invent a placement, remedy, timing, or life detail that isn't there. If you're extrapolating a general tendency rather than stating a documented fact from their chart, say so plainly ("this is a common pattern for this placement, though you haven't confirmed it") instead of asserting it as certain.`;
+
+  const planDomains = `1. **UPAYA**: The specific remedy attached to the relevant yoga/dosha/Sade Sati — lead with this, not last. Name the exact mantra/gemstone/dana/vrata (or behavioral sadhana in behavioral-only mode) already provided in the chart data.
 2. **LIFESTYLE**: Daily routine shifts, environment changes, sleep hygiene, physical practices, relationship boundaries and adjustments, dietary considerations aligned to planetary nature
 3. **BEHAVIOR**: Patterns to interrupt, habits to build, reactions to rewire, energy to redirect, communication styles to adopt, work approaches to experiment with — framed as the sadhana that makes the upaya durable, not standalone self-help
-4. **THOUGHT PROCESS**: Mental models to adopt, beliefs to examine, reframes through dharma/karma rather than generic cognitive language
-Always anchor every recommendation to their chart placements, current Dasha, natal yogas/doshas, and active transits.
-Be direct and specific — not "try to be more mindful" but "when you notice X pattern, do Y instead."
-Reference specific planetary energies in their chart and how to work with them consciously.
-Explain WHY each recommendation works based on their chart structure.
-Do NOT ask further gathering questions. Deliver grounded, actionable guidance.`
-      : `COACHING PHASE — ASTROLOGICAL DISCOVERY:
+4. **THOUGHT PROCESS**: Mental models to adopt, beliefs to examine, reframes through dharma/karma rather than generic cognitive language`;
+
+  let phaseInstructions: string;
+
+  if (phase === "recommending" && !planDelivered) {
+    phaseInstructions = `COACHING PHASE — DELIVER THE COMPLETE PLAN NOW:
+This person came for guidance, not an endless interview — you now have enough to act on. This response is the single, conclusive plan for everything discussed so far. Not a fragment, not a preview, not another question — the whole thing, organized and complete, covering:
+${planDomains}
+Be direct and specific — not "try to be more mindful" but "when you notice X pattern, do Y instead." Explain WHY each recommendation works based on their chart structure.
+${groundingRule}
+Close with one short, clear line handing the conversation back to them (e.g. "That's your plan — come back anytime you want to go deeper on any part of it, or start a New Topic for something else."). Do NOT end with a new question. Do NOT ask what else they'd like to cover — that's their call to make, not yours to prompt.`;
+  } else if (phase === "recommending" && planDelivered) {
+    phaseInstructions = `COACHING PHASE — FOLLOW-UP ONLY:
+You already delivered the complete plan for this topic. Only address what the user is specifically asking in their latest message — go deeper on that one part if asked, or answer their question directly. Do not restate the whole plan. Do not proactively introduce new recommendations they didn't ask about. Do not end your response with a new question of your own — this is them driving, not you probing.
+${groundingRule}
+If they've clearly moved to a genuinely new topic unrelated to the plan already given, it's fine to engage it directly with grounded guidance — but still don't default to asking a discovery question first; lead with insight the way the plan did.`;
+  } else {
+    phaseInstructions = `COACHING PHASE — ASTROLOGICAL DISCOVERY:
 Your task is to understand this person while actively interpreting their chart in real time — as a warm, grounded conversation, not a form.
 
 Each response should naturally do three things, in flowing prose (never as labeled sections, never with a heading like "Astrological Reflection" — that reads like a form, not a person talking):
@@ -277,9 +286,11 @@ TONE — this matters as much as the astrology:
 RULES:
 - NEVER ask more than ONE question per response
 - Give real astrological insight with each exchange — user should feel the chart being read, not just questioned
-- After exchange 5 or when you have enough context on their situation, naturally begin weaving in recommendations alongside questions
+- Keep this phase SHORT — after exchange 2, or as soon as you have one real signal about their situation, you should be moving to recommendations, not gathering more. This person is impatient for guidance, not being interviewed; every extra question you ask is a cost, so only ask one if it would genuinely change what you recommend
 - Use natal yogas and doshas as active lenses — when the user describes something a yoga/dosha explains, name it explicitly, and for topics matching a natal dosha (debt/health/relationship strain mapping to Manglik, Kaal Sarp, Pitru Dosha, or Sade Sati) it's fine to preview its attached remedy early rather than waiting for the recommending phase
-- Reference the current Dasha and any active transits when they match what the user is experiencing`;
+- Reference the current Dasha and any active transits when they match what the user is experiencing
+${groundingRule}`;
+  }
 
   const parts: string[] = [];
   parts.push(`USER'S GOALS: ${goals.length > 0 ? goals.join(", ") : "Not yet set"}`);

@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
-  const { chart, dashas, goals, profileContext, vargaContext, messages, phase, includeReligiousSolutions, transitContext } =
+  const { chart, dashas, goals, profileContext, vargaContext, messages, phase, planDelivered, includeReligiousSolutions, transitContext } =
     (await req.json()) as {
       chart: NatalChart;
       dashas: DashaData;
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
       vargaContext?: string;
       messages: ChatMessage[];
       phase?: CoachingPhase;
+      planDelivered?: boolean;
       includeReligiousSolutions?: boolean;
       transitContext?: string;
     };
@@ -49,7 +50,8 @@ export async function POST(req: NextRequest) {
     goals,
     vargaContext,
     profileContext,
-    transitContext
+    transitContext,
+    planDelivered ?? false
   );
 
   const encoder = new TextEncoder();

@@ -183,6 +183,11 @@ export interface UserProfile {
     phase: CoachingPhase;
     exchangeCount: number;
     includeReligiousSolutions: boolean;
+    /** True once the coach has delivered its one complete, conclusive plan
+     * for this topic. Before this, the "recommending" phase means "give the
+     * full plan now"; after, it means "answer follow-ups only — don't restate
+     * the plan or ask a new question." Resets to false on New Topic. */
+    planDelivered: boolean;
     /** Sarvam BCP-47 language code (e.g. "hi-IN"). "en-IN" means English —
      * no translation layer is invoked. */
     preferredLanguage: string;
@@ -209,6 +214,7 @@ const DEFAULT_PROFILE: UserProfile = {
     lastUpdated: new Date().toISOString(),
     phase: "gathering" as CoachingPhase,
     exchangeCount: 0,
+    planDelivered: false,
     // Vedic remedies (mantra/gemstone/dana alongside behavioral practice) are
     // the default — this app's premise is remedying astrological affliction
     // through Jyotish itself, not generic self-help with a chart attached.
