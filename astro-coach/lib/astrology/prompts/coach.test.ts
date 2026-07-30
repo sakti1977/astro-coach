@@ -113,3 +113,34 @@ describe("buildCoachSystemPrompt tonePreference", () => {
     expect(prompt).toContain("do not skip or weaken the analysis itself");
   });
 });
+
+// SPEC.md §2.6 — "world-class" per The Pattern's own reviews means writing
+// quality, not just astrological correctness. This is a distinct calibration
+// from the chain-analysis method: getting the placement logic right and then
+// writing it up in generic astrology-app voice still fails the bar.
+describe("buildCoachSystemPrompt writing-quality bar", () => {
+  it("bans common generic-astrology-app hedging phrases", () => {
+    const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z");
+    expect(prompt).toContain("WRITING QUALITY");
+    for (const crutch of ["you may find", "this could indicate", "it's important to", "on some level"]) {
+      expect(prompt).toContain(crutch);
+    }
+  });
+
+  it("gives a concrete generic-vs-specific example distinct from the chain-analysis example", () => {
+    const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z");
+    expect(prompt).toContain("Example of generic (WRONG)");
+    expect(prompt).toContain("Example of specific (CORRECT)");
+    // Distinct from the earlier chain-analysis shallow/deep example pair.
+    expect(prompt).toContain("Example of shallow (WRONG)");
+    expect(prompt).toContain("Example of deep (CORRECT)");
+  });
+
+  it("is present regardless of tonePreference — a prose-quality bar, not a jyotish-only concern", () => {
+    const jyotish = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z", true, [], [], "jyotish");
+    const skeptic = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z", true, [], [], "skeptic");
+    for (const prompt of [jyotish, skeptic]) {
+      expect(prompt).toContain("WRITING QUALITY — THIS IS THE PRODUCT");
+    }
+  });
+});

@@ -62,6 +62,22 @@ This account already operates `Bangla-Calendar`, `bengali-panchang-bot`, and `Od
 ### 2.5 The long-term, hardest-to-copy moat: outcome-correlated remedy efficacy
 Given remedies are free and deterministic (never upsold), Astro Coach is uniquely positioned to do what no competitor — marketplace or AI — is doing: correlate "remedy actually followed" against "outcome reported" over time, and honestly report back what its own data shows works. This requires years of longitudinal, consented user relationships to build — the single hardest thing here for AstroTalk or AstroSage to fast-follow, precisely *because* their business models depend on upselling and one-off transactions rather than a sustained coaching relationship.
 
+### 2.6 What "world-class" actually means here — lessons from The Pattern (15M users)
+A deeper review (astrologer-written, not just funding coverage) of The Pattern surfaces something more specific than "translate jargon into plain language" (§3 already covers that). Its **actual** differentiator is writing quality — reviewers repeatedly describe the prose itself, not the feature set, as "eerily accurate." Its own documented weaknesses are just as instructive, because Astro Coach already has structural answers to every one of them — they just aren't packaged to make the contrast obvious yet:
+
+| The Pattern's weakness (per review) | Astro Coach's existing structural answer |
+|---|---|
+| Black-box opacity — users can't see which placement drove an insight | Chain-analysis method already names the exact placement/house/lordship inline |
+| Restrictive à la carte paywall, cost compounds | Deterministic remedy table, never upsold (§2.1) |
+| No daily content / refresh cycle | Has the transit data already computed (`transits.py`) — just not surfaced as a lightweight daily touchpoint |
+| Potential fatalism from fixed "pattern" framing | G3 — tendencies within free will, never a fixed verdict, already a hard non-negotiable |
+
+Four concrete product changes follow from this, added to §5:
+1. **A writing-quality bar in the coaching prompt itself** — not just "be specific," but an explicit few-shot calibration (generic vs. Pattern-quality specific phrasing), the same discipline `coach.ts` already applies to chain-analysis correctness, applied instead to prose craft.
+2. **A static, re-readable "Your Foundation" profile** — generated once from the chart (same chain-analysis engine, written as a standalone piece), not gated behind having to prompt for it in chat. This is the artifact people share and re-read, and it directly answers Pattern's "no daily content" gap by being worth returning to.
+3. **Named Bond-style categories for Kundli Matching** (queued next in §5.1) — pair the Ashtakoot Guna score with an evocative named category (e.g. soulmate-adjacent / steady / complex / high-friction — final naming TBD, framed via relationship dynamics per G3), not a bare percentage. More memorable, more shareable, avoids the pass/fail trap either way.
+4. **A daily chart-grounded transit note** — one or two sentences, generated from the user's own current transits (never a generic horoscope, which would violate G1), surfaced as a notification or home-screen card. Closes Pattern's "no daily refresh" gap without inheriting the genericness that daily-horoscope competitors already lose to.
+
 ---
 
 ## 3. Non-Believer / Skeptic Positioning — what it actually requires
@@ -118,20 +134,23 @@ _Verified against code as of commit `1fc5f00`. See git history for anything afte
 Re-verify market facts in §1 before acting on stale versions of this section — funding rounds, valuations, and feature parity all move fast in this space.
 
 ### 5.1 Near-term (0-3 months) — close known gaps, build the trust-attack surface
-1. **Skeptic-mode onboarding + methodology-disclosure surfacing** (§3) — the single highest-leverage, lowest-engineering-cost item here. Mostly prompt/copy/IA work, not new calculation surface.
-2. **A "Trust & Methodology" page** making the deterministic-remedy-table and no-upsell stance explicit and comparison-aware (without naming competitors) — directly counter-positions against §1's documented AstroTalk/AstroYogi weaknesses.
-3. **Kundli Matching (Ashtakoot Guna Milan)** — confirmed as table-stakes: AstroYogi and AstroSage Kundli (70M downloads) both lead with this as a headline feature. Frame results as relationship-dynamics coaching, never pass/fail (G3).
-4. **WhatsApp coaching channel** — lowest-friction acquisition surface in India; none of the researched competitors were found offering a WhatsApp-native flow.
+1. ~~**Skeptic-mode onboarding + methodology-disclosure surfacing** (§3)~~ — **shipped**: `tonePreference` toggle + `/trust` page.
+2. ~~**A "Trust & Methodology" page**~~ — **shipped** alongside #1.
+3. **A writing-quality bar in the coaching prompt** (§2.6) — few-shot calibration (generic vs. specific phrasing), applied to prose craft the way `coach.ts` already calibrates chain-analysis correctness. Cheap, prompt-only, high-leverage.
+4. **A static, re-readable "Your Foundation" profile page** (§2.6) — generated once from the chart via the same chain-analysis engine, written as a standalone piece rather than gated behind chat. The artifact people actually re-read and share.
+5. **A daily chart-grounded transit note** (§2.6) — one or two sentences from the user's own current transits (`transits.py` already computes this), surfaced as a notification/home-card. Never a generic horoscope — violates G1 if it isn't chart-specific.
+6. **Kundli Matching (Ashtakoot Guna Milan)** — confirmed table-stakes: AstroYogi and AstroSage Kundli (70M downloads) both lead with this. Pair the Guna score with a named Bond-style category (§2.6 #3), not a bare percentage — frame via relationship dynamics, never pass/fail (G3).
+7. **WhatsApp coaching channel** — lowest-friction acquisition surface in India; none of the researched competitors were found offering a WhatsApp-native flow.
 
 ### 5.2 Mid-term (3-9 months)
-5. **Family chart linking** — household retention multiplier.
-6. **Personalized festival/vrata calendar** and **regional panchang integration** (§2.4) — genuine owned-distribution advantage.
-7. **Shareable chart "report card"** — low-friction viral acquisition loop.
-8. **Exam/career-cycle timing coach** mapped to Indian competitive-exam calendars — an India-specific angle no researched competitor (including global reference apps) addresses.
+8. **Family chart linking** — household retention multiplier.
+9. **Personalized festival/vrata calendar** and **regional panchang integration** (§2.4) — genuine owned-distribution advantage.
+10. **Shareable chart "report card"** — low-friction viral acquisition loop; the "Your Foundation" profile (#4) is a natural source for this.
+11. **Exam/career-cycle timing coach** mapped to Indian competitive-exam calendars — an India-specific angle no researched competitor (including global reference apps) addresses.
 
 ### 5.3 Long-term / defensibility (9+ months)
-9. **Outcome-correlated remedy efficacy** (§2.5) — the core, hardest-to-copy moat. Requires evolving the one-time Validation quiz into a periodic check-in.
-10. **Optional human-astrologer escalation** — strictly supplementary (G4), never replacing the chart+chat-grounded core; only relevant if user research shows real demand for it despite the trust-positioning strategy above.
+12. **Outcome-correlated remedy efficacy** (§2.5) — the core, hardest-to-copy moat. Requires evolving the one-time Validation quiz into a periodic check-in.
+13. **Optional human-astrologer escalation** — strictly supplementary (G4), never replacing the chart+chat-grounded core; only relevant if user research shows real demand for it despite the trust-positioning strategy above.
 
 ---
 
@@ -141,3 +160,42 @@ Re-verify market facts in §1 before acting on stale versions of this section �
 - IF a candidate fails any of guardrails G1-G4 (§0) THEN it shall be rejected and logged with the reason, regardless of competitive pressure to match a competitor's feature.
 - IF a candidate passes G1-G4 THEN it still requires explicit human approval before promotion from "Candidate" to an accepted item in §5.
 - This process, and all resulting scope, is subject to the same `NON_NEGOTIABLES.md` gate as every other change to this codebase.
+
+---
+
+## 7. UI/UX Audit (2026-07-30)
+
+Method note: done as a code-level read of every page's Tailwind/JSX (no live browser access in the environment this was written in — no screenshots were taken). Re-verify visually before treating any finding here as settled; code-level review can miss things only visible when rendered (spacing rhythm at real breakpoints, actual color contrast, real font rendering).
+
+### 7.1 Cross-cutting findings (affect every page at once)
+
+1. **No real typeface is actually loaded.** `globals.css` hardcodes `body { font-family: Arial, Helvetica, sans-serif; }`, which overrides a `--font-geist-sans` CSS variable in `@theme inline` that is never set anywhere — `layout.tsx` has no `next/font` import at all. Every visitor sees their OS's default Arial/Helvetica. Every comparable app (Linear, Notion, Co-Star, The Pattern, Vercel-adjacent products generally) deliberately picks a typeface; this is the single highest-ROI fix in this whole review — one `next/font` import plus deleting one CSS line touches every page at once.
+2. **No dark mode**, despite `prefers-color-scheme` variables being declared and then unused everywhere else (every page hardcodes `bg-white`/`text-gray-900` with no `dark:` variants). Astrology/coaching content gets real evening usage — it's literally when Co-Star/The Pattern users check in. A real gap versus "world-class."
+3. **Icons are unicode/emoji glyphs** (✦ ◎ ⬡ ◐ ✕ ✓ 🔒 🕉 🎯…) throughout, despite `lucide-react` already being an installed, unused dependency. Emoji render inconsistently across OS/browser (Windows Segoe UI Emoji vs. Apple's set vs. Android's look visibly different), which undercuts the "designed" feel the rest of the layout is going for. Swapping to a consistent SVG icon set is a Nielsen consistency-and-standards fix, not a redesign.
+4. **Color palette is 100% stock Tailwind indigo/violet/gray** — clean and inoffensive, but generic. It doesn't yet have a distinctive identity the way Co-Star (stark mono + neon accent) or The Pattern (soft warm gradients) do, despite indigo/violet being thematically reasonable for astrology already. There's room to push further (a signature gradient, restrained celestial texture) without abandoning the current palette.
+5. **One brand-consistency slip**: `YesNoQuestion.tsx` uses near-black (`gray-900`) for its primary "Yes" button and progress bar instead of the indigo-600 used as the primary action color everywhere else in the app.
+
+### 7.2 Page-by-page notes
+
+- **Chart** (`app/chart/page.tsx`) — well-composed (consistent `rounded-2xl` card system, clear hierarchy via uppercase micro-labels), but `HOUSE_COLORS` assigns 12 different arbitrary hues to house badges with no semantic grouping — reads as busier than the otherwise disciplined 1-2 color primary palette. Consider collapsing to 2-3 semantic groups (e.g. kendra/trikona/dusthana) or a single accent + neutral treatment.
+- **Habits** — same quality bar as Chart; 3-column grid (radar+goals sidebar, tracker main) is a sound layout.
+- **Profile/Settings** (`app/profile/page.tsx`) — noticeably flatter than Chart/Habits: a long vertical stack of undifferentiated white boxes, text-only section headers, no icons, no visual hierarchy variety. Reads like an afterthought next to the more visually considered data pages. Worth bringing to the same bar — icons per section at minimum; a left-side settings nav instead of one long scroll if the section count keeps growing.
+- **Validate** (`YesNoQuestion.tsx`) — actually one of the better-designed flows: real progress bar, clean card-based Yes/No with `active:scale-95` micro-interaction. Only issue is the color inconsistency noted above.
+- **Auth/Sign-in** — well done: centered card, tab switcher, `shadow-xl`, gradient background, privacy note under the fold. Matches modern SaaS auth-page conventions (Linear/Vercel-style) already.
+- **Muhurta / Trust** (this session's additions) — built against the same design system as Chart/Habits, so they inherit both its strengths and the cross-cutting gaps above (no dark mode, emoji icons).
+
+### 7.3 Prioritized recommendations
+
+**Tier 1 — cheap, universal, high leverage:** — **shipped**
+1. ~~Load a real typeface~~ — the `geist` package (official Vercel typeface, matching the CSS variable name that was already half-wired) is now loaded via `next/font` in `layout.tsx`; the Arial override in `globals.css` is gone.
+2. ~~Replace decorative unicode/emoji glyphs with `lucide-react` icons~~ — done app-wide (17 files). Meaningful glyphs were deliberately kept: classical planet symbols (☉☽♂…), the 🕉 Om symbol (no icon equivalent, paired with 🎯 for visual parity in the two tone-preference toggles), country flags, and simple bullet dots.
+3. ~~Fix `YesNoQuestion.tsx`'s color to indigo-600~~ — done, plus the same `gray-900` inconsistency found and fixed in `auth/error/page.tsx`'s CTA button during the sweep.
+
+**Tier 2 — moderate effort, meaningful differentiation:**
+4. Dark mode via Tailwind `dark:` variants across the existing color usage.
+5. Bring Profile/Settings up to the visual bar of Chart/Habits (icons, hierarchy, possibly a section nav).
+6. Rationalize the 12-color house-badge rainbow on Chart into a smaller, semantic palette.
+
+**Tier 3 — bigger investment, brand-level differentiation:**
+7. A more distinctive visual identity beyond stock Tailwind indigo — a signature gradient or restrained celestial texture, considered rather than decorative.
+8. A real mobile-breakpoint pass once live browser/device testing is available — this review could reason about responsive grid classes but not verify actual touch-target sizing or spacing rhythm at 375px.
