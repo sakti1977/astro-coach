@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Force native form-control chrome (date/time picker icons, popups) to stay
+     light regardless of OS/browser dark-mode preference — the app's own UI
+     is hardcoded light everywhere, with no `dark:` variants, so letting
+     native controls follow the OS preference produces near-invisible text
+     and mismatched picker chrome. Not full dark mode (still not implemented
+     — see SPEC.md §7). */
+  color-scheme: light;
 }
 
 @theme inline {

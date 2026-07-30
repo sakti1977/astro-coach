@@ -134,7 +134,7 @@ export default function HabitsPage() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-400">Loading habits…</p>
+          <p className="text-sm text-gray-500">Loading habits…</p>
         </div>
       </div>
     );
@@ -159,7 +159,7 @@ export default function HabitsPage() {
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 py-5">
           <h1 className="text-xl font-bold text-gray-900">Sadhana — Daily Practice</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             Practices aligned to your {dashas?.current_maha} Maha Dasha · {dashas?.current_antar} Antardasha
           </p>
         </div>
@@ -171,7 +171,7 @@ export default function HabitsPage() {
           <div className="space-y-6">
             {/* Behavior radar */}
             <div className="border border-gray-100 rounded-xl p-5">
-              <p className="text-xs font-medium text-gray-400 uppercase mb-4">Behavior Meter</p>
+              <p className="text-xs font-medium text-gray-500 uppercase mb-4">Behavior Meter</p>
               <div className="flex justify-center">
                 <BehaviorRadar axes={radarAxes} size={240} />
               </div>
@@ -185,7 +185,7 @@ export default function HabitsPage() {
             {/* Goals */}
             <div className="border border-gray-100 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-medium text-gray-400 uppercase">Your Goals</p>
+                <p className="text-xs font-medium text-gray-500 uppercase">Your Goals</p>
                 <button
                   onClick={() => setShowGoalForm((s) => !s)}
                   className="text-xs text-indigo-600 font-medium hover:underline"
@@ -200,7 +200,7 @@ export default function HabitsPage() {
                     title="Goal category"
                     value={newGoal.category}
                     onChange={(e) => setNewGoal((g) => ({ ...g, category: e.target.value as typeof GOAL_CATEGORIES[number] }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white"
                   >
                     {GOAL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -210,7 +210,7 @@ export default function HabitsPage() {
                     value={newGoal.description}
                     onChange={(e) => setNewGoal((g) => ({ ...g, description: e.target.value }))}
                     onKeyDown={(e) => e.key === "Enter" && addGoal()}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900"
                   />
                   <button onClick={addGoal}
                     className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">
@@ -220,7 +220,7 @@ export default function HabitsPage() {
               )}
 
               {goals.length === 0 ? (
-                <p className="text-sm text-gray-400">No goals yet. Add one to get personalized habit recommendations.</p>
+                <p className="text-sm text-gray-500">No goals yet. Add one to get personalized habit recommendations.</p>
               ) : (
                 <div className="space-y-2">
                   {goals.map((g) => (
@@ -230,7 +230,7 @@ export default function HabitsPage() {
                       </span>
                       <p className="text-sm text-gray-700 flex-1">{g.description}</p>
                       <button onClick={() => removeGoal(g.id)}
-                        className="text-gray-300 hover:text-gray-500 flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
+                        className="text-gray-500 hover:text-gray-600 flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
                 </div>
@@ -243,7 +243,7 @@ export default function HabitsPage() {
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-700">
                 Today&apos;s Habits
-                <span className="ml-2 text-gray-400 font-normal">
+                <span className="ml-2 text-gray-500 font-normal">
                   {habits.filter((h) => h.completedDates.includes(todayStr)).length}/{habits.length} done
                 </span>
               </p>
@@ -295,7 +295,7 @@ export default function HabitsPage() {
                         </button>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className={`font-medium text-sm ${done ? "line-through text-gray-400" : "text-gray-900"}`}>
+                            <p className={`font-medium text-sm ${done ? "line-through text-gray-500" : "text-gray-900"}`}>
                               {h.habit}
                             </p>
                             <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
@@ -305,14 +305,14 @@ export default function HabitsPage() {
                               <span className="text-base" title={meta.label}>{meta.symbol}</span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-400 mt-1">{h.why}</p>
+                          <p className="text-xs text-gray-500 mt-1">{h.why}</p>
                           {h.streak > 0 && (
                             <p className="text-xs text-gray-500 mt-1 inline-flex items-center gap-1">
                               <Flame className="w-3 h-3 text-orange-500" /> {h.streak}-day streak
                             </p>
                           )}
                         </div>
-                        <span className="text-xs text-gray-400 flex-shrink-0 mt-1 capitalize">{h.category}</span>
+                        <span className="text-xs text-gray-500 flex-shrink-0 mt-1 capitalize">{h.category}</span>
                       </div>
                     </div>
                   );
@@ -323,7 +323,7 @@ export default function HabitsPage() {
             {/* Weekly summary */}
             {habits.length > 0 && (
               <div className="border border-gray-100 rounded-xl p-5 mt-4">
-                <p className="text-xs font-medium text-gray-400 uppercase mb-3">This Week</p>
+                <p className="text-xs font-medium text-gray-500 uppercase mb-3">This Week</p>
                 <div className="grid grid-cols-7 gap-1">
                   {Array.from({ length: 7 }, (_, i) => {
                     const d = new Date();
@@ -334,7 +334,7 @@ export default function HabitsPage() {
                     return (
                       <div key={ds} className="text-center">
                         <div className={`h-8 rounded-md ${allDone ? "bg-indigo-600" : anyDone ? "bg-indigo-200" : "bg-gray-50 border border-gray-100"}`} />
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-500 mt-1">
                           {["Su","Mo","Tu","We","Th","Fr","Sa"][d.getDay()]}
                         </p>
                       </div>

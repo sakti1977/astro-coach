@@ -208,7 +208,7 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
-          <p className="text-sm text-gray-400">Loading profile…</p>
+          <p className="text-sm text-gray-500">Loading profile…</p>
         </div>
       </div>
     );
@@ -224,7 +224,7 @@ export default function ProfilePage() {
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 py-5">
           <h1 className="text-xl font-bold text-gray-900">Profile &amp; Settings</h1>
-          <p className="text-sm text-gray-400 mt-1">Manage your birth data, sync, and export your information</p>
+          <p className="text-sm text-gray-500 mt-1">Manage your birth data, sync, and export your information</p>
         </div>
       </div>
 
@@ -241,7 +241,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-semibold text-gray-900">Birth Data</h2>
-              <p className="text-xs text-gray-400">Used for all chart, dasha, and coaching calculations</p>
+              <p className="text-xs text-gray-500">Used for all chart, dasha, and coaching calculations</p>
             </div>
             {!editingBirth && (
               <button
@@ -273,19 +273,19 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                  <input type="text" value={birthForm.name} onChange={(e) => setField("name", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm" />
+                  <input type="text" value={birthForm.name} onChange={(e) => setField("name", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Date of Birth</label>
-                  <input type="date" value={birthForm.date} onChange={(e) => setField("date", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm" />
+                  <input type="date" value={birthForm.date} onChange={(e) => setField("date", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Time of Birth (exact)</label>
-                  <input type="time" value={birthForm.time} onChange={(e) => setField("time", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm" />
+                  <input type="time" value={birthForm.time} onChange={(e) => setField("time", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Timezone</label>
-                  <select value={birthForm.timezone} onChange={(e) => setField("timezone", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white">
+                  <select value={birthForm.timezone} onChange={(e) => setField("timezone", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 bg-white">
                     {ALL_TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
                   </select>
                 </div>
@@ -293,17 +293,17 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">City / Place</label>
-                <input type="text" value={birthForm.city} onChange={(e) => setField("city", e.target.value)} placeholder="Mumbai, London…" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm" />
+                <input type="text" value={birthForm.city} onChange={(e) => setField("city", e.target.value)} placeholder="Mumbai, London…" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Latitude</label>
-                  <input type="number" step="0.0001" value={birthForm.lat} onChange={(e) => setField("lat", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm" />
+                  <input type="number" step="0.0001" value={birthForm.lat} onChange={(e) => setField("lat", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Longitude</label>
-                  <input type="number" step="0.0001" value={birthForm.lng} onChange={(e) => setField("lng", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm" />
+                  <input type="number" step="0.0001" value={birthForm.lng} onChange={(e) => setField("lng", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
                 </div>
               </div>
 
@@ -313,7 +313,7 @@ export default function ProfilePage() {
                 </button>
                 <button onClick={() => { setEditingBirth(false); setMessage(null); }} className="flex-1 border border-gray-200 py-2.5 rounded-xl text-sm font-medium">Cancel</button>
               </div>
-              <p className="text-[10px] text-gray-400">Changing birth data requires recalculating the chart (below) to see updated positions and predictions.</p>
+              <p className="text-[10px] text-gray-500">Changing birth data requires recalculating the chart (below) to see updated positions and predictions.</p>
             </div>
           )}
         </div>
@@ -342,7 +342,7 @@ export default function ProfilePage() {
                 </button>
               )}
             </div>
-            <p className="text-xs text-gray-400 mt-2">Archiving creates a local backup you can restore from if needed.</p>
+            <p className="text-xs text-gray-500 mt-2">Archiving creates a local backup you can restore from if needed.</p>
           </div>
         )}
 
@@ -379,7 +379,7 @@ export default function ProfilePage() {
               className="w-full text-left border border-gray-200 hover:bg-gray-50 rounded-xl px-4 py-3 flex justify-between items-center"
             >
               <span>Export all my data (JSON)</span>
-              <span className="text-xs text-gray-400">{exporting ? "Exporting…" : "Download"}</span>
+              <span className="text-xs text-gray-500">{exporting ? "Exporting…" : "Download"}</span>
             </button>
 
             <button
@@ -391,7 +391,7 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <p className="text-xs text-gray-400 mt-4">Your chart, habits, coaching history, and validation data are stored locally and (when signed in) synced to Supabase with row-level security.</p>
+          <p className="text-xs text-gray-500 mt-4">Your chart, habits, coaching history, and validation data are stored locally and (when signed in) synced to Supabase with row-level security.</p>
         </div>
 
         {/* Account */}

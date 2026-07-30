@@ -86,7 +86,7 @@ export default function YesNoQuestion({ questions, onComplete }: Props) {
       {/* Previous answers */}
       {answers.length > 0 && (
         <div className="mt-8">
-          <p className="text-xs font-medium text-gray-400 uppercase mb-3">Your answers so far</p>
+          <p className="text-xs font-medium text-gray-500 uppercase mb-3">Your answers so far</p>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {[...answers].reverse().map((a, i) => (
               <div key={i} className="flex items-start gap-2 text-sm">

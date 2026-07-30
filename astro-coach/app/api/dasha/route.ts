@@ -16,13 +16,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { chart, dashaLord, years } = await req.json() as {
+    const { chart, dashaLord, years, currentAntarLord, currentPratyantarLord } = await req.json() as {
       chart: NatalChart;
       dashaLord: string;
       years: number;
+      currentAntarLord?: string;
+      currentPratyantarLord?: string;
     };
 
-    const prompt = buildDashaPredictionPrompt(chart, dashaLord, years, new Date().toISOString());
+    const currentSubPeriod = currentAntarLord && currentPratyantarLord
+      ? { antarLord: currentAntarLord, pratyantarLord: currentPratyantarLord }
+      : undefined;
+    const prompt = buildDashaPredictionPrompt(chart, dashaLord, years, new Date().toISOString(), currentSubPeriod);
     const raw = await generateDashaPrediction(prompt);
 
     // prepareJsonString strips any stray text/markdown, sanitises control chars,

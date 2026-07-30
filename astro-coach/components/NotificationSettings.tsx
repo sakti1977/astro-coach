@@ -142,7 +142,7 @@ export default function NotificationSettings() {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-6">
       <h2 className="font-semibold text-gray-900 mb-2">Notifications</h2>
-      <p className="text-xs text-gray-400 mb-4">
+      <p className="text-xs text-gray-500 mb-4">
         A gentle nudge when your dasha shifts, Sade Sati changes phase, or a day&apos;s sadhana is still undone —
         sent once, around your local morning.
       </p>

@@ -48,7 +48,7 @@ def _years_to_days(years: float) -> float:
     return years * YEAR_DAYS
 
 
-def calculate_dashas(moon_abs_pos: float, birth_date: date) -> dict:
+def calculate_dashas(moon_abs_pos: float, birth_date: date, natal_planet_signs: dict[str, int] | None = None) -> dict:
     start_lord, balance_years = _dasha_balance_years(moon_abs_pos)
     start_idx = DASHA_SEQUENCE.index(start_lord)
 
@@ -103,13 +103,30 @@ def calculate_dashas(moon_abs_pos: float, birth_date: date) -> dict:
         (a for a in current_maha["antardashas"] if a["start"] <= str(today) <= a["end"]),
         current_maha["antardashas"][0] if current_maha["antardashas"] else None
     )
+    current_pratyantar = next(
+        (p for p in (current_antar["pratyantardashas"] if current_antar else [])
+         if p["start"] <= str(today) <= p["end"]),
+        None
+    )
+
+    lord_dignity = None
+    if natal_planet_signs:
+        from dignity import classify_dignity
+        lord_dignity = {
+            lord: classify_dignity(lord, natal_planet_signs[lord.lower()])
+            for lord in DASHA_SEQUENCE
+            if lord.lower() in natal_planet_signs
+        }
 
     return {
         "mahadashas": mahadashas,
         "current_maha": current_maha["lord"],
         "current_antar": current_antar["lord"] if current_antar else "",
+        "current_pratyantar": current_pratyantar["lord"] if current_pratyantar else "",
         "current_maha_end": current_maha["end"],
         "current_antar_end": current_antar["end"] if current_antar else "",
+        "current_pratyantar_end": current_pratyantar["end"] if current_pratyantar else "",
+        "lord_dignity": lord_dignity,
     }
 
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import type { DashaData } from "@/lib/profile";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
+import { dignityPhrase } from "@/lib/astrology/dignityFraming";
 
 interface Props {
   dashas: DashaData;
@@ -46,6 +47,10 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
     return meta?.color ?? "#6B7280";
   }
 
+  function dignityCaption(lord: string): string | null {
+    return dignityPhrase(dashas.lord_dignity?.[lord.toLowerCase()]);
+  }
+
   async function loadPrediction(idx: number) {
     const maha = dashas.mahadashas[idx];
     if (selectedMaha === idx) {
@@ -58,6 +63,15 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
     setLoadingPrediction(true);
     setPrediction(null);
     setPredictionError("");
+
+    // Auto-expand the current Antardasha so the current Pratyantardasha is
+    // visible without a manual second click, when opening the current Maha.
+    const isCurrentMaha = maha.lord === dashas.current_maha;
+    if (isCurrentMaha) {
+      const antarIdx = maha.antardashas.findIndex((a) => a.lord === dashas.current_antar);
+      if (antarIdx !== -1) setSelectedAntar(`${idx}-${antarIdx}`);
+    }
+
     try {
       const profile = JSON.parse(localStorage.getItem("astro_coach_profile") ?? "{}");
       const res = await fetch("/api/dasha", {
@@ -67,6 +81,9 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
           chart: profile.chart,
           dashaLord: maha.lord,
           years: maha.balance_years,
+          ...(isCurrentMaha
+            ? { currentAntarLord: dashas.current_antar, currentPratyantarLord: dashas.current_pratyantar }
+            : {}),
         }),
       });
       const data = await res.json();
@@ -92,10 +109,14 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
           <div>
             <p className="font-semibold text-gray-900">
               {dashas.current_maha} Maha Dasha / {dashas.current_antar} Antardasha
+              {dashas.current_pratyantar && ` / ${dashas.current_pratyantar} Pratyantardasha`}
             </p>
             <p className="text-sm text-gray-500">
               Maha ends: {new Date(dashas.current_maha_end).toLocaleDateString("en-IN", { year: "numeric", month: "long" })}
             </p>
+            {dignityCaption(dashas.current_maha) && (
+              <p className="text-xs text-gray-500 mt-0.5">{dashas.current_maha} is {dignityCaption(dashas.current_maha)}.</p>
+            )}
           </div>
         </div>
       </div>
@@ -134,7 +155,7 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
           </div>
         </div>
         {/* Year labels */}
-        <div className="flex justify-between mt-1 text-xs text-gray-400">
+        <div className="flex justify-between mt-1 text-xs text-gray-500">
           <span>{birthYear}</span>
           <span className="text-gray-900 font-medium">Today</span>
           <span>{birthYear + 120}</span>
@@ -164,9 +185,10 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
                       <span className="text-xs bg-gray-900 text-white px-2 py-0.5 rounded-full">Now</span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 mt-0.5">
                     {new Date(maha.start).getFullYear()} – {new Date(maha.end).getFullYear()}
                     {" · "}{Math.round((new Date(maha.end).getTime() - new Date(maha.start).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years
+                    {dignityCaption(maha.lord) && ` · ${dignityCaption(maha.lord)}`}
                   </p>
                 </div>
                 <span className="text-gray-300">{isSelected ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</span>
@@ -176,7 +198,7 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
               {isSelected && (
                 <div className="px-3 pb-3 border-t border-gray-100 mt-0">
                   {loadingPrediction ? (
-                    <p className="text-sm text-gray-400 py-4 text-center">Reading the planetary currents...</p>
+                    <p className="text-sm text-gray-500 py-4 text-center">Reading the planetary currents...</p>
                   ) : predictionError ? (
                     <p className="text-sm text-red-500 py-3">{predictionError}</p>
                   ) : prediction ? (
@@ -234,7 +256,7 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
                                     {isCurrentAntar && <span className="ml-1 text-[10px]">● Now</span>}
                                   </span>
                                   {hasPratyantars && (
-                                    <span className={isCurrentAntar ? "text-white" : "text-gray-400"}>
+                                    <span className={isCurrentAntar ? "text-white" : "text-gray-500"}>
                                       {isAntarExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                     </span>
                                   )}
@@ -245,15 +267,23 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
                                   <div className="px-2 pb-2 pt-1 bg-gray-50">
                                     <p className="text-[10px] font-medium text-gray-500 uppercase mb-1">Pratyantar Dasha</p>
                                     <div className="flex flex-wrap gap-1">
-                                      {a.pratyantardashas!.map((p, k) => (
-                                        <span
-                                          key={k}
-                                          className="text-[10px] px-1.5 py-0.5 rounded border border-gray-200 bg-white text-gray-600"
-                                          title={`${p.lord}: ${p.start} → ${p.end}`}
-                                        >
-                                          {PLANET_META[p.lord.toLowerCase() as PlanetKey]?.symbol ?? ""} {p.lord}
-                                        </span>
-                                      ))}
+                                      {a.pratyantardashas!.map((p, k) => {
+                                        const isCurrentPratyantar = p.lord === dashas.current_pratyantar && isCurrentAntar;
+                                        return (
+                                          <span
+                                            key={k}
+                                            className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                                              isCurrentPratyantar
+                                                ? "bg-gray-900 text-white border-gray-900"
+                                                : "border-gray-200 bg-white text-gray-600"
+                                            }`}
+                                            title={`${p.lord}: ${p.start} → ${p.end}`}
+                                          >
+                                            {PLANET_META[p.lord.toLowerCase() as PlanetKey]?.symbol ?? ""} {p.lord}
+                                            {isCurrentPratyantar && <span className="ml-1">● Now</span>}
+                                          </span>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 )}
@@ -264,7 +294,7 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400 py-2">Click to generate prediction</p>
+                    <p className="text-sm text-gray-500 py-2">Click to generate prediction</p>
                   )}
                 </div>
               )}

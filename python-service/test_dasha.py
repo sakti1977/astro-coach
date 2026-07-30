@@ -71,6 +71,42 @@ class TestCalculateDashas:
         assert result["current_maha"] in DASHA_SEQUENCE
         assert result["current_maha_end"] > str(date.today())
 
+    def test_current_pratyantar_is_populated_and_falls_within_current_antar(self):
+        result = calculate_dashas(10.0, date(2000, 1, 1))
+        assert result["current_pratyantar"] in DASHA_SEQUENCE
+        assert result["current_pratyantar_end"] > str(date.today())
+
+        current_maha = next(m for m in result["mahadashas"] if m["lord"] == result["current_maha"])
+        current_antar = next(a for a in current_maha["antardashas"] if a["lord"] == result["current_antar"])
+        today = str(date.today())
+        matching = [
+            p for p in current_antar["pratyantardashas"]
+            if p["start"] <= today <= p["end"]
+        ]
+        assert len(matching) == 1
+        assert matching[0]["lord"] == result["current_pratyantar"]
+        assert matching[0]["end"] == result["current_pratyantar_end"]
+
+    def test_lord_dignity_is_none_when_natal_planet_signs_omitted(self):
+        result = calculate_dashas(10.0, date(2000, 1, 1))
+        assert result["lord_dignity"] is None
+
+    def test_lord_dignity_is_populated_and_matches_classify_dignity_when_provided(self):
+        from dignity import classify_dignity
+        natal_planet_signs = {
+            "sun": 0, "moon": 3, "mars": 9, "mercury": 5,
+            "jupiter": 8, "venus": 6, "saturn": 10,
+        }
+        result = calculate_dashas(10.0, date(2000, 1, 1), natal_planet_signs)
+        assert result["lord_dignity"] is not None
+        for lord, sign_num in natal_planet_signs.items():
+            # lord_dignity is keyed by the DASHA_SEQUENCE spelling (title case)
+            key = next(l for l in DASHA_SEQUENCE if l.lower() == lord)
+            assert result["lord_dignity"][key] == classify_dignity(lord, sign_num)
+        # Rahu/Ketu absent from the fixture — must not appear as keys.
+        assert "Rahu" not in result["lord_dignity"]
+        assert "Ketu" not in result["lord_dignity"]
+
 
 class TestDayLevelPrecision:
     """Regression guard for the silent-truncation bug: `date + timedelta(days=x.y)`

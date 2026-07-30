@@ -99,7 +99,7 @@ export default function FoundationPage() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-400">Loading…</p>
+          <p className="text-sm text-gray-500">Loading…</p>
         </div>
       </div>
     );
@@ -118,7 +118,7 @@ export default function FoundationPage() {
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-indigo-500" /> Your Foundation
             </h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               A single, considered read — grounded in your chart, written once, worth returning to.
             </p>
           </div>
@@ -169,7 +169,7 @@ export default function FoundationPage() {
         {generating && !displayContent && (
           <div className="text-center py-16">
             <Loader2 className="w-8 h-8 mb-3 mx-auto text-indigo-300 animate-spin" />
-            <p className="text-gray-400 text-sm">Reading your chart…</p>
+            <p className="text-gray-500 text-sm">Reading your chart…</p>
           </div>
         )}
 
@@ -179,7 +179,7 @@ export default function FoundationPage() {
               <ReactMarkdown>{displayContent}</ReactMarkdown>
             </div>
             {generating && (
-              <span className="inline-flex items-center gap-1 text-xs text-gray-400 mt-3">
+              <span className="inline-flex items-center gap-1 text-xs text-gray-500 mt-3">
                 <Loader2 className="w-3 h-3 animate-spin" /> Writing…
               </span>
             )}
@@ -187,7 +187,7 @@ export default function FoundationPage() {
         )}
 
         {saved && !generating && (
-          <p className="text-center text-xs text-gray-300 mt-4">
+          <p className="text-center text-xs text-gray-500 mt-4">
             Generated {new Date(saved.generatedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}
           </p>
         )}

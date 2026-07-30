@@ -183,7 +183,7 @@ function EmailAuthForm({
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="you@example.com"
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
@@ -253,7 +253,7 @@ function EmailAuthForm({
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="you@example.com"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
@@ -261,7 +261,7 @@ function EmailAuthForm({
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Password
           {mode === "signup" && (
-            <span className="text-gray-400 font-normal ml-1">(min. 6 characters)</span>
+            <span className="text-gray-500 font-normal ml-1">(min. 6 characters)</span>
           )}
         </label>
         <input
@@ -270,7 +270,7 @@ function EmailAuthForm({
           onChange={(e) => setPassword(e.target.value)}
           required
           placeholder="••••••••"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         {mode === "signin" && (
           <div className="text-right mt-1.5">
@@ -296,7 +296,7 @@ function EmailAuthForm({
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               confirmPassword && confirmPassword !== password
                 ? "border-red-300 bg-red-50"
                 : "border-gray-200"
@@ -430,7 +430,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
               onChange={(e) => setCountryCode(e.target.value)}
               aria-label="Country code"
               title="Country code"
-              className="border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+              className="border border-gray-200 rounded-xl px-3 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
             >
               {COUNTRY_CODES.map((c) => (
                 <option key={`${c.code}-${c.label}`} value={c.code}>
@@ -443,11 +443,11 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="98765 43210"
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onKeyDown={(e) => e.key === "Enter" && sendOtp()}
             />
           </div>
-          <p className="text-xs text-gray-400 mt-1.5">
+          <p className="text-xs text-gray-500 mt-1.5">
             A 6-digit OTP will be sent via SMS
           </p>
         </div>
@@ -481,7 +481,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
         <button
           type="button"
           onClick={() => { setStep("enter-phone"); setOtp(""); setError(""); }}
-          className="text-xs text-gray-400 hover:text-gray-600 underline mt-1"
+          className="text-xs text-gray-500 hover:text-gray-600 underline mt-1"
         >
           Change number
         </button>
@@ -499,7 +499,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
           value={otp}
           onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
           placeholder="• • • • • •"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 text-center tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
           onKeyDown={(e) => e.key === "Enter" && otp.length === 6 && verifyOtp()}
           autoFocus
         />
@@ -522,7 +522,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
 
       <div className="text-center">
         {resendCooldown > 0 ? (
-          <p className="text-xs text-gray-400">Resend OTP in {resendCooldown}s</p>
+          <p className="text-xs text-gray-500">Resend OTP in {resendCooldown}s</p>
         ) : (
           <button
             type="button"
@@ -597,7 +597,7 @@ function SignInForm() {
         </div>
 
         {/* Privacy note */}
-        <p className="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-1">
+        <p className="text-center text-xs text-gray-500 mt-6 flex items-center justify-center gap-1">
           <Lock className="w-3 h-3 flex-shrink-0" />
           Signing in syncs your chart across devices, in an access-controlled database scoped to your account only
         </p>

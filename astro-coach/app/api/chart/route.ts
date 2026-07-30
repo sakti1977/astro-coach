@@ -36,11 +36,17 @@ export async function POST(req: NextRequest) {
 
     const chart = await fetchChart({ name, year, month, day, hour: hour ?? 12, minute: minute ?? 0, lat, lng, tz_str });
 
+    const planets = chart.planets as Record<string, { sign_num: number }>;
+    const natal_planet_signs = Object.fromEntries(
+      Object.entries(planets).map(([key, p]) => [key, p.sign_num])
+    );
+
     const dashas = await fetchDashas({
       moon_abs_pos: chart.planets.moon.abs_pos,
       birth_year: year,
       birth_month: month,
       birth_day: day,
+      natal_planet_signs,
     });
 
     return NextResponse.json({ chart, dashas });

@@ -91,7 +91,7 @@ export default function ChartToggle({ chart, highlightHouse }: Props) {
 
       {/* North / South toggle */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-400">Style:</span>
+        <span className="text-xs text-gray-500">Style:</span>
         <div className="flex rounded-md border border-gray-200 overflow-hidden">
           {(["north", "south"] as GridView[]).map((v) => (
             <button
@@ -128,7 +128,7 @@ export default function ChartToggle({ chart, highlightHouse }: Props) {
             <div key={key} className="flex items-center gap-1.5 text-xs">
               <span className="text-base leading-none">{meta.symbol}</span>
               <span className="text-gray-700 font-medium">{meta.label}</span>
-              <span className="text-gray-400">
+              <span className="text-gray-500">
                 {disp.sign.slice(0, 3)} H{disp.house}
                 {natal.retrograde ? " ®" : ""}
               </span>

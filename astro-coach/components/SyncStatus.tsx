@@ -70,7 +70,7 @@ export default function SyncStatus() {
         <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-gray-100 rounded-lg shadow-lg text-xs p-2 whitespace-nowrap">
           <div>Last sync: {formatLastSynced(lastSyncedAt)}</div>
           {error && <div className="text-red-600 mt-0.5">Error: {error}</div>}
-          <div className="text-gray-400 mt-0.5">Click to sync now</div>
+          <div className="text-gray-500 mt-0.5">Click to sync now</div>
         </div>
       )}
     </div>

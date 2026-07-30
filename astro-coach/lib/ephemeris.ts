@@ -47,6 +47,7 @@ export interface ChartRequest {
 export interface DashaRequest {
   moon_abs_pos: number;
   birth_year: number; birth_month: number; birth_day: number;
+  natal_planet_signs?: Record<string, number>;
 }
 
 export interface TransitRequest {

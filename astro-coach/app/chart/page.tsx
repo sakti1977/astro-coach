@@ -62,7 +62,7 @@ export default function ChartPage() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-400">Loading your chart…</p>
+          <p className="text-sm text-gray-500">Loading your chart…</p>
         </div>
       </div>
     );
@@ -82,7 +82,7 @@ export default function ChartPage() {
               <h1 className="text-xl font-bold text-gray-900">
                 {birthData?.name}&apos;s Birth Chart
               </h1>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 {birthData?.date} &middot; {birthData?.time} &middot; {birthData?.city}
               </p>
             </div>
@@ -109,16 +109,16 @@ export default function ChartPage() {
             <div className="grid grid-cols-2 gap-3">
               {/* Ascendant */}
               <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Ascendant</p>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Ascendant</p>
                 <p className="text-lg font-bold text-gray-900">{SIGN_NAMES[chart.ascendant.sign_num]}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{chart.ascendant.degree.toFixed(1)}° · House 1</p>
+                <p className="text-xs text-gray-500 mt-0.5">{chart.ascendant.degree.toFixed(1)}° · House 1</p>
               </div>
 
               {/* Moon nakshatra */}
               <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Nakshatra</p>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Nakshatra</p>
                 <p className="text-lg font-bold text-gray-900">{chart.moon_nakshatra.name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Pada {chart.moon_nakshatra.pada} · {chart.moon_nakshatra.lord}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Pada {chart.moon_nakshatra.pada} · {chart.moon_nakshatra.lord}</p>
               </div>
             </div>
 
@@ -142,7 +142,7 @@ export default function ChartPage() {
 
             {/* Planetary positions */}
             <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-4">Planetary Positions</p>
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-4">Planetary Positions</p>
               <div className="space-y-2.5">
                 {Object.entries(chart.planets).map(([key, p]) => {
                   const meta = PLANET_META[key as PlanetKey];
@@ -193,14 +193,14 @@ export default function ChartPage() {
             <div className="flex gap-3 pt-1">
               <button
                 onClick={exportProfile}
-                className="flex-1 inline-flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-gray-700 py-2 border border-gray-100 rounded-xl transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-1 text-xs text-gray-500 hover:text-gray-700 py-2 border border-gray-100 rounded-xl transition-colors"
                 title="Download your chart data as a JSON backup"
               >
                 <Download className="w-3.5 h-3.5" /> Backup data
               </button>
               <button
                 onClick={resetChart}
-                className="flex-1 inline-flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-red-600 py-2 border border-gray-100 rounded-xl transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-1 text-xs text-gray-500 hover:text-red-600 py-2 border border-gray-100 rounded-xl transition-colors"
                 title="Clear chart and start over"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Reset chart

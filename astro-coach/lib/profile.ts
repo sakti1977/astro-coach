@@ -82,6 +82,8 @@ export interface NatalChart extends ChartDisplay {
   doshas?: Dosha[];
 }
 
+export type DignityTier = "exalted" | "own" | "neutral" | "debilitated";
+
 export interface DashaData {
   mahadashas: Array<{
     lord: string; years: number; balance_years: number;
@@ -93,8 +95,12 @@ export interface DashaData {
   }>;
   current_maha: string;
   current_antar: string;
+  current_pratyantar: string;
   current_maha_end: string;
   current_antar_end: string;
+  current_pratyantar_end: string;
+  /** Keyed by lowercase planet name (e.g. "mercury"). v1: dignity-tier only — see SPEC.md §4.3. */
+  lord_dignity?: Record<string, DignityTier> | null;
 }
 
 export interface ValidationEntry {

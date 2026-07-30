@@ -17,8 +17,10 @@ const DASHAS: DashaData = {
   ],
   current_maha: "Saturn",
   current_antar: "Saturn",
+  current_pratyantar: "Saturn",
   current_maha_end: "2039-01-01",
   current_antar_end: "2027-01-01",
+  current_pratyantar_end: "2026-06-01",
 };
 
 // Regression coverage for the "endless questions, never concludes" fix:

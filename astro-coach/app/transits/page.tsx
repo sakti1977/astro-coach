@@ -105,7 +105,7 @@ export default function TransitsPage() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-400">Loading…</p>
+          <p className="text-sm text-gray-500">Loading…</p>
         </div>
       </div>
     );
@@ -122,11 +122,11 @@ export default function TransitsPage() {
         <div className="max-w-3xl mx-auto px-4 py-5 flex items-start justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Current Transits</h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               Gochar — planetary positions today relative to your natal chart
             </p>
             {calcTime && (
-              <p className="text-xs text-gray-300 mt-0.5">Calculated at {calcTime}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Calculated at {calcTime}</p>
             )}
           </div>
           <button
@@ -149,7 +149,7 @@ export default function TransitsPage() {
         {loading && !transits && (
           <div className="text-center py-20">
             <Orbit className="w-9 h-9 mb-3 mx-auto text-indigo-300 animate-pulse" />
-            <p className="text-gray-400 text-sm">Calculating planetary positions…</p>
+            <p className="text-gray-500 text-sm">Calculating planetary positions…</p>
           </div>
         )}
 
@@ -170,7 +170,7 @@ export default function TransitsPage() {
         {transits && (
           <div className="space-y-3">
             {/* Legend */}
-            <div className="flex items-center gap-4 text-xs text-gray-400 pb-1 border-b border-gray-100">
+            <div className="flex items-center gap-4 text-xs text-gray-500 pb-1 border-b border-gray-100">
               <span className="font-medium text-gray-600">Planet</span>
               <span className="ml-auto">Transit Sign</span>
               <span className="w-20 text-center">House</span>
@@ -197,7 +197,7 @@ export default function TransitsPage() {
                       <div>
                         <p className="text-sm font-semibold text-gray-900">{meta.label}</p>
                         {tp.retrograde && (
-                          <p className="text-xs text-gray-400">Retrograde ®</p>
+                          <p className="text-xs text-gray-500">Retrograde ®</p>
                         )}
                       </div>
                     </div>
@@ -205,14 +205,14 @@ export default function TransitsPage() {
                     {/* Arrow from natal to transit */}
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {natal && (
-                        <span className="text-xs text-gray-400 hidden sm:block flex-shrink-0">
+                        <span className="text-xs text-gray-500 hidden sm:block flex-shrink-0">
                           {SIGN_NAMES[natal.sign_num].slice(0, 3)} →
                         </span>
                       )}
                       <span className={`text-sm font-medium ${sameSign ? "text-blue-700" : "text-gray-900"}`}>
                         {SIGN_NAMES[tp.sign_num]}
                       </span>
-                      <span className="text-xs text-gray-400">{tp.degree.toFixed(1)}°</span>
+                      <span className="text-xs text-gray-500">{tp.degree.toFixed(1)}°</span>
                       {sameSign && (
                         <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full flex-shrink-0">
                           natal sign
@@ -229,7 +229,7 @@ export default function TransitsPage() {
                   </div>
 
                   {/* Theme */}
-                  <p className="text-xs text-gray-400 mt-2 ml-1">
+                  <p className="text-xs text-gray-500 mt-2 ml-1">
                     <span className="font-medium text-gray-500">{meta.label} in {houseSuffix(h)} house —</span>{" "}
                     {HOUSE_THEMES[h]}
                   </p>
@@ -241,7 +241,7 @@ export default function TransitsPage() {
             <div className="mt-4 border border-dashed border-gray-200 rounded-xl p-4 text-sm text-gray-500">
               <span className="font-medium text-gray-700">Natal Lagna:</span>{" "}
               {SIGN_NAMES[profile.chart.ascendant.sign_num]} · Houses counted from {SIGN_NAMES[profile.chart.ascendant.sign_num]} as 1st
-              <span className="ml-3 text-gray-400">· Kendra (1/4/7/10) transits highlighted</span>
+              <span className="ml-3 text-gray-500">· Kendra (1/4/7/10) transits highlighted</span>
             </div>
           </div>
         )}

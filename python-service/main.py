@@ -61,6 +61,7 @@ class DashaRequest(BaseModel):
     birth_year: int
     birth_month: int
     birth_day: int
+    natal_planet_signs: Optional[dict[str, int]] = None
 
 
 class TransitRequest(BaseModel):
@@ -99,7 +100,7 @@ def calculate(req: ChartRequest):
 def dasha(req: DashaRequest):
     try:
         birth = date(req.birth_year, req.birth_month, req.birth_day)
-        return calculate_dashas(req.moon_abs_pos, birth)
+        return calculate_dashas(req.moon_abs_pos, birth, req.natal_planet_signs)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

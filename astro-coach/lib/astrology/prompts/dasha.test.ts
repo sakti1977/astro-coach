@@ -57,6 +57,32 @@ describe("buildDashaPredictionPrompt", () => {
     expect(prompt).toContain("generic statements that could apply to any Saturn dasha");
   });
 
+  it("injects a current-sub-period note when the Antardasha lord genuinely differs from the Maha lord", () => {
+    const prompt = buildDashaPredictionPrompt(chart(), "Saturn", 19, undefined, {
+      antarLord: "Moon",
+      pratyantarLord: "Venus",
+    });
+    expect(prompt).toContain("CURRENTLY active period");
+    expect(prompt).toContain("Moon");
+    expect(prompt).toContain("Venus");
+  });
+
+  it("does NOT inject the current-sub-period note when the Antardasha lord equals the Maha lord (regression guard)", () => {
+    // Protects against reintroducing the exact historical bug via this new
+    // mechanism: never let a structurally-identical sub-period lord through.
+    const prompt = buildDashaPredictionPrompt(chart(), "Saturn", 19, undefined, {
+      antarLord: "Saturn",
+      pratyantarLord: "Moon",
+    });
+    expect(prompt).not.toContain("CURRENTLY active period");
+  });
+
+  it("leaves the prompt unchanged when currentSubPeriod is omitted (no regression for past/future mahadasha predictions)", () => {
+    const withParam = buildDashaPredictionPrompt(chart(), "Saturn", 19, undefined, undefined);
+    const withoutParam = buildDashaPredictionPrompt(chart(), "Saturn", 19, undefined);
+    expect(withParam).toBe(withoutParam);
+  });
+
   it("produces meaningfully different prompts for two different charts sharing the same dasha lord", () => {
     const chartA = chart();
     const chartB = chart({

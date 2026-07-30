@@ -90,7 +90,7 @@ export default function ValidatePage() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-400">Loading validation…</p>
+          <p className="text-sm text-gray-500">Loading validation…</p>
         </div>
       </div>
     );
@@ -104,7 +104,7 @@ export default function ValidatePage() {
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-4 py-5">
           <h1 className="text-xl font-bold text-gray-900">Chart Validation</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             Claude analyzes your chart and asks questions to confirm accuracy
           </p>
         </div>
@@ -122,7 +122,7 @@ export default function ValidatePage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Chart accuracy score</p>
-                    <p className="text-xs text-gray-400">{profile.validation.questions.length} questions answered</p>
+                    <p className="text-xs text-gray-500">{profile.validation.questions.length} questions answered</p>
                   </div>
                 </div>
               </div>
@@ -131,10 +131,10 @@ export default function ValidatePage() {
             <div className="border border-gray-100 rounded-xl p-6">
               <h2 className="font-semibold text-gray-900 mb-2">How validation works</h2>
               <ol className="space-y-2 text-sm text-gray-600">
-                <li className="flex gap-2"><span className="font-mono text-gray-400">1.</span>Claude analyzes your birth chart</li>
-                <li className="flex gap-2"><span className="font-mono text-gray-400">2.</span>It generates 10 yes/no questions about life events derived from your chart</li>
-                <li className="flex gap-2"><span className="font-mono text-gray-400">3.</span>Your answers calibrate the chart interpretation accuracy</li>
-                <li className="flex gap-2"><span className="font-mono text-gray-400">4.</span>Future predictions are weighted by this accuracy score</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-500">1.</span>Claude analyzes your birth chart</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-500">2.</span>It generates 10 yes/no questions about life events derived from your chart</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-500">3.</span>Your answers calibrate the chart interpretation accuracy</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-500">4.</span>Future predictions are weighted by this accuracy score</li>
               </ol>
             </div>
 
@@ -157,7 +157,7 @@ export default function ValidatePage() {
           <div className="text-center py-20">
             <Sparkles className="w-10 h-10 mb-4 mx-auto text-indigo-300 animate-pulse" />
             <p className="text-gray-500">Claude is reading your chart...</p>
-            <p className="text-xs text-gray-400 mt-2">This takes about 10–15 seconds</p>
+            <p className="text-xs text-gray-500 mt-2">This takes about 10–15 seconds</p>
           </div>
         )}
 

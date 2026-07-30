@@ -15,7 +15,7 @@ export default function TrustPage() {
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-6 py-10 text-center">
           <h1 className="text-2xl font-bold text-gray-900">How We Work</h1>
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-sm text-gray-500 mt-2">
             What the calculation actually does, why nothing here is ever upsold, and how to read
             your results in whichever voice actually works for you.
           </p>
@@ -36,7 +36,7 @@ export default function TrustPage() {
               { icon: Orbit, title: "Vimshottari Dasha, verified to the day", body: "Timing is calculated from the Moon's nakshatra at birth across a 120-year cycle. Every Mahadasha, Antardasha, and Pratyantardasha period is checked at calculation time — each level's sub-periods must sum in days exactly to their parent period, with no gaps. If that check ever fails, we refuse to show you a date rather than show you a wrong one." },
             ].map((item) => (
               <div key={item.title} className="bg-white border border-gray-100 rounded-2xl p-5 flex gap-3">
-                <item.icon className="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" />
+                <item.icon className="w-5 h-5 flex-shrink-0 text-gray-500 mt-0.5" />
                 <div>
                   <p className="font-medium text-gray-800 text-sm">{item.title}</p>
                   <p className="text-xs text-gray-500 mt-1 leading-relaxed">{item.body}</p>
@@ -53,7 +53,7 @@ export default function TrustPage() {
           </h2>
           <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-4">
             <div className="flex gap-3">
-              <Lock className="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" />
+              <Lock className="w-5 h-5 flex-shrink-0 text-gray-500 mt-0.5" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">One deterministic table, not a sales conversation</p>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
@@ -66,7 +66,7 @@ export default function TrustPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Sprout className="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" />
+              <Sprout className="w-5 h-5 flex-shrink-0 text-gray-500 mt-0.5" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">Behavioral practice is never optional</p>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
@@ -78,7 +78,7 @@ export default function TrustPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Target className="w-5 h-5 flex-shrink-0 text-gray-400 mt-0.5" />
+              <Target className="w-5 h-5 flex-shrink-0 text-gray-500 mt-0.5" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">Tendencies, never verdicts</p>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
@@ -121,7 +121,7 @@ export default function TrustPage() {
           </div>
         </section>
 
-        <p className="text-center text-xs text-gray-300">
+        <p className="text-center text-xs text-gray-500">
           Questions about your data? See <Link href="/profile" className="underline hover:text-gray-500">Profile &amp; Settings</Link>.
         </p>
       </div>

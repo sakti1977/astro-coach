@@ -56,7 +56,7 @@ export default function NavBar() {
           <div className="flex items-center gap-2.5 ml-3 flex-shrink-0">
             <Link
               href="/trust"
-              className="hidden sm:inline text-xs text-gray-400 hover:text-gray-700 transition-colors"
+              className="hidden sm:inline text-xs text-gray-500 hover:text-gray-700 transition-colors"
               title="How we calculate your chart, and why we never upsell remedies"
             >
               How we work
@@ -75,7 +75,7 @@ export default function NavBar() {
             </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-              className="text-xs text-gray-400 hover:text-gray-700 transition-colors pl-1"
+              className="text-xs text-gray-500 hover:text-gray-700 transition-colors pl-1"
             >
               Sign out
             </button>

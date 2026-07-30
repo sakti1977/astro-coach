@@ -96,7 +96,7 @@ export default function MuhurtaPage() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-400">Loading…</p>
+          <p className="text-sm text-gray-500">Loading…</p>
         </div>
       </div>
     );
@@ -114,7 +114,7 @@ export default function MuhurtaPage() {
         <div className="max-w-3xl mx-auto px-4 py-5 flex items-start justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Muhurta</h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               Panchang and timing windows for {profile.birthData.city || "your saved location"}
             </p>
           </div>
@@ -137,7 +137,7 @@ export default function MuhurtaPage() {
         {loading && !data && (
           <div className="text-center py-20">
             <Clock className="w-9 h-9 mb-3 mx-auto text-indigo-300 animate-pulse" />
-            <p className="text-gray-400 text-sm">Calculating panchang…</p>
+            <p className="text-gray-500 text-sm">Calculating panchang…</p>
           </div>
         )}
 
@@ -152,13 +152,13 @@ export default function MuhurtaPage() {
                 { label: "Karana", value: karana?.name },
               ].map((item) => (
                 <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
-                  <p className="text-xs text-gray-400">{item.label}</p>
+                  <p className="text-xs text-gray-500">{item.label}</p>
                   <p className="text-sm font-semibold text-gray-900 mt-0.5">{item.value ?? "—"}</p>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center gap-4 text-xs text-gray-400 border border-dashed border-gray-200 rounded-xl p-4">
+            <div className="flex items-center gap-4 text-xs text-gray-500 border border-dashed border-gray-200 rounded-xl p-4">
               <span><span className="font-medium text-gray-600">{data.vara}</span> ({data.vara_lord})</span>
               <span>Sunrise {fmtTime(data.sunrise)}</span>
               <span>Sunset {fmtTime(data.sunset)}</span>
@@ -196,7 +196,7 @@ export default function MuhurtaPage() {
               </div>
             </div>
 
-            <p className="text-xs text-gray-300 text-center pt-2">
+            <p className="text-xs text-gray-500 text-center pt-2">
               Calculated for your saved birth location — update it on your Profile page if you&apos;ve relocated.
             </p>
           </div>

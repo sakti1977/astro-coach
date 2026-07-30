@@ -4,10 +4,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Sparkles, Hexagon, Target, Orbit, Lock, Check, Loader2, MapPin, ChevronRight, Compass, LayoutGrid, Lightbulb, AlertTriangle } from "lucide-react";
-import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type UserProfile, type CoachTonePreference } from "@/lib/profile";
+import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type UserProfile, type CoachTonePreference, type NatalChart, type DashaData } from "@/lib/profile";
 import ConfirmResetModal from "@/components/ConfirmResetModal";
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
+import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
+import { dignityPhrase } from "@/lib/astrology/dignityFraming";
 
 // IANA timezone guesses by country code (best-effort for common countries)
 const COUNTRY_TZ: Record<string, string> = {
@@ -84,6 +86,8 @@ export default function HomePage() {
 
   // Track if user already has a calculated chart (for overview instead of blank redirect)
   const [hasExistingChart, setHasExistingChart] = useState(false);
+  const [chart, setChart] = useState<NatalChart | null>(null);
+  const [dashas, setDashas] = useState<DashaData | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -95,7 +99,11 @@ export default function HomePage() {
 
     const p = getProfile();
     const hasExisting = !!(p.chart && p.dashas);
-    queueMicrotask(() => setHasExistingChart(hasExisting));
+    queueMicrotask(() => {
+      setHasExistingChart(hasExisting);
+      setChart(p.chart ?? null);
+      setDashas(p.dashas ?? null);
+    });
 
     if (p.birthData) {
       const bd = p.birthData;
@@ -359,7 +367,7 @@ export default function HomePage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
-          <p className="text-sm text-gray-400">Loading…</p>
+          <p className="text-sm text-gray-500">Loading…</p>
         </div>
       </div>
     );
@@ -385,7 +393,7 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => router.push("/trust")}
-              className="text-xs text-gray-400 hover:text-gray-700 hidden sm:inline">How we work</button>
+              className="text-xs text-gray-500 hover:text-gray-700 hidden sm:inline">How we work</button>
             <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
               serviceStatus === "ok" ? "bg-green-50 border-green-200 text-green-700"
               : serviceStatus === "down" ? "bg-red-50 border-red-200 text-red-700"
@@ -406,7 +414,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <button onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-                  className="text-xs text-gray-400 hover:text-gray-700">Sign out</button>
+                  className="text-xs text-gray-500 hover:text-gray-700">Sign out</button>
               </div>
             ) : (
               <button onClick={() => router.push("/auth/signin")}
@@ -448,38 +456,90 @@ export default function HomePage() {
                 <f.icon className="w-5 h-5" />
               </div>
               <p className="font-semibold text-gray-900 text-sm">{f.label}</p>
-              <p className="text-xs text-gray-400 mt-1">{f.desc}</p>
+              <p className="text-xs text-gray-500 mt-1">{f.desc}</p>
             </div>
           ))}
         </div>
 
-        {/* Sample insights */}
-        <div className="mb-12">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest text-center mb-5">
-            What you&apos;ll discover
-          </p>
-          <div className="space-y-3">
-            {[
-              { planet: "☽", header: "Moon in Rohini · House 4", body: "Your emotional intelligence is one of your greatest assets. You need a stable, beautiful home environment to feel grounded.", tag: "Personality", tagColor: "bg-blue-50 text-blue-600" },
-              { planet: "♃", header: "Jupiter Mahadasha · Active until 2031", body: "This is an expansion phase — the right time to teach, study, or build something with long-term meaning.", tag: "Current Period", tagColor: "bg-amber-50 text-amber-600" },
-              { planet: "☉", header: "Sun · 10th House", body: "Career is not just income for you — it is identity. Leadership roles suit you, but only when you have genuine authority.", tag: "Career", tagColor: "bg-green-50 text-green-600" },
-            ].map((item) => (
-              <div key={item.header} className="border border-gray-100 rounded-2xl p-4 flex gap-4 hover:border-indigo-100 hover:bg-indigo-50/30 transition-all">
-                <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
-                  {item.planet}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <p className="text-sm font-semibold text-gray-900">{item.header}</p>
-                    <span className={`text-xs ${item.tagColor} px-2 py-0.5 rounded-full font-medium`}>{item.tag}</span>
+        {/* Sample insights — pre-chart teaser only; real users see actual highlights below (Welcome back) */}
+        {!hasExistingChart && ready && (
+          <div className="mb-12">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest text-center mb-5">
+              What you&apos;ll discover
+            </p>
+            <div className="space-y-3">
+              {[
+                { planet: "☽", header: "Moon in Rohini · House 4", body: "Your emotional intelligence is one of your greatest assets. You need a stable, beautiful home environment to feel grounded.", tag: "Personality", tagColor: "bg-blue-50 text-blue-600" },
+                { planet: "♃", header: "Jupiter Mahadasha · Active until 2031", body: "This is an expansion phase — the right time to teach, study, or build something with long-term meaning.", tag: "Current Period", tagColor: "bg-amber-50 text-amber-600" },
+                { planet: "☉", header: "Sun · 10th House", body: "Career is not just income for you — it is identity. Leadership roles suit you, but only when you have genuine authority.", tag: "Career", tagColor: "bg-green-50 text-green-600" },
+              ].map((item) => (
+                <div key={item.header} className="border border-gray-100 rounded-2xl p-4 flex gap-4 hover:border-indigo-100 hover:bg-indigo-50/30 transition-all">
+                  <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
+                    {item.planet}
                   </div>
-                  <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <p className="text-sm font-semibold text-gray-900">{item.header}</p>
+                      <span className={`text-xs ${item.tagColor} px-2 py-0.5 rounded-full font-medium`}>{item.tag}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            <p className="text-center text-xs text-gray-500 mt-4">Sample insights — your chart will reflect your actual birth data</p>
           </div>
-          <p className="text-center text-xs text-gray-300 mt-4">Sample insights — your chart will reflect your actual birth data</p>
-        </div>
+        )}
+
+        {/* Real chart-derived highlights — deterministic, no LLM call (G1: read-only display of already-computed data) */}
+        {hasExistingChart && ready && chart && dashas && (
+          <div className="mb-12">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest text-center mb-5">
+              Your highlights
+            </p>
+            <div className="space-y-3">
+              {(() => {
+                const mahaDignity = dignityPhrase(dashas.lord_dignity?.[dashas.current_maha.toLowerCase()]);
+                const items = [
+                  {
+                    key: "dasha",
+                    planet: PLANET_META[dashas.current_maha.toLowerCase() as PlanetKey]?.symbol ?? "●",
+                    header: `${dashas.current_maha} Mahadasha / ${dashas.current_antar} Antardasha${dashas.current_pratyantar ? ` / ${dashas.current_pratyantar} Pratyantardasha` : ""}`,
+                    body: mahaDignity
+                      ? `${dashas.current_maha} is ${mahaDignity} in your chart.`
+                      : `Your current planetary period, active until ${new Date(dashas.current_maha_end).toLocaleDateString("en-IN", { year: "numeric", month: "long" })}.`,
+                    tag: "Current Period",
+                    tagColor: "bg-amber-50 text-amber-600",
+                  },
+                  chart.planets.moon && chart.moon_nakshatra
+                    ? {
+                        key: "moon",
+                        planet: "☽",
+                        header: `Moon in ${chart.planets.moon.sign} · House ${chart.planets.moon.house}`,
+                        body: `Your natal Moon sits in ${chart.moon_nakshatra.name} nakshatra — this shapes your emotional baseline and, via Vimshottari, your entire dasha timeline.`,
+                        tag: "Personality",
+                        tagColor: "bg-blue-50 text-blue-600",
+                      }
+                    : null,
+                ].filter((x): x is NonNullable<typeof x> => x !== null);
+                return items.map((item) => (
+                  <div key={item.key} className="border border-gray-100 rounded-2xl p-4 flex gap-4 hover:border-indigo-100 hover:bg-indigo-50/30 transition-all">
+                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
+                      {item.planet}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <p className="text-sm font-semibold text-gray-900">{item.header}</p>
+                        <span className={`text-xs ${item.tagColor} px-2 py-0.5 rounded-full font-medium`}>{item.tag}</span>
+                      </div>
+                      <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* Existing chart overview + journey guidance */}
         {hasExistingChart && ready && (
@@ -515,7 +575,7 @@ export default function HomePage() {
           <div className="mb-6 border border-dashed border-gray-200 rounded-xl p-4 flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-gray-700">Have a backup file?</p>
-              <p className="text-xs text-gray-400 mt-0.5">Restore your chart from a previous export</p>
+              <p className="text-xs text-gray-500 mt-0.5">Restore your chart from a previous export</p>
             </div>
             <label className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-2 transition-colors whitespace-nowrap">
               ↑ Restore backup
@@ -529,7 +589,7 @@ export default function HomePage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-1">
             {hasExistingChart ? "Update birth details or recalculate" : "Calculate your birth chart"}
           </h2>
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm text-gray-500 mb-6">
             {hasExistingChart
               ? "Change time, place or name and recalculate. Your previous data can be archived."
               : "Enter your birth details below — takes under a minute"}
@@ -561,7 +621,7 @@ export default function HomePage() {
                     <p className="text-xs text-gray-500 mt-1">Same chart, plain language, no belief required</p>
                   </button>
                 </div>
-                <p className="text-xs text-gray-300 mt-2">You can switch this anytime from the Coach screen.</p>
+                <p className="text-xs text-gray-500 mt-2">You can switch this anytime from the Coach screen.</p>
               </div>
             )}
             <div>
@@ -569,7 +629,7 @@ export default function HomePage() {
               <input
                 type="text" value={form.name} onChange={(e) => setField("name", e.target.value)}
                 placeholder="Your name"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 transition-colors"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-300 transition-colors"
               />
             </div>
 
@@ -579,26 +639,26 @@ export default function HomePage() {
                   Date of Birth <span className="text-red-400">*</span>
                 </label>
                 <input type="date" title="Date of birth" value={form.date} onChange={(e) => setField("date", e.target.value)} required
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Time of Birth <span className="text-red-400">*</span>
-                  <span className="text-xs text-gray-400 ml-1">(as exact as possible)</span>
+                  <span className="text-xs text-gray-500 ml-1">(as exact as possible)</span>
                 </label>
                 <input type="time" title="Time of birth" value={form.time} onChange={(e) => setField("time", e.target.value)} required
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                 />
               </div>
             </div>
 
-            <p className="text-[11px] text-gray-400 -mt-1 mb-1">Tip: Hospital records or a parent’s memory are best. Within 15–30 minutes is usually sufficient — you can refine later with the Validate tool.</p>
+            <p className="text-[11px] text-gray-500 -mt-1 mb-1">Tip: Hospital records or a parent’s memory are best. Within 15–30 minutes is usually sufficient — you can refine later with the Validate tool.</p>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Place of Birth <span className="text-red-400">*</span>
-                <span className="text-xs text-gray-400 ml-1">— type to search or use location</span>
+                <span className="text-xs text-gray-500 ml-1">— type to search or use location</span>
               </label>
               <div className="relative" ref={dropdownRef}>
                 <input
@@ -606,13 +666,13 @@ export default function HomePage() {
                   onFocus={() => geoResults.length > 0 && setShowDropdown(true)}
                   placeholder="e.g. Mumbai, Kolkata, London…"
                   autoComplete="off"
-                  className={`w-full border rounded-xl px-4 py-3 pr-20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors ${
+                  className={`w-full border rounded-xl px-4 py-3 pr-20 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors ${
                     citySelected ? "border-green-300 bg-green-50" : "border-gray-200"
                   }`}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   {geoLoading ? (
-                    <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
                   ) : citySelected ? (
                     <Check className="w-4 h-4 text-green-500" />
                   ) : null}
@@ -631,7 +691,7 @@ export default function HomePage() {
                       <button key={i} type="button" onMouseDown={() => selectResult(r)}
                         className="w-full text-left px-4 py-3 text-sm hover:bg-indigo-50 border-b border-gray-50 last:border-0 transition-colors">
                         <p className="font-medium text-gray-900">{r.label}</p>
-                        <p className="text-xs text-gray-400 truncate mt-0.5">{r.display_name}</p>
+                        <p className="text-xs text-gray-500 truncate mt-0.5">{r.display_name}</p>
                       </button>
                     ))}
                   </div>
@@ -648,14 +708,14 @@ export default function HomePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
                   <input type="number" step="0.0001" value={form[key as "lat" | "lng"]}
                     onChange={(e) => setField(key, e.target.value)} placeholder="auto-filled"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50"
                   />
                 </div>
               ))}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Timezone</label>
                 <select title="Timezone" value={form.timezone} onChange={(e) => setField("timezone", e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                  className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
                   {ALL_TIMEZONES.map((tz) => (
                     <option key={tz} value={tz}>{tz}</option>
                   ))}
@@ -697,7 +757,7 @@ export default function HomePage() {
               {loading ? "Calculating your chart…" : "Calculate My Birth Chart →"}
             </button>
 
-            <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1">
+            <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1">
               <Lock className="w-3 h-3 flex-shrink-0" />
               {session
                 ? "Synced to your account · Nothing shared except chart calculation"
@@ -708,13 +768,13 @@ export default function HomePage() {
 
         {/* Technical transparency */}
         <details className="mt-12 group">
-          <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-600 text-center list-none flex items-center justify-center gap-1 select-none">
+          <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-600 text-center list-none flex items-center justify-center gap-1 select-none">
             <ChevronRight className="w-3 h-3 group-open:rotate-90 transition-transform" />
             How the chart is calculated
           </summary>
           <div className="mt-4 border border-gray-100 rounded-xl p-5 space-y-3 text-sm text-gray-600">
             <div className="flex gap-3">
-              <Hexagon className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
+              <Hexagon className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-500" />
               <div>
                 <p className="font-medium text-gray-800">Swiss Ephemeris (swe)</p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -723,7 +783,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Compass className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
+              <Compass className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-500" />
               <div>
                 <p className="font-medium text-gray-800">Lahiri Ayanamsha</p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -732,7 +792,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <LayoutGrid className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
+              <LayoutGrid className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-500" />
               <div>
                 <p className="font-medium text-gray-800">Whole-sign houses</p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -741,7 +801,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Orbit className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
+              <Orbit className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-500" />
               <div>
                 <p className="font-medium text-gray-800">Vimshottari Dasha</p>
                 <p className="text-xs text-gray-500 mt-0.5">

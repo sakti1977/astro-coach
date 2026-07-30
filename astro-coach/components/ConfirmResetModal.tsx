@@ -53,7 +53,7 @@ export default function ConfirmResetModal({ onArchiveAndReplace, onReplaceOnly, 
           {/* Cancel */}
           <button
             onClick={onCancel}
-            className="w-full text-gray-400 py-2 text-sm hover:text-gray-600 transition-colors"
+            className="w-full text-gray-500 py-2 text-sm hover:text-gray-600 transition-colors"
           >
             Cancel — keep existing chart
           </button>

@@ -99,6 +99,7 @@ _Verified against code as of commit `1fc5f00`. See git history for anything afte
 - The system shall collect name, date of birth, time of birth, and place of birth via geocode autocomplete before chart calculation.
 - WHEN an unauthenticated user submits birth data, the system shall redirect to `/auth/signin` before proceeding.
 - IF a chart already exists THEN the system shall prompt to archive-and-replace, replace-only, or cancel before overwriting.
+- WHEN a chart already exists, the home page shall show real, chart-derived highlights (current dasha, Moon placement) instead of the pre-chart sample teaser; the sample teaser shall render only for users with no chart yet (G1).
 
 ### 4.2 Chart Calculation
 - The system shall compute sidereal (Lahiri) positions for the 9 classical grahas using whole-sign houses, plus D9/D10/D7/D30 divisional charts.
@@ -109,6 +110,9 @@ _Verified against code as of commit `1fc5f00`. See git history for anything afte
 - The system shall compute Vimshottari Mahadasha/Antardasha/Pratyantardasha (3 levels) from the birth Moon's nakshatra.
 - The system shall verify internal date-arithmetic consistency at calculation time — every sub-period's days must sum exactly to its parent's span, contiguously, or the calculation shall fail loudly rather than serve inaccurate dates (`NON_NEGOTIABLES.md` #9).
 - WHEN the user selects a Mahadasha, the system shall generate an LLM prediction grounded in that period's lord and the natal chart.
+- The system shall compute and surface the current Pratyantardasha (not just Mahadasha/Antardasha) as a first-class field, server-side, as the single source of truth alongside `current_maha`/`current_antar`.
+- WHEN the user requests a prediction for the currently active Mahadasha, the system shall additionally ground the prompt in the current Antardasha and Pratyantardasha lords — a genuinely differentiating signal, since these are frequently not the same planet as the Mahadasha lord (unlike a historical, since-removed parameter that was always identical to it by construction). Predictions for non-current Mahadashas are unaffected.
+- The system shall classify each dasha period's lord by natal dignity (exalted / own-sign / neutral / debilitated, derived mechanically from existing exaltation/own-sign tables) and surface it as a non-fatalistic "operates from strength" / "may ask more deliberate effort" indicator — never a bare verdict (G3). v1 scope: dignity-tier only; moolatrikona, friend/enemy grading, and functional benefic/malefic-by-ascendant are explicitly deferred (would require new classical-table authoring, not mechanically derivable from existing data).
 
 ### 4.4 Transits & Muhurta
 - The system shall compute current transit positions and detect Sade Sati server-side as the single source of truth.
@@ -174,6 +178,7 @@ Method note: done as a code-level read of every page's Tailwind/JSX (no live bro
 3. **Icons are unicode/emoji glyphs** (✦ ◎ ⬡ ◐ ✕ ✓ 🔒 🕉 🎯…) throughout, despite `lucide-react` already being an installed, unused dependency. Emoji render inconsistently across OS/browser (Windows Segoe UI Emoji vs. Apple's set vs. Android's look visibly different), which undercuts the "designed" feel the rest of the layout is going for. Swapping to a consistent SVG icon set is a Nielsen consistency-and-standards fix, not a redesign.
 4. **Color palette is 100% stock Tailwind indigo/violet/gray** — clean and inoffensive, but generic. It doesn't yet have a distinctive identity the way Co-Star (stark mono + neon accent) or The Pattern (soft warm gradients) do, despite indigo/violet being thematically reasonable for astrology already. There's room to push further (a signature gradient, restrained celestial texture) without abandoning the current palette.
 5. **One brand-consistency slip**: `YesNoQuestion.tsx` uses near-black (`gray-900`) for its primary "Yes" button and progress bar instead of the indigo-600 used as the primary action color everywhere else in the app.
+6. **Light-mode text/input contrast bug (fixed this pass, distinct from #2).** `globals.css`'s `prefers-color-scheme: dark` media query flips `--foreground` to near-white with zero `dark:` Tailwind variants anywhere in the app, so under an OS/browser set to dark mode, unstyled inputs/text inherit near-invisible near-white text inside hardcoded white containers — this is what was reported as date/time/place text being hard to read. Fixed via `color-scheme: light` (forces native form-control chrome to stay light) plus explicit text colors on form inputs, and a contrast bump on the worst-offending `text-gray-300`/`text-gray-400` secondary-text instances (both fail WCAG AA on white) — NOT full dark mode, which remains Tier 2 item #2 below, not done.
 
 ### 7.2 Page-by-page notes
 
@@ -190,6 +195,7 @@ Method note: done as a code-level read of every page's Tailwind/JSX (no live bro
 1. ~~Load a real typeface~~ — the `geist` package (official Vercel typeface, matching the CSS variable name that was already half-wired) is now loaded via `next/font` in `layout.tsx`; the Arial override in `globals.css` is gone.
 2. ~~Replace decorative unicode/emoji glyphs with `lucide-react` icons~~ — done app-wide (17 files). Meaningful glyphs were deliberately kept: classical planet symbols (☉☽♂…), the 🕉 Om symbol (no icon equivalent, paired with 🎯 for visual parity in the two tone-preference toggles), country flags, and simple bullet dots.
 3. ~~Fix `YesNoQuestion.tsx`'s color to indigo-600~~ — done, plus the same `gray-900` inconsistency found and fixed in `auth/error/page.tsx`'s CTA button during the sweep.
+4. ~~Fix light-mode text/input contrast bug~~ — `color-scheme: light` forced globally, explicit `text-gray-900` added to form inputs lacking a text color, worst-offending `text-gray-300`/`text-gray-400` secondary-text instances bumped to `text-gray-500`/`600` for WCAG AA. Full dark mode is still Tier 2 item #2 above, not done.
 
 **Tier 2 — moderate effort, meaningful differentiation:**
 4. Dark mode via Tailwind `dark:` variants across the existing color usage.

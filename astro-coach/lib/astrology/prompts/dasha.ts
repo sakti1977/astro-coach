@@ -4,7 +4,8 @@ export function buildDashaPredictionPrompt(
   chart: NatalChart,
   dashaLord: string,
   years: number,
-  todayIso?: string
+  todayIso?: string,
+  currentSubPeriod?: { antarLord: string; pratyantarLord: string }
 ): string {
   const { ascendant, planets } = chart;
   const dashaLordKey = dashaLord.toLowerCase() as keyof typeof planets;
@@ -32,6 +33,19 @@ export function buildDashaPredictionPrompt(
     ? `\n- Yogas/doshas involving ${dashaLord}: ${[...relevantYogas, ...relevantDoshas].map((c) => `${c.name} (${c.description})`).join("; ")}`
     : `\n- No specific yogas or doshas involve ${dashaLord} directly in this chart.`;
 
+  // Only inject sub-period grounding when it's genuinely differentiating —
+  // i.e. a real, currently-active Antardasha lord distinct from the Maha
+  // lord. This guard is what prevents reintroducing the exact bug described
+  // above via a new mechanism: never inject a sub-period lord that could be
+  // structurally identical to dashaLord.
+  const currentSubNote = currentSubPeriod && currentSubPeriod.antarLord.toLowerCase() !== dashaLord.toLowerCase()
+    ? (() => {
+        const antarKey = currentSubPeriod.antarLord.toLowerCase() as keyof typeof planets;
+        const antarPlanet = planets[antarKey];
+        return `\n- This is the CURRENTLY active period. Within it, the active Antardasha lord is ${currentSubPeriod.antarLord} (placement: ${antarPlanet?.sign ?? "unknown"} House ${antarPlanet?.house ?? "?"}), and the active Pratyantardasha lord is ${currentSubPeriod.pratyantarLord}. Let these sharpen the specific flavor of *this* window within the broader ${dashaLord} period — don't just restate the Mahadasha-level analysis.`;
+      })()
+    : "";
+
   return `You are a precise Vedic astrology expert specializing in Vimshottari Dasha interpretation.
 
 Task: Provide a concise, practical prediction for this person's ${dashaLord} Maha Dasha, grounded specifically in THEIR chart below — not a generic description of what ${dashaLord} dashas mean in general. Two different people in a ${dashaLord} dasha should get noticeably different predictions if their charts differ.
@@ -40,7 +54,7 @@ Chart context:
 - Ascendant: ${ascendant.sign}
 - ${dashaLord} (the dasha lord) placement: ${dashaLordPlanet?.sign ?? "unknown"} House ${dashaLordPlanet?.house ?? "?"} ${dashaLordPlanet?.retrograde ? "(retrograde)" : ""} — Nakshatra: ${dashaLordPlanet?.nakshatra?.name ?? "unknown"}${combinationsNote}
 - Moon (governs this dasha timing): ${moon?.sign ?? "unknown"} House ${moon?.house ?? "?"} — Nakshatra: ${moon?.nakshatra?.name ?? "unknown"}
-- Period length: ~${years} years${todayNote}
+- Period length: ~${years} years${todayNote}${currentSubNote}
 
 Output EXACTLY this JSON structure with no extra text, no markdown, no explanations before or after:
 

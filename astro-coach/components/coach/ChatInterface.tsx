@@ -543,7 +543,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           <span className="font-medium text-gray-900">{dashas.current_maha}</span> Maha ·{" "}
           <span className="font-medium text-gray-900">{dashas.current_antar}</span> Antar
         </span>
-        <span className="ml-auto flex items-center gap-2 text-gray-400">
+        <span className="ml-auto flex items-center gap-2 text-gray-500">
           {/* New Topic */}
           <button
             type="button"
@@ -675,7 +675,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
               }`}
             >
               {msg.role === "assistant" && msg.content === "" ? (
-                <span className="inline-flex items-center gap-1.5 text-gray-400">
+                <span className="inline-flex items-center gap-1.5 text-gray-500">
                   <svg className="w-3 h-3 animate-spin text-indigo-400" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -736,7 +736,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
             placeholder={phase === "recommending" ? "Ask for recommendations..." : "Tell me about yourself..."}
             disabled={streaming}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
           />
           <button
             onClick={() => send()}
@@ -749,7 +749,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
         {voiceError && (
           <p className="text-xs text-red-500 text-center mt-1.5">{voiceError}</p>
         )}
-        <p className="text-[10px] text-gray-300 text-center mt-2">
+        <p className="text-[10px] text-gray-500 text-center mt-2">
           Jyotish guidance for reflection and remedial practice — not a substitute for professional medical, mental health, legal, or financial advice.
         </p>
       </div>

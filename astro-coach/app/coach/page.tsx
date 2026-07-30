@@ -22,7 +22,7 @@ export default function CoachPage() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-400">Loading your coach…</p>
+          <p className="text-sm text-gray-500">Loading your coach…</p>
         </div>
       </div>
     );
@@ -41,7 +41,7 @@ export default function CoachPage() {
             </div>
             <div>
               <h1 className="text-base font-bold text-gray-900">Your Jyotish Guidance</h1>
-              <p className="text-[11px] text-gray-400 leading-none mt-0.5">
+              <p className="text-[11px] text-gray-500 leading-none mt-0.5">
                 Remedy and practice, grounded in your natal chart
               </p>
             </div>
