@@ -15,5 +15,6 @@ export const config = {
     "/transits/:path*",
     "/validate/:path*",
     "/muhurta/:path*",
+    "/foundation/:path*",
   ],
 }

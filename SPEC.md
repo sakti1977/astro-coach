@@ -136,8 +136,8 @@ Re-verify market facts in §1 before acting on stale versions of this section �
 ### 5.1 Near-term (0-3 months) — close known gaps, build the trust-attack surface
 1. ~~**Skeptic-mode onboarding + methodology-disclosure surfacing** (§3)~~ — **shipped**: `tonePreference` toggle + `/trust` page.
 2. ~~**A "Trust & Methodology" page**~~ — **shipped** alongside #1.
-3. **A writing-quality bar in the coaching prompt** (§2.6) — few-shot calibration (generic vs. specific phrasing), applied to prose craft the way `coach.ts` already calibrates chain-analysis correctness. Cheap, prompt-only, high-leverage.
-4. **A static, re-readable "Your Foundation" profile page** (§2.6) — generated once from the chart via the same chain-analysis engine, written as a standalone piece rather than gated behind chat. The artifact people actually re-read and share.
+3. ~~**A writing-quality bar in the coaching prompt**~~ — **shipped**: few-shot calibration in `coach.ts`.
+4. ~~**A static, re-readable "Your Foundation" profile page**~~ — **shipped**: `/foundation`, reusing `buildCoachSystemPrompt` wholesale (NON_NEGOTIABLES.md #13) with a new task instruction (`buildFoundationTask`), generated once via Sonnet and cached on the profile, with Regenerate/Copy affordances. A natural source for the future "shareable report card" (#10).
 5. **A daily chart-grounded transit note** (§2.6) — one or two sentences from the user's own current transits (`transits.py` already computes this), surfaced as a notification/home-card. Never a generic horoscope — violates G1 if it isn't chart-specific.
 6. **Kundli Matching (Ashtakoot Guna Milan)** — confirmed table-stakes: AstroYogi and AstroSage Kundli (70M downloads) both lead with this. Pair the Guna score with a named Bond-style category (§2.6 #3), not a bare percentage — frame via relationship dynamics, never pass/fail (G3).
 7. **WhatsApp coaching channel** — lowest-friction acquisition surface in India; none of the researched competitors were found offering a WhatsApp-native flow.

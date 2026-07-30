@@ -205,6 +205,17 @@ export interface UserProfile {
   };
   /** PERF-03: cached planetary transits with a 2-hour TTL. */
   cachedTransits?: CachedTransits;
+  /** "Your Foundation" — generated once, re-read rather than regenerated on
+   * every visit. The user can explicitly regenerate from the Foundation page. */
+  foundation?: FoundationProfile;
+}
+
+export interface FoundationProfile {
+  /** Canonical English markdown — always what's stored/synced, regardless of
+   * preferredLanguage (matches the chat's content/displayContent split). */
+  content: string;
+  generatedAt: string;
+  tonePreference: CoachTonePreference;
 }
 
 const DEFAULT_PROFILE: UserProfile = {

@@ -501,6 +501,7 @@ export default function HomePage() {
             <div className="mt-5 pt-4 border-t border-gray-100">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Recommended next steps</p>
               <div className="flex flex-wrap gap-2 text-sm">
+                <button onClick={() => router.push("/foundation")} className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100">Read your Foundation</button>
                 <button onClick={() => router.push("/validate")} className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100">Validate chart accuracy</button>
                 <button onClick={() => router.push("/habits")} className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">Generate sadhana for current dasha</button>
                 <button onClick={() => router.push("/dasha")} className="px-3 py-1.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100">Explore your dasha timeline</button>

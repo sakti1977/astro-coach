@@ -4,17 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
-import { Sparkles, Hexagon, CircleDot, Orbit, Clock, Target, MessageCircle, Sprout } from "lucide-react";
+import { Sparkles, Hexagon, BookOpen, CircleDot, Orbit, Clock, Target, MessageCircle, Sprout } from "lucide-react";
 import SyncStatus from "@/components/SyncStatus";
 
 const NAV_ITEMS = [
-  { href: "/chart",    label: "Chart",    icon: Hexagon },
-  { href: "/dasha",    label: "Dasha",    icon: CircleDot },
-  { href: "/transits", label: "Transits", icon: Orbit },
-  { href: "/muhurta",  label: "Muhurta",  icon: Clock },
-  { href: "/validate", label: "Validate", icon: Target },
-  { href: "/coach",    label: "Guidance", icon: MessageCircle },
-  { href: "/habits",   label: "Sadhana",  icon: Sprout },
+  { href: "/chart",      label: "Chart",      icon: Hexagon },
+  { href: "/foundation", label: "Foundation", icon: BookOpen },
+  { href: "/dasha",      label: "Dasha",      icon: CircleDot },
+  { href: "/transits",   label: "Transits",   icon: Orbit },
+  { href: "/muhurta",    label: "Muhurta",    icon: Clock },
+  { href: "/validate",   label: "Validate",   icon: Target },
+  { href: "/coach",      label: "Guidance",   icon: MessageCircle },
+  { href: "/habits",     label: "Sadhana",    icon: Sprout },
 ];
 
 export default function NavBar() {

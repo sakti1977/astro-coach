@@ -18,6 +18,7 @@ export const MAX_TOKENS_VALIDATE  = 1024;  // chart validation questions
 export const MAX_TOKENS_HABITS    = 1024;  // habit list JSON
 export const MAX_TOKENS_EXTRACT   = 512;   // observation extraction
 export const MAX_TOKENS_SUMMARISE = 250;   // observation summarisation
+export const MAX_TOKENS_FOUNDATION = 3072; // "Your Foundation" static profile — 5 sections of considered prose
 
 // ── Observation management ─────────────────────────────────────────────────────
 /** Hard cap on stored coaching observations (oldest are pruned beyond this). */
