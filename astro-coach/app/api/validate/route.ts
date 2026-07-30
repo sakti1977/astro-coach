@@ -4,6 +4,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { validateChart } from "@/lib/claude";
 import { buildValidatorSystemPrompt, buildValidatorUserPrompt } from "@/lib/astrology/prompts";
 import { extractJsonArray } from "@/lib/claude-json";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 import type { NatalChart } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ questions });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Validation failed";
+    const msg = safeClientErrorMessage(err, "Validation failed. Please try again shortly.", "validate");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

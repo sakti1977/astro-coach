@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 import type { UserProfile, CoachingObservation } from "@/lib/profile";
 
 // This route replaces direct browser -> Supabase writes/reads for user_profiles
@@ -72,8 +73,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
-    console.error("Sync push error:", err);
-    const msg = err instanceof Error ? err.message : "Sync failed";
+    const msg = safeClientErrorMessage(err, "Sync failed. Please try again shortly.", "sync-push");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
@@ -112,8 +112,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ profile: profileData ?? null, observations: obsData ?? [] });
   } catch (err: unknown) {
-    console.error("Sync pull error:", err);
-    const msg = err instanceof Error ? err.message : "Sync failed";
+    const msg = safeClientErrorMessage(err, "Sync failed. Please try again shortly.", "sync-pull");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { textToSpeech } from "@/lib/sarvam";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     const result = await textToSpeech(text, targetLanguageCode);
     return NextResponse.json(result);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Text-to-speech failed";
+    const msg = safeClientErrorMessage(err, "Text-to-speech failed. Please try again shortly.", "text-to-speech");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { translateText } from "@/lib/sarvam";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     const { translatedText } = await translateText(text, sourceLanguageCode, targetLanguageCode);
     return NextResponse.json({ translatedText });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Translation failed";
+    const msg = safeClientErrorMessage(err, "Translation failed. Please try again shortly.", "translate");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

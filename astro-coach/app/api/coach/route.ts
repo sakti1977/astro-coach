@@ -3,6 +3,7 @@ import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { streamCoachResponse } from "@/lib/claude";
 import { buildCoachSystemPrompt, buildCoachDynamicBlock } from "@/lib/astrology/prompts";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 import type { NatalChart, DashaData, ChatMessage, CoachingPhase } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "Stream error";
+        const msg = safeClientErrorMessage(e, "The coach hit a snag. Please try again shortly.", "coach-stream");
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`));
       } finally {
         controller.close();

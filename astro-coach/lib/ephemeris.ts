@@ -1,3 +1,5 @@
+import { safeClientErrorMessage } from "@/lib/safe-error";
+
 const EPHEMERIS_URL = process.env.EPHEMERIS_SERVICE_URL ?? "http://localhost:8000";
 const EPHEMERIS_SHARED_SECRET = process.env.EPHEMERIS_SHARED_SECRET ?? "";
 const TIMEOUT_MS = 20_000; // 20 seconds max per call
@@ -90,10 +92,5 @@ export async function checkEphemerisHealth(): Promise<boolean> {
 // production client — log the full detail server-side and return a generic
 // message instead.
 export function ephemerisClientErrorMessage(err: unknown, fallback: string): string {
-  const detail = err instanceof Error ? err.message : String(err);
-  console.error(`[ephemeris] ${detail}`);
-  if (process.env.NODE_ENV !== "production") {
-    return detail;
-  }
-  return fallback;
+  return safeClientErrorMessage(err, fallback, "ephemeris");
 }

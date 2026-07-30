@@ -4,6 +4,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { generateDashaPrediction } from "@/lib/claude";
 import { buildDashaPredictionPrompt } from "@/lib/astrology/prompts";
 import { prepareJsonString } from "@/lib/claude-json";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 import type { NatalChart } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ prediction });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Dasha prediction failed";
+    const msg = safeClientErrorMessage(err, "Dasha prediction failed. Please try again shortly.", "dasha");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

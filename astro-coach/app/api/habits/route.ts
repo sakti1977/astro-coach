@@ -4,6 +4,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { generateHabits } from "@/lib/claude";
 import { buildHabitPrompt } from "@/lib/astrology/prompts";
 import { extractJsonArray } from "@/lib/claude-json";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 import type { NatalChart } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ habits });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Habit generation failed";
+    const msg = safeClientErrorMessage(err, "Habit generation failed. Please try again shortly.", "habits");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

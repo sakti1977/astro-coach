@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendPush, isPushConfigured, type PushSubscriptionRow } from "@/lib/push";
 import { fetchTransits } from "@/lib/ephemeris";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 import type { DashaData, Habit, NatalChart } from "@/lib/profile";
 
 // Runs once daily (Vercel Hobby plan allows only one cron invocation/day —
@@ -70,7 +71,10 @@ export async function GET(req: NextRequest) {
   const { data: subs, error: subsError } = await supabaseAdmin
     .from("push_subscriptions")
     .select("*");
-  if (subsError) return NextResponse.json({ error: subsError.message }, { status: 500 });
+  if (subsError) {
+    const msg = safeClientErrorMessage(subsError, "Failed to load subscriptions.", "cron-notifications");
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
   if (!subs || subs.length === 0) return NextResponse.json({ processed: 0, sent: 0 });
 
   const userIds = [...new Set(subs.map((s) => s.user_id as string))];
@@ -78,7 +82,10 @@ export async function GET(req: NextRequest) {
     .from("user_profiles")
     .select("user_id, birth_data, chart, dashas, habits")
     .in("user_id", userIds);
-  if (profilesError) return NextResponse.json({ error: profilesError.message }, { status: 500 });
+  if (profilesError) {
+    const msg = safeClientErrorMessage(profilesError, "Failed to load profiles.", "cron-notifications");
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 
   const profileByUser = new Map<string, ProfileRow>((profiles ?? []).map((p) => [p.user_id, p as ProfileRow]));
   const today = todayUtcDateString();

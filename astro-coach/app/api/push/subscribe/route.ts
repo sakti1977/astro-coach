@@ -3,6 +3,7 @@ import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { isPushConfigured } from "@/lib/push";
+import { safeClientErrorMessage } from "@/lib/safe-error";
 
 interface SubscriptionBody {
   endpoint: string;
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Subscribe failed";
+    const msg = safeClientErrorMessage(err, "Subscribe failed. Please try again shortly.", "push-subscribe");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
@@ -91,7 +92,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Update failed";
+    const msg = safeClientErrorMessage(err, "Update failed. Please try again shortly.", "push-update");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
@@ -116,7 +117,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Unsubscribe failed";
+    const msg = safeClientErrorMessage(err, "Unsubscribe failed. Please try again shortly.", "push-unsubscribe");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
