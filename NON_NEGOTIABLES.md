@@ -102,8 +102,40 @@ date-only string variable rather than a fresh `new Date()`.
 
 ---
 
-## Pending additions
+### 10. Coaching output must be chart/conversation-grounded
+**Rule:** Every coaching response must be traceable to a specific chart placement, dasha period,
+transit, or yoga/dosha that is actually present in the chart data, AND/OR something the user
+actually said in the conversation. No generic sun-sign-style filler ("Cancers are emotional").
+**Why:** This is the entire premise of a "rational coach" (`SPEC.md` §0) — competitors in this
+market are documented (see `SPEC.md` §1) using cold-reading (generic statements that apply to
+anyone). Grounding is the product's core trust claim, not a style preference.
+**Check:** Spot-check coaching prompt changes in `lib/astrology/prompts/coach.ts` for the grounding
+rule text; for new coaching-adjacent features, confirm output is derived from real chart/session
+data, not templated boilerplate.
 
-- Product-identity guardrails (coaching must stay grounded in chart + client chat input, remedies
-  must stay behavior/habit-oriented, no fatalistic/deterministic claims) are being formalized in
-  `SPEC.md` §0. Once that's finalized, promote its G1–G4 guardrails into numbered items here.
+### 11. Every remedy includes a behavioral component
+**Rule:** A remedy surfaced to the user must always include a behavioral/habit practice. Ritual-only
+remedies (mantra/gemstone/dana/vrata with no behavioral counterpart) are non-compliant.
+**Why:** `python-service/remedies.py`'s deterministic table already guarantees this at the data
+layer — this item guards against a future feature bypassing that table and inventing a ritual-only
+remedy elsewhere (e.g., a new module that doesn't route through `attach_remedies()`).
+**Check:** Any new remedy-surfacing code path must source from `remedies.py`'s deterministic table,
+not synthesize remedies ad hoc.
+
+### 12. No deterministic/fatalistic claims
+**Rule:** The product never asserts a deterministic outcome ("you will fail," "this marriage will
+not work"). It frames tendencies within free will (purushartha) and offers agency.
+**Why:** This is both an ethical stance and the direct opposite of the fear-based-prediction pattern
+`SPEC.md` §1 documents at the market leader. It's also what makes ritual remedies presentable as
+practice rather than a hedge against doom.
+**Check:** Review new coaching-prompt or user-facing copy for absolute/fatalistic language,
+especially around health, money, and relationships.
+
+### 13. No second, ungrounded advice pathway
+**Rule:** New features may add data sources or delivery channels (WhatsApp, voice, a new module),
+but must not introduce a parallel advice surface that bypasses items #10–12 — e.g., a generic
+chatbot fallback unrelated to the user's chart.
+**Why:** Keeps the product's identity coherent as surface area grows — see `SPEC.md` §5's roadmap,
+all of which is written to route through the existing chart+chat-grounded core.
+**Check:** For any new coaching-adjacent surface, confirm it calls into the existing grounded
+coaching/remedy path rather than shipping independent, ungrounded advice logic.
