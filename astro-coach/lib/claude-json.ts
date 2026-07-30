@@ -5,6 +5,48 @@
  */
 
 /**
+ * Escape raw newline/tab/carriage-return characters that fall *inside* JSON
+ * string literals, leaving structural whitespace between tokens untouched.
+ *
+ * A blind global regex here previously escaped every bare newline in the
+ * whole payload — including the indentation Claude naturally produces for
+ * pretty-printed JSON (e.g. the whitespace between `{` and the first key).
+ * That turned valid structural whitespace into a literal backslash-n sitting
+ * outside any string, which JSON.parse rejects immediately after `{`. Real
+ * control characters inside a string value *do* need escaping (raw ones
+ * aren't legal JSON), so this walks the string tracking string-literal state
+ * (respecting `\"` and other escape sequences) and only escapes there.
+ */
+function escapeControlCharsInStrings(jsonStr: string): string {
+  let result = "";
+  let inString = false;
+
+  for (let i = 0; i < jsonStr.length; i++) {
+    const ch = jsonStr[i];
+
+    if (inString && ch === "\\") {
+      // Already-escaped sequence (\", \\, \n, \uXXXX, ...) — copy verbatim.
+      result += ch + (jsonStr[i + 1] ?? "");
+      i++;
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = !inString;
+      result += ch;
+      continue;
+    }
+
+    if (inString && ch === "\n") result += "\\n";
+    else if (inString && ch === "\t") result += "\\t";
+    else if (inString && ch === "\r") result += "\\r";
+    else result += ch;
+  }
+
+  return result;
+}
+
+/**
  * Strip markdown code fences, sanitise stray control characters, and return
  * the sub-string from the first `{` to the last `}`.
  * Throws if no object braces are found.
@@ -32,8 +74,9 @@ export function prepareJsonString(raw: string): string {
   // Remove stray C0/C1 control characters while preserving \n \t \r
   jsonStr = jsonStr.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, " ");
 
-  // Escape bare (un-escaped) newlines and tabs so JSON.parse doesn't choke
-  jsonStr = jsonStr.replace(/(?<!\\)\n/g, "\\n").replace(/(?<!\\)\t/g, "\\t");
+  // Escape bare (un-escaped) newlines/tabs/CRs, but only inside string
+  // literals — structural whitespace between tokens must be left alone.
+  jsonStr = escapeControlCharsInStrings(jsonStr);
 
   return jsonStr;
 }

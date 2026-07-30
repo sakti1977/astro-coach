@@ -26,6 +26,34 @@ describe("extractJsonObject", () => {
     expect(extractJsonObject(raw)).toEqual({ summary: "line one\nline two" });
   });
 
+  it("parses pretty-printed, multi-line JSON without corrupting structural whitespace", () => {
+    // Regression test: this is what Claude actually returns for most JSON-mode
+    // prompts (fenced + indented), and it used to break prepareJsonString —
+    // the newline/indentation between "{" and the first key was blindly
+    // escaped into a literal backslash-n, which JSON.parse rejects right
+    // after the opening brace.
+    const raw = '```json\n{\n  "observations": [\n    {\n      "text": "avoids exam prep",\n      "category": "pattern"\n    }\n  ],\n  "shouldTransitionToRecommending": true\n}\n```';
+    expect(extractJsonObject(raw)).toEqual({
+      observations: [{ text: "avoids exam prep", category: "pattern" }],
+      shouldTransitionToRecommending: true,
+    });
+  });
+
+  it("still escapes a bare newline inside a string value within pretty-printed JSON", () => {
+    const raw = '{\n  "summary": "line one\nline two",\n  "count": 2\n}';
+    expect(extractJsonObject(raw)).toEqual({ summary: "line one\nline two", count: 2 });
+  });
+
+  it("does not mistake an escaped quote inside a string for the string's end", () => {
+    const raw = '{\n  "text": "she said \\"hello\\" then left"\n}';
+    expect(extractJsonObject(raw)).toEqual({ text: 'she said "hello" then left' });
+  });
+
+  it("escapes bare tabs and carriage returns inside string values", () => {
+    const raw = '{"a": "col1\tcol2\rline2"}';
+    expect(extractJsonObject(raw)).toEqual({ a: "col1\tcol2\rline2" });
+  });
+
   it("strips stray control characters without corrupting the JSON", () => {
     const raw = '{"a": "value\x00with\x07control"}';
     expect(extractJsonObject(raw)).toEqual({ a: "value with control" });
