@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import { getProfile, updateProfile, type UserProfile, type SadeSati } from "@/lib/profile";
 import { TRANSIT_TTL_MS } from "@/lib/constants";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
@@ -116,8 +116,7 @@ export default function TransitsPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
+    <AppShell>
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 py-5 flex items-start justify-between">
           <div>
@@ -246,6 +245,6 @@ export default function TransitsPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

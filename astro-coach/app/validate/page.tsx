@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import SignInRequired from "@/components/SignInRequired";
 import YesNoQuestion from "@/components/validate/YesNoQuestion";
 import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
@@ -90,29 +90,29 @@ export default function ValidatePage() {
 
   if (!profile || status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Loading validation…</p>
+      <AppShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Loading validation…</p>
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-        <NavBar />
+      <AppShell>
         <SignInRequired feature="Chart validation" />
-      </div>
+      </AppShell>
     );
   }
 
   const alreadyValidated = profile.validation.isValidated;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
+    <AppShell>
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-4 py-5">
           <h1 className="text-xl font-bold text-gray-900">Chart Validation</h1>
@@ -215,6 +215,6 @@ export default function ValidatePage() {
           </div>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

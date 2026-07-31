@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import { getProfile, type UserProfile } from "@/lib/profile";
 import { Clock } from "lucide-react";
 
@@ -108,8 +108,7 @@ export default function MuhurtaPage() {
   const karana = data ? activeEntry(data.karana) : undefined;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
+    <AppShell>
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 py-5 flex items-start justify-between flex-wrap gap-3">
           <div>
@@ -202,6 +201,6 @@ export default function MuhurtaPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

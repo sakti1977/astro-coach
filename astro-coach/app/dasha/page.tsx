@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import DashaTimeline from "@/components/dasha/DashaTimeline";
 import { getProfile, type UserProfile } from "@/lib/profile";
 
@@ -28,8 +28,7 @@ export default function DashaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
+    <AppShell>
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 py-5">
           <h1 className="text-xl font-bold text-gray-900">Vimshottari Dasha Timeline</h1>
@@ -41,6 +40,6 @@ export default function DashaPage() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <DashaTimeline dashas={profile.dashas} birthDate={profile.birthData.date} />
       </div>
-    </div>
+    </AppShell>
   );
 }

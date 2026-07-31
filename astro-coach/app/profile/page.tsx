@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import { getProfile, updateProfile, clearProfile, archiveProfile, type UserProfile } from "@/lib/profile";
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
@@ -218,9 +218,7 @@ export default function ProfilePage() {
   const hasChart = !!profile.chart;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
-
+    <AppShell>
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 py-5">
           <h1 className="text-xl font-bold text-gray-900">Profile &amp; Settings</h1>
@@ -410,6 +408,6 @@ export default function ProfilePage() {
           <button onClick={() => router.push(hasChart ? "/chart" : "/")} className="text-sm text-indigo-600 hover:text-indigo-800">← Back to {hasChart ? "Chart" : "Home"}</button>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import SignInRequired from "@/components/SignInRequired";
 import BehaviorRadar from "@/components/habits/BehaviorRadar";
 import { getProfile, updateProfile, type UserProfile, type Habit, type Goal } from "@/lib/profile";
@@ -134,21 +134,22 @@ export default function HabitsPage() {
 
   if (!profile || status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Loading habits…</p>
+      <AppShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Loading habits…</p>
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-        <NavBar />
+      <AppShell>
         <SignInRequired feature="Sadhana tracking" />
-      </div>
+      </AppShell>
     );
   }
 
@@ -166,8 +167,7 @@ export default function HabitsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
+    <AppShell>
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 py-5">
           <h1 className="text-xl font-bold text-gray-900">Sadhana — Daily Practice</h1>
@@ -358,6 +358,6 @@ export default function HabitsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

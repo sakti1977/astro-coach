@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ReactMarkdown from "react-markdown";
 import { BookOpen, RotateCw, Copy, CheckCheck, Loader2 } from "lucide-react";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import SignInRequired from "@/components/SignInRequired";
 import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
 
@@ -99,21 +99,22 @@ export default function FoundationPage() {
 
   if (!profile?.chart || status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Loading…</p>
+      <AppShell>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Loading…</p>
+          </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-        <NavBar />
+      <AppShell>
         <SignInRequired feature="Your Foundation" />
-      </div>
+      </AppShell>
     );
   }
 
@@ -121,9 +122,7 @@ export default function FoundationPage() {
   const displayContent = generating ? streamedContent : saved?.content ?? "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
-
+    <AppShell>
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-4 py-5 flex items-start justify-between flex-wrap gap-3">
           <div>
@@ -204,6 +203,6 @@ export default function FoundationPage() {
           </p>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

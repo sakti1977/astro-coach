@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import ChartToggle from "@/components/chart/ChartToggle";
 import { getProfile, saveProfile, type UserProfile } from "@/lib/profile";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
@@ -71,9 +71,7 @@ export default function ChartPage() {
   const { chart, dashas, birthData } = profile;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
-
+    <AppShell>
       {/* Page header */}
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 py-5">
@@ -209,6 +207,6 @@ export default function ChartPage() {
           </div>
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

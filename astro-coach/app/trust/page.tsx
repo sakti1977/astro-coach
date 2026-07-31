@@ -1,5 +1,5 @@
 import Link from "next/link";
-import NavBar from "@/components/NavBar";
+import AppShell from "@/components/AppShell";
 import { Hexagon, Compass, LayoutGrid, Orbit, Lock, Sprout, Target } from "lucide-react";
 
 export const metadata = {
@@ -9,9 +9,7 @@ export const metadata = {
 
 export default function TrustPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
-      <NavBar />
-
+    <AppShell>
       <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-6 py-10 text-center">
           <h1 className="text-2xl font-bold text-gray-900">How We Work</h1>
@@ -125,6 +123,6 @@ export default function TrustPage() {
           Questions about your data? See <Link href="/profile" className="underline hover:text-gray-500">Profile &amp; Settings</Link>.
         </p>
       </div>
-    </div>
+    </AppShell>
   );
 }
