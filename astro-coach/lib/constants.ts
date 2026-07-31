@@ -50,6 +50,11 @@ export const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
  * a user id, so the cap is deliberately tighter than the authenticated limit. */
 export const ANON_CHART_RATE_LIMIT_MAX = 5;
 export const ANON_CHART_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+/** Geocode search (place-of-birth autocomplete) is a required step before a
+ * guest can even submit the chart form — also anonymous, but a looser limit
+ * since a visitor may type/refine a city search several times per visit. */
+export const ANON_GEOCODE_RATE_LIMIT_MAX = 20;
+export const ANON_GEOCODE_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 // ── Profile archives (BUG-03) ─────────────────────────────────────────────────
 /** Maximum number of localStorage profile archives to retain. */

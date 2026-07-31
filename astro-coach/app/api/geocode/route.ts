@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { ANON_GEOCODE_RATE_LIMIT_MAX, ANON_GEOCODE_RATE_LIMIT_WINDOW_MS } from "@/lib/constants";
 
+// Required step before a guest can submit the chart form at all (place-of-
+// birth search) — part of chart-only guest mode, same as /api/chart itself.
 export async function GET(req: NextRequest) {
-  const access = await getApiAccessContext(req);
+  const access = await getApiAccessContext(req, { allowAnonymous: true });
   if (access instanceof NextResponse) return access;
 
-  if (!(await checkRateLimit(access.rateLimitKey))) {
+  const rateLimitOk = access.session
+    ? await checkRateLimit(access.rateLimitKey)
+    : await checkRateLimit(access.rateLimitKey, ANON_GEOCODE_RATE_LIMIT_MAX, ANON_GEOCODE_RATE_LIMIT_WINDOW_MS);
+  if (!rateLimitOk) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
