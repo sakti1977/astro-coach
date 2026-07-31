@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import NavBar from "@/components/NavBar";
+import SignInRequired from "@/components/SignInRequired";
 import YesNoQuestion from "@/components/validate/YesNoQuestion";
 import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
 import { Sparkles } from "lucide-react";
@@ -18,6 +20,7 @@ type Phase = "intro" | "loading" | "questions" | "result";
 
 export default function ValidatePage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [phase, setPhase] = useState<Phase>("intro");
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -85,13 +88,22 @@ export default function ValidatePage() {
     setPhase("result");
   }
 
-  if (!profile) {
+  if (!profile || status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm text-gray-500">Loading validation…</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
+        <NavBar />
+        <SignInRequired feature="Chart validation" />
       </div>
     );
   }

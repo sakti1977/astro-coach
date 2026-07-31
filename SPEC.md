@@ -97,9 +97,10 @@ _Verified against code as of commit `1fc5f00`. See git history for anything afte
 
 ### 4.1 Birth Data Intake & Onboarding
 - The system shall collect name, date of birth, time of birth, and place of birth via geocode autocomplete before chart calculation.
-- WHEN an unauthenticated user submits birth data, the system shall redirect to `/auth/signin` before proceeding.
+- Chart-only guest mode: an unauthenticated visitor may submit birth data and receive a real chart and dasha timeline (deterministic ephemeris computation only, no LLM call), stored on-device only — rate-limited by IP, more strictly than the authenticated per-user default, since IP keys are inherently weaker (shared NAT, VPNs). Every LLM-backed surface (coaching chat, Your Foundation, habit/sadhana generation, chart validation, AI dasha predictions) still requires a signed-in session; a guest who reaches one of these is shown a sign-in prompt rather than the feature.
 - IF a chart already exists THEN the system shall prompt to archive-and-replace, replace-only, or cancel before overwriting.
 - WHEN a chart already exists, the home page shall show real, chart-derived highlights (current dasha, Moon placement) instead of the pre-chart sample teaser; the sample teaser shall render only for users with no chart yet (G1).
+- WHEN a guest who has a local chart signs in for the first time, the system shall push that local data to their new account before any pull from the server can occur, and shall never let an empty/default server profile overwrite non-empty local chart data (data-loss guard, `lib/storage-supabase.ts`).
 
 ### 4.2 Chart Calculation
 - The system shall compute sidereal (Lahiri) positions for the 9 classical grahas using whole-sign houses, plus D9/D10/D7/D30 divisional charts.

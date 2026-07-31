@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import NavBar from "@/components/NavBar";
+import SignInRequired from "@/components/SignInRequired";
 import BehaviorRadar from "@/components/habits/BehaviorRadar";
 import { getProfile, updateProfile, type UserProfile, type Habit, type Goal } from "@/lib/profile";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
@@ -25,6 +27,7 @@ function today(): string {
 
 export default function HabitsPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loadingHabits, setLoadingHabits] = useState(false);
   const [habitError, setHabitError] = useState("");
@@ -129,13 +132,22 @@ export default function HabitsPage() {
     }
   }
 
-  if (!profile) {
+  if (!profile || status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm text-gray-500">Loading habits…</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
+        <NavBar />
+        <SignInRequired feature="Sadhana tracking" />
       </div>
     );
   }

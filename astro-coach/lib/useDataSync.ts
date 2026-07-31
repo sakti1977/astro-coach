@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { storage } from "@/lib/storage-supabase";
+import { getProfile } from "@/lib/profile";
 
 export interface SyncState {
   isSyncing: boolean;
@@ -43,9 +44,18 @@ export function useDataSync() {
       if (session?.user?.id && !hasSynced.current) {
         hasSynced.current = true;
         try {
+          // Claim guest data: a chart-only guest who just signed up has real
+          // local data and a brand-new (blank) server profile. Push before
+          // pulling so that local data is backed up before anything could
+          // pull the blank profile back down over it — storage-supabase.ts's
+          // syncFromServer also refuses that overwrite as a backstop, but
+          // this is what actually gets the guest's chart onto their account.
+          if (getProfile().chart) {
+            await storage.syncToServer(session.user.id);
+          }
           await performSyncFrom(session.user.id);
         } catch {
-          // error already handled in performSyncFrom
+          // error already handled in performSyncFrom/storage layer
         }
       }
     }

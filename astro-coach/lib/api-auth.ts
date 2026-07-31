@@ -15,8 +15,16 @@ function getClientIp(req: NextRequest): string {
     ?? "unknown";
 }
 
+export interface ApiAccessOptions {
+  /** Allow a request through with an IP-keyed context instead of a 401 when
+   * no session is present. Opt-in per route — default is unchanged (session
+   * required). Only /api/chart uses this today (chart-only guest mode). */
+  allowAnonymous?: boolean;
+}
+
 export async function getApiAccessContext(
-  req: NextRequest
+  req: NextRequest,
+  opts: ApiAccessOptions = {}
 ): Promise<ApiAccessContext | NextResponse> {
   const clientIp = getClientIp(req);
 
@@ -37,6 +45,13 @@ export async function getApiAccessContext(
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
+    if (opts.allowAnonymous) {
+      return {
+        clientIp,
+        rateLimitKey: `ip:${clientIp}`,
+        session: null,
+      };
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

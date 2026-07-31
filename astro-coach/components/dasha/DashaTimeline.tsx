@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import type { DashaData } from "@/lib/profile";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
 import { dignityPhrase } from "@/lib/astrology/dignityFraming";
+import SignInRequired from "@/components/SignInRequired";
 
 interface Props {
   dashas: DashaData;
@@ -20,6 +22,7 @@ interface DashaPrediction {
 }
 
 export default function DashaTimeline({ dashas, birthDate }: Props) {
+  const { data: session } = useSession();
   const [selectedMaha, setSelectedMaha] = useState<number | null>(null);
   const [selectedAntar, setSelectedAntar] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<DashaPrediction | null>(null);
@@ -60,7 +63,6 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
       return;
     }
     setSelectedMaha(idx);
-    setLoadingPrediction(true);
     setPrediction(null);
     setPredictionError("");
 
@@ -72,6 +74,14 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
       if (antarIdx !== -1) setSelectedAntar(`${idx}-${antarIdx}`);
     }
 
+    if (!session) {
+      // Guest: the timeline itself (including pratyantardasha/dignity, both
+      // already free) stays visible, but AI predictions require an account —
+      // rendered via the <SignInRequired> branch below instead of fetching.
+      return;
+    }
+
+    setLoadingPrediction(true);
     try {
       const profile = JSON.parse(localStorage.getItem("astro_coach_profile") ?? "{}");
       const res = await fetch("/api/dasha", {
@@ -197,7 +207,9 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
               {/* Prediction panel */}
               {isSelected && (
                 <div className="px-3 pb-3 border-t border-gray-100 mt-0">
-                  {loadingPrediction ? (
+                  {!session ? (
+                    <SignInRequired feature="AI dasha predictions" />
+                  ) : loadingPrediction ? (
                     <p className="text-sm text-gray-500 py-4 text-center">Reading the planetary currents...</p>
                   ) : predictionError ? (
                     <p className="text-sm text-red-500 py-3">{predictionError}</p>

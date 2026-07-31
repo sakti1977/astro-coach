@@ -314,13 +314,11 @@ export default function HomePage() {
     e.preventDefault();
     setError("");
 
-    // SPEC.md §4.1: unauthenticated submission redirects to sign-in — this is
-    // the actual gate now (moved from a page-load redirect, which blocked
-    // anonymous visitors from ever seeing the page at all).
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-      return;
-    }
+    // SPEC.md §4.1: chart calculation is allowed anonymously (chart-only
+    // guest mode) — /api/chart itself accepts and IP-rate-limits guest
+    // requests. Every other feature (coach, Foundation, habits, validation,
+    // AI dasha predictions) still requires a session, enforced at those
+    // surfaces via <SignInRequired>, not here.
 
     if (!form.name || !form.date || !form.time || !form.lat || !form.lng) {
       setError("Please fill in all required fields including birth location.");

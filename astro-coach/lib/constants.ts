@@ -45,6 +45,12 @@ export const RATE_LIMIT_MAX = 20;
 /** Rate-limit sliding window length (ms). */
 export const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 
+// ── Anonymous chart-only guest mode ────────────────────────────────────────────
+/** Stricter than RATE_LIMIT_MAX — anonymous requests are keyed by IP, not by
+ * a user id, so the cap is deliberately tighter than the authenticated limit. */
+export const ANON_CHART_RATE_LIMIT_MAX = 5;
+export const ANON_CHART_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
 // ── Profile archives (BUG-03) ─────────────────────────────────────────────────
 /** Maximum number of localStorage profile archives to retain. */
 export const MAX_ARCHIVES = 5;

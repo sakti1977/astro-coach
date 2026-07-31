@@ -2,12 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiAccessContext } from "@/lib/api-auth";
 import { fetchChart, fetchDashas, checkEphemerisHealth, ephemerisClientErrorMessage } from "@/lib/ephemeris";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { ANON_CHART_RATE_LIMIT_MAX, ANON_CHART_RATE_LIMIT_WINDOW_MS } from "@/lib/constants";
 
+// Chart-only guest mode: anonymous visitors can calculate a real chart (no
+// LLM call, deterministic ephemeris compute), stored locally on their
+// device only. Every other route stays fully session-gated — this is the
+// one deliberate opt-in. Rate-limited by IP, tighter than the authenticated
+// per-user default, since IP keys are weaker (shared NAT, VPNs).
 export async function POST(req: NextRequest) {
-  const access = await getApiAccessContext(req);
+  const access = await getApiAccessContext(req, { allowAnonymous: true });
   if (access instanceof NextResponse) return access;
 
-  if (!(await checkRateLimit(access.rateLimitKey))) {
+  const isGuest = !access.session;
+  const rateLimitOk = isGuest
+    ? await checkRateLimit(access.rateLimitKey, ANON_CHART_RATE_LIMIT_MAX, ANON_CHART_RATE_LIMIT_WINDOW_MS)
+    : await checkRateLimit(access.rateLimitKey);
+  if (!rateLimitOk) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 

@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import ReactMarkdown from "react-markdown";
 import { BookOpen, RotateCw, Copy, CheckCheck, Loader2 } from "lucide-react";
 import NavBar from "@/components/NavBar";
+import SignInRequired from "@/components/SignInRequired";
 import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
 
 export default function FoundationPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [streamedContent, setStreamedContent] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -94,13 +97,22 @@ export default function FoundationPage() {
     }
   }
 
-  if (!profile?.chart) {
+  if (!profile?.chart || status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm text-gray-500">Loading…</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/30 to-white">
+        <NavBar />
+        <SignInRequired feature="Your Foundation" />
       </div>
     );
   }

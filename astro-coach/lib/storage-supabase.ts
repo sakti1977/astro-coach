@@ -110,6 +110,15 @@ class SupabaseStorageAdapter implements StorageAdapter {
       const { profile: profileData, observations: obsData } = await res.json();
 
       if (profileData) {
+        // Guest-mode safety: a brand-new account gets a blank profile row
+        // upserted at sign-up (ensureProfile in lib/auth.ts), chart: null.
+        // Never let that empty server profile clobber a real local chart
+        // that hasn't been pushed yet — useDataSync pushes before it pulls
+        // specifically to avoid needing this, but this is the backstop.
+        if (!profileData.chart && getProfile().chart) {
+          return;
+        }
+
         const profile: UserProfile = {
           birthData: profileData.birth_data as UserProfile["birthData"],
           chart: profileData.chart as UserProfile["chart"],
