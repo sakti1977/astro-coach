@@ -10,6 +10,7 @@ import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
 import { dignityPhrase } from "@/lib/astrology/dignityFraming";
+import { SAMPLE_FOUNDATION } from "@/lib/sampleFoundation";
 
 // IANA timezone guesses by country code (best-effort for common countries)
 const COUNTRY_TZ: Record<string, string> = {
@@ -92,11 +93,10 @@ export default function HomePage() {
   useEffect(() => {
     if (status === "loading") return;
 
-    if (status === "unauthenticated") {
-      router.replace("/auth/signin");
-      return;
-    }
-
+    // Unauthenticated visitors can view this page (hero, features, sample
+    // demo) — only submitting birth data requires a session, enforced in
+    // handleSubmit per SPEC.md §4.1. getProfile() is purely localStorage-
+    // based, so this runs fine for signed-out visitors too.
     const p = getProfile();
     const hasExisting = !!(p.chart && p.dashas);
     queueMicrotask(() => {
@@ -314,6 +314,14 @@ export default function HomePage() {
     e.preventDefault();
     setError("");
 
+    // SPEC.md §4.1: unauthenticated submission redirects to sign-in — this is
+    // the actual gate now (moved from a page-load redirect, which blocked
+    // anonymous visitors from ever seeing the page at all).
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
+      return;
+    }
+
     if (!form.name || !form.date || !form.time || !form.lat || !form.lng) {
       setError("Please fill in all required fields including birth location.");
       return;
@@ -444,6 +452,54 @@ export default function HomePage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-12">
+        {/* Sample Foundation demo — a taste of the real product before the data-entry
+            form, shown to first-time visitors (including anonymous ones, now that this
+            page no longer hard-redirects signed-out visitors to sign-in). Fully static,
+            hand-authored copy — no LLM call, so no cost or abuse surface per visitor. */}
+        {!hasExistingChart && ready && (
+          <div className="mb-12 border border-indigo-100 rounded-2xl p-6 bg-gradient-to-b from-indigo-50/40 to-white">
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+              <p className="text-xs font-semibold text-indigo-600 uppercase tracking-widest">
+                Sample reading
+              </p>
+              <div className="inline-flex items-center gap-1 bg-white border border-gray-200 rounded-full p-1">
+                <button
+                  type="button"
+                  onClick={() => setTonePreference("jyotish")}
+                  className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                    tonePreference === "jyotish" ? "bg-purple-100 text-purple-700" : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  🕉 Traditional
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTonePreference("skeptic")}
+                  className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                    tonePreference === "skeptic" ? "bg-sky-100 text-sky-700" : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  🎯 Plain language
+                </button>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {SAMPLE_FOUNDATION[tonePreference].map((paragraph, i) => (
+                <p key={i} className="text-sm text-gray-700 leading-relaxed">{paragraph}</p>
+              ))}
+            </div>
+            <div className="flex items-center justify-between flex-wrap gap-3 mt-5 pt-4 border-t border-indigo-100">
+              <p className="text-xs text-gray-500">A fictional sample chart — yours will be entirely about you.</p>
+              <a
+                href="#birth-form"
+                className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors whitespace-nowrap"
+              >
+                Calculate your real chart →
+              </a>
+            </div>
+          </div>
+        )}
+
         {/* Features */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           {[
@@ -460,36 +516,6 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-
-        {/* Sample insights — pre-chart teaser only; real users see actual highlights below (Welcome back) */}
-        {!hasExistingChart && ready && (
-          <div className="mb-12">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest text-center mb-5">
-              What you&apos;ll discover
-            </p>
-            <div className="space-y-3">
-              {[
-                { planet: "☽", header: "Moon in Rohini · House 4", body: "Your emotional intelligence is one of your greatest assets. You need a stable, beautiful home environment to feel grounded.", tag: "Personality", tagColor: "bg-blue-50 text-blue-600" },
-                { planet: "♃", header: "Jupiter Mahadasha · Active until 2031", body: "This is an expansion phase — the right time to teach, study, or build something with long-term meaning.", tag: "Current Period", tagColor: "bg-amber-50 text-amber-600" },
-                { planet: "☉", header: "Sun · 10th House", body: "Career is not just income for you — it is identity. Leadership roles suit you, but only when you have genuine authority.", tag: "Career", tagColor: "bg-green-50 text-green-600" },
-              ].map((item) => (
-                <div key={item.header} className="border border-gray-100 rounded-2xl p-4 flex gap-4 hover:border-indigo-100 hover:bg-indigo-50/30 transition-all">
-                  <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
-                    {item.planet}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <p className="text-sm font-semibold text-gray-900">{item.header}</p>
-                      <span className={`text-xs ${item.tagColor} px-2 py-0.5 rounded-full font-medium`}>{item.tag}</span>
-                    </div>
-                    <p className="text-sm text-gray-500 leading-relaxed">{item.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-center text-xs text-gray-500 mt-4">Sample insights — your chart will reflect your actual birth data</p>
-          </div>
-        )}
 
         {/* Real chart-derived highlights — deterministic, no LLM call (G1: read-only display of already-computed data) */}
         {hasExistingChart && ready && chart && dashas && (
@@ -585,7 +611,7 @@ export default function HomePage() {
         )}
 
         {/* Form */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+        <div id="birth-form" className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">
             {hasExistingChart ? "Update birth details or recalculate" : "Calculate your birth chart"}
           </h2>
