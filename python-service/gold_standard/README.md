@@ -14,8 +14,8 @@ under test**; these fixtures must not be generated from `chart.py` /
 | Yogas / doshas | Restated classical rules in `oracle.py` (BPHS Pancha Mahapurusha, Gaja Kesari, Budhaditya, Chandra Mangal, Kemadruma, Visha; Kuja; Kaal Sarp hemisphere; one common Pitru reading) | `yoga_dosha_cases.json` + natal names |
 | Coaching efficacy | Vitest against `buildCoachSystemPrompt` / `buildCoachDynamicBlock` / `buildDashaPredictionPrompt` using the Mumbai gold natal | `astro-coach/lib/astrology/prompts/goldStandard.efficacy.test.ts` |
 
-kerykeion is pinned `>=5.12.0,<6` because v6 removed `AstrologicalSubject` and
-is not bit-compatible with this service.
+kerykeion is pinned `==5.12.9` (last 5.x). v6 removed `AstrologicalSubject` and
+is not bit-compatible with this service; an uncapped `>=5.12.0` resolves to 6.x.
 
 ## Run
 

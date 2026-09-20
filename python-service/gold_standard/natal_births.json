@@ -1,7 +1,7 @@
 {
   "schema": "astro-coach.gold.natal.v1",
   "ephemeris": "Swiss Ephemeris Lahiri (SIDM_LAHIRI) via pyswisseph, FLG_SWIEPH|FLG_SIDEREAL. True lunar node. Whole-sign houses from true sidereal Lagna (houses_ex Placidus for the rising degree only).",
-  "kerykeion_pin": ">=5.12.0,<6",
+  "kerykeion_pin": "==5.12.9",
   "births": [
     {
       "id": "mumbai-1990-morning",

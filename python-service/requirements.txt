@@ -1,4 +1,6 @@
-kerykeion>=5.12.0,<6
+# 5.12.9 is the last 5.x with AstrologicalSubject. Uncapped `>=5.12.0` installs
+# kerykeion 6, which removes that class and fails pytest collection on chart.py.
+kerykeion==5.12.9
 fastapi[standard]>=0.115.0
 uvicorn>=0.30.0
 pytz>=2024.1
