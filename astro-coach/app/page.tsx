@@ -60,7 +60,7 @@ interface GeoResult {
 export default function HomePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { syncToServer } = useDataSync();
+  const { syncToServer, lastSyncedAt, isSyncing } = useDataSync();
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -805,9 +805,13 @@ export default function HomePage() {
 
             <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1">
               <Lock className="w-3 h-3 flex-shrink-0" />
-              {session
-                ? "Synced to your account · Nothing shared except chart calculation"
-                : "Data stored locally on this device · Nothing shared except chart calculation · Sign in to sync across devices"}
+              {!session
+                ? "Data stored locally on this device · Nothing shared except chart calculation · Sign in to copy it to your account"
+                : isSyncing
+                ? "Copying this device to your account…"
+                : lastSyncedAt
+                ? "Copied to your account · Nothing shared except chart calculation"
+                : "Signed in — waiting for the first successful account copy"}
             </p>
           </form>
         </div>

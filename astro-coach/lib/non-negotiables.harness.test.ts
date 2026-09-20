@@ -51,6 +51,8 @@ describe("NON_NEGOTIABLES harness", () => {
       expect(src, relative(APP_ROOT, file)).not.toMatch(/synced to Supabase with row-level security/i);
       expect(src, relative(APP_ROOT, file)).not.toMatch(/Local only \(no Supabase\)/);
     }
+    const syncStatus = read(join(APP_ROOT, "components/SyncStatus.tsx"));
+    expect(syncStatus).not.toContain('"Local only"');
   });
 
   it("#3 every python POST that takes user input depends on the shared secret", () => {

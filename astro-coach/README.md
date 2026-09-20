@@ -115,7 +115,7 @@ The app supports two modes:
 - Create account with email/password
 - Data stored in Supabase PostgreSQL
 - Automatic sync across all devices
-- Secure with row-level security
+- Session-verified `/api/sync` (service-role, scoped to your user id)
 
 ### Without Authentication
 - Data stored locally (localStorage + IndexedDB)

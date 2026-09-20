@@ -8,7 +8,7 @@ The application now includes:
 - **Authentication**: Email/password authentication using NextAuth.js
 - **Database**: Supabase PostgreSQL for persistent user data storage
 - **Sync**: Automatic synchronization between local storage and Supabase
-- **Security**: Row-level security policies to protect user data
+- **Security**: Session-verified API writes; RLS remains on as defense-in-depth against direct client access
 
 ## Architecture
 

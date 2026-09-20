@@ -86,7 +86,7 @@ Your authentication system is now fully configured:
 - ✅ Users can sign up and sign in
 - ✅ User data is stored in Supabase
 - ✅ Data syncs automatically across devices
-- ✅ Row-level security protects user data
+- ✅ Account copy goes through a session-verified API (not a silent browser write)
 
 ## Next Steps
 
