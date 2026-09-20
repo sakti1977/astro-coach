@@ -44,6 +44,9 @@ export const TRANSIT_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 export const RATE_LIMIT_MAX = 20;
 /** Rate-limit sliding window length (ms). */
 export const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+/** Health-check probes are cheap but still upstream work — cap per IP. */
+export const HEALTH_RATE_LIMIT_MAX = 30;
+export const HEALTH_RATE_LIMIT_WINDOW_MS = 60_000;
 
 // ── Anonymous chart-only guest mode ────────────────────────────────────────────
 /** Stricter than RATE_LIMIT_MAX — anonymous requests are keyed by IP, not by
@@ -63,3 +66,7 @@ export const MAX_ARCHIVES = 5;
 // ── Health check cache (ARCH-01) ──────────────────────────────────────────────
 /** Cache-Control max-age for the /api/health endpoint (seconds). */
 export const HEALTH_CACHE_SECS = 60;
+
+/** Visible on every coaching-output surface (NON_NEGOTIABLES.md #4). */
+export const ADVICE_DISCLAIMER =
+  "Jyotish guidance for reflection and remedial practice — not a substitute for professional medical, mental health, legal, or financial advice.";

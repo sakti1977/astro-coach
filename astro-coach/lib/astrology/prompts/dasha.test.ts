@@ -51,10 +51,10 @@ describe("buildDashaPredictionPrompt", () => {
     expect(prompt).toContain("No specific yogas or doshas involve Saturn directly");
   });
 
-  it("instructs the model that two different charts must produce noticeably different predictions", () => {
+  it("forbids deterministic/fatalistic outcomes (G3)", () => {
     const prompt = buildDashaPredictionPrompt(chart(), "Saturn", 19);
-    expect(prompt).toContain("noticeably different predictions if their charts differ");
-    expect(prompt).toContain("generic statements that could apply to any Saturn dasha");
+    expect(prompt).toContain("purushartha");
+    expect(prompt).toContain("Never assert a deterministic outcome");
   });
 
   it("injects a current-sub-period note when the Antardasha lord genuinely differs from the Maha lord", () => {

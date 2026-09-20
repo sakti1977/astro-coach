@@ -4,11 +4,18 @@ const EPHEMERIS_URL = process.env.EPHEMERIS_SERVICE_URL ?? "http://localhost:800
 const EPHEMERIS_SHARED_SECRET = process.env.EPHEMERIS_SHARED_SECRET ?? "";
 const TIMEOUT_MS = 20_000; // 20 seconds max per call
 
+function requireEphemerisSecret(): void {
+  if (process.env.NODE_ENV === "production" && !EPHEMERIS_SHARED_SECRET) {
+    throw new Error("EPHEMERIS_SHARED_SECRET is required in production");
+  }
+}
+
 function withTimeout(ms: number): AbortSignal {
   return AbortSignal.timeout(ms);
 }
 
 async function post(path: string, body: unknown) {
+  requireEphemerisSecret();
   let res: Response;
   try {
     res = await fetch(`${EPHEMERIS_URL}${path}`, {

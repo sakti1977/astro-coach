@@ -53,6 +53,10 @@ export async function GET(req: NextRequest) {
   if (!access.session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!supabaseAdmin) return NextResponse.json({ subscribed: false });
 
+  if (!(await checkRateLimit(access.rateLimitKey))) {
+    return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
+  }
+
   const endpoint = req.nextUrl.searchParams.get("endpoint");
   if (!endpoint) return NextResponse.json({ error: "endpoint query param required" }, { status: 400 });
 
@@ -73,6 +77,9 @@ export async function PATCH(req: NextRequest) {
   if (access instanceof NextResponse) return access;
   if (!access.session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!supabaseAdmin) return NextResponse.json({ error: "Push notifications are not configured" }, { status: 503 });
+  if (!(await checkRateLimit(access.rateLimitKey))) {
+    return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
+  }
 
   try {
     const { endpoint, notify_dasha, notify_sade_sati, notify_sadhana } = await req.json();
@@ -103,6 +110,9 @@ export async function DELETE(req: NextRequest) {
   if (access instanceof NextResponse) return access;
   if (!access.session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!supabaseAdmin) return NextResponse.json({ error: "Push notifications are not configured" }, { status: 503 });
+  if (!(await checkRateLimit(access.rateLimitKey))) {
+    return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
+  }
 
   try {
     const { endpoint } = await req.json();

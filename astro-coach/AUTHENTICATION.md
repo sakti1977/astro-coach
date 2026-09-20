@@ -57,7 +57,7 @@ Copy `.env.local.example` to `.env.local` and fill in your values:
 ```bash
 # NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=wB4uLfZ5ewiY0Pt0Ghwe4bleLH6KK8OmQpO5tO9cOyg=
+NEXTAUTH_SECRET=generate-with-openssl-rand-base64-32
 
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co

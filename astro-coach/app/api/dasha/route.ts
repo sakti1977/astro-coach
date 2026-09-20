@@ -5,7 +5,7 @@ import { generateDashaPrediction } from "@/lib/claude";
 import { buildDashaPredictionPrompt } from "@/lib/astrology/prompts";
 import { prepareJsonString } from "@/lib/claude-json";
 import { safeClientErrorMessage } from "@/lib/safe-error";
-import type { NatalChart } from "@/lib/profile";
+import { resolveNatalGrounding } from "@/lib/server-grounding";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -16,13 +16,29 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { chart, dashaLord, years, currentAntarLord, currentPratyantarLord } = await req.json() as {
-      chart: NatalChart;
+    const { chart: clientChart, dashas: clientDashas, dashaLord, years, currentAntarLord, currentPratyantarLord } = await req.json() as {
+      chart: unknown;
+      dashas?: unknown;
       dashaLord: string;
       years: number;
       currentAntarLord?: string;
       currentPratyantarLord?: string;
     };
+
+    const grounding = await resolveNatalGrounding(
+      access.session?.user?.id,
+      clientChart,
+      clientDashas
+    );
+    if (grounding instanceof NextResponse) return grounding;
+    const chart = grounding.chart;
+
+    const knownLord = grounding.dashas.mahadashas.some(
+      (m) => m.lord.toLowerCase() === String(dashaLord ?? "").toLowerCase()
+    );
+    if (!dashaLord || !knownLord) {
+      return NextResponse.json({ error: "Unknown dasha period for this chart." }, { status: 400 });
+    }
 
     const currentSubPeriod = currentAntarLord && currentPratyantarLord
       ? { antarLord: currentAntarLord, pratyantarLord: currentPratyantarLord }

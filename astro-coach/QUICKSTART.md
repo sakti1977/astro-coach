@@ -53,7 +53,7 @@ This guide will help you set up authentication and cloud storage for Astro Coach
 
    With your actual values from Step 3.
 
-3. The `NEXTAUTH_SECRET` is already generated - leave it as is.
+3. Generate `NEXTAUTH_SECRET` with `openssl rand -base64 32` and put it in `.env.local`. Never commit a real secret; `.env.example` has a placeholder only.
 
 ### 5. Start the Application (1 minute)
 

@@ -87,8 +87,18 @@ class SupabaseStorageAdapter implements StorageAdapter {
       const res = await fetch("/api/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile, observations }),
+        body: JSON.stringify({
+          profile,
+          observations,
+          localUpdatedAt: profile.coaching?.lastUpdated,
+        }),
       });
+
+      if (res.status === 409) {
+        const err = new Error("SYNC_CONFLICT");
+        (err as Error & { code?: string }).code = "SYNC_CONFLICT";
+        throw err;
+      }
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -139,7 +149,7 @@ class SupabaseStorageAdapter implements StorageAdapter {
             exchangeCount: 0,
             planDelivered: false,
             tonePreference: "jyotish",
-            includeReligiousSolutions: true,
+            includeReligiousSolutions: false,
             preferredLanguage: "en-IN",
           },
         };

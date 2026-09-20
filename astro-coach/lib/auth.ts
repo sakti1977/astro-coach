@@ -2,6 +2,7 @@ import { NextAuthOptions, Session } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { supabase } from "@/lib/supabase"
+import { supabaseAdmin } from "@/lib/supabase-admin"
 
 const DEFAULT_PROFILE = {
   birth_data: null,
@@ -23,14 +24,17 @@ const DEFAULT_PROFILE = {
     exchangeCount: 0,
     planDelivered: false,
     tonePreference: "jyotish",
-    includeReligiousSolutions: true,
+    includeReligiousSolutions: false,
     preferredLanguage: "en-IN",
   },
 }
 
 async function ensureProfile(userId: string) {
-  if (!supabase) return
-  const { error } = await supabase
+  // Service-role client: the anon client here has no Supabase Auth session
+  // (NextAuth holds the JWT), so RLS would reject this upsert.
+  const client = supabaseAdmin ?? supabase
+  if (!client) return
+  const { error } = await client
     .from("user_profiles")
     .upsert(
       { user_id: userId, ...DEFAULT_PROFILE },
@@ -139,6 +143,8 @@ export const authOptions: NextAuthOptions = {
 
           if (signInError) throw signInError
           if (!authData.user) throw new Error("Invalid credentials")
+
+          await ensureProfile(authData.user.id)
 
           return {
             id: authData.user.id,

@@ -70,17 +70,21 @@ describe("buildCoachDynamicBlock", () => {
     }
   });
 
-  it("still includes goals, varga context, and transit context in the output", () => {
+  it("still includes goals, varga context, transit context, and tracked habits", () => {
     const block = buildCoachDynamicBlock(
       "gathering",
       ["Get promoted", "Save more"],
       "D9 Navamsa Ascendant: Leo (soul & relationship nature)",
       "",
-      "CURRENT TRANSITS (Gochar — slow planets only):\n- Saturn in Capricorn → H3"
+      "CURRENT TRANSITS (Gochar — slow planets only):\n- Saturn in Capricorn → H3",
+      false,
+      "- Meditate 10 minutes (daily, moon; streak 4; last done 2026-09-19)"
     );
     expect(block).toContain("Get promoted, Save more");
     expect(block).toContain("D9 Navamsa Ascendant");
     expect(block).toContain("CURRENT TRANSITS");
+    expect(block).toContain("TRACKED SADHANA");
+    expect(block).toContain("Meditate 10 minutes");
   });
 });
 
@@ -91,6 +95,14 @@ describe("buildCoachSystemPrompt tonePreference", () => {
     const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z");
     expect(prompt).toContain("You are a Jyotish practitioner");
     expect(prompt).not.toContain("VOICE OVERRIDE");
+  });
+
+  it("defaults to behavioral-first — ritual is an opt-in layer, not the core of the role", () => {
+    const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z");
+    expect(prompt).toContain("BEHAVIORAL MODE (DEFAULT)");
+    expect(prompt).not.toContain("THIS IS THE CORE OF YOUR ROLE");
+    const ritualOn = buildCoachSystemPrompt(CHART, DASHAS, "2026-07-30T00:00:00.000Z", true);
+    expect(ritualOn).toContain("BEHAVIOR FIRST, RITUAL AS AN OPT-IN LAYER");
   });
 
   it("uses the plain-language persona and voice override in skeptic mode", () => {

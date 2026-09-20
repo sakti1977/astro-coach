@@ -3,7 +3,7 @@ import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { safeClientErrorMessage } from "@/lib/safe-error";
-import type { UserProfile, CoachingObservation } from "@/lib/profile";
+import { parseSyncPushBody } from "@/lib/profile-schema";
 
 // This route replaces direct browser -> Supabase writes/reads for user_profiles
 // and coaching_observations. The browser's anon Supabase client is never signed
@@ -13,9 +13,12 @@ import type { UserProfile, CoachingObservation } from "@/lib/profile";
 // uses the service-role key (which bypasses RLS) scoped strictly to
 // `access.session.user.id` — never to a client-supplied id.
 
-interface SyncPushBody {
-  profile: UserProfile;
-  observations: CoachingObservation[];
+function isNewer(serverIso: string | undefined, clientIso: string | undefined): boolean {
+  if (!serverIso || !clientIso) return false;
+  const server = Date.parse(serverIso);
+  const client = Date.parse(clientIso);
+  if (Number.isNaN(server) || Number.isNaN(client)) return false;
+  return server > client + 2000;
 }
 
 export async function POST(req: NextRequest) {
@@ -34,7 +37,35 @@ export async function POST(req: NextRequest) {
   const userId = access.session.user.id;
 
   try {
-    const { profile, observations } = (await req.json()) as SyncPushBody;
+    const parsed = parseSyncPushBody(await req.json());
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+    const { profile, observations, force } = parsed.value;
+    const localUpdatedAt =
+      parsed.value.localUpdatedAt
+      ?? (typeof profile.coaching?.lastUpdated === "string" ? profile.coaching.lastUpdated : undefined);
+
+    const { data: existing } = await supabaseAdmin
+      .from("user_profiles")
+      .select("updated_at, chart")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (
+      !force
+      && existing?.chart
+      && isNewer(existing.updated_at as string | undefined, localUpdatedAt)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Cloud copy is newer. Pull latest before pushing, or retry with force.",
+          code: "SYNC_CONFLICT",
+          serverUpdatedAt: existing.updated_at,
+        },
+        { status: 409 }
+      );
+    }
 
     const { error: profileError } = await supabaseAdmin
       .from("user_profiles")
@@ -53,22 +84,26 @@ export async function POST(req: NextRequest) {
 
     if (profileError) throw profileError;
 
-    await supabaseAdmin.from("coaching_observations").delete().eq("user_id", userId);
+    // Only replace observations when the client actually sent the array.
+    // An omitted field must not wipe cloud memory.
+    if (observations) {
+      await supabaseAdmin.from("coaching_observations").delete().eq("user_id", userId);
 
-    if (observations.length > 0) {
-      const { error: obsError } = await supabaseAdmin
-        .from("coaching_observations")
-        .insert(
-          observations.map((obs) => ({
-            user_id: userId,
-            observation_id: obs.id,
-            timestamp: obs.timestamp,
-            text: obs.text,
-            category: obs.category,
-            exchange_index: obs.exchangeIndex,
-          }))
-        );
-      if (obsError) throw obsError;
+      if (observations.length > 0) {
+        const { error: obsError } = await supabaseAdmin
+          .from("coaching_observations")
+          .insert(
+            observations.map((obs) => ({
+              user_id: userId,
+              observation_id: obs.id,
+              timestamp: obs.timestamp,
+              text: obs.text,
+              category: obs.category,
+              exchange_index: obs.exchangeIndex,
+            }))
+          );
+        if (obsError) throw obsError;
+      }
     }
 
     return NextResponse.json({ ok: true });

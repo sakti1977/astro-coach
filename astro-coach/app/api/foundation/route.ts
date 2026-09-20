@@ -4,7 +4,8 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { streamFoundationProfile } from "@/lib/claude";
 import { buildCoachSystemPrompt, buildFoundationTask } from "@/lib/astrology/prompts";
 import { safeClientErrorMessage } from "@/lib/safe-error";
-import type { NatalChart, DashaData, CoachTonePreference } from "@/lib/profile";
+import { resolveNatalGrounding } from "@/lib/server-grounding";
+import type { CoachTonePreference } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -14,29 +15,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
-  const { chart, dashas, includeReligiousSolutions, tonePreference } =
+  const { chart: clientChart, dashas: clientDashas, includeReligiousSolutions, tonePreference } =
     (await req.json()) as {
-      chart: NatalChart;
-      dashas: DashaData;
+      chart: unknown;
+      dashas: unknown;
       includeReligiousSolutions?: boolean;
       tonePreference?: CoachTonePreference;
     };
 
-  if (!chart || !dashas) {
-    return NextResponse.json({ error: "chart and dashas are required" }, { status: 400 });
-  }
+  const grounding = await resolveNatalGrounding(
+    access.session?.user?.id,
+    clientChart,
+    clientDashas
+  );
+  if (grounding instanceof NextResponse) return grounding;
 
   const todayIso = new Date().toISOString();
 
-  // Same system prompt the coaching chat uses (NON_NEGOTIABLES.md #13 — no
-  // second, ungrounded advice pathway). Only the task instruction differs.
   const systemPrompt = buildCoachSystemPrompt(
-    chart,
-    dashas,
+    grounding.chart,
+    grounding.dashas,
     todayIso,
-    includeReligiousSolutions ?? true,
-    chart.yogas ?? [],
-    chart.doshas ?? [],
+    includeReligiousSolutions ?? false,
+    grounding.chart.yogas ?? [],
+    grounding.chart.doshas ?? [],
     tonePreference ?? "jyotish"
   );
   const task = buildFoundationTask();

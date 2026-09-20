@@ -5,7 +5,7 @@ import { generateHabits } from "@/lib/claude";
 import { buildHabitPrompt } from "@/lib/astrology/prompts";
 import { extractJsonArray } from "@/lib/claude-json";
 import { safeClientErrorMessage } from "@/lib/safe-error";
-import type { NatalChart } from "@/lib/profile";
+import { resolveNatalGrounding } from "@/lib/server-grounding";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -16,14 +16,28 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { chart, dashaLord, goals, weakPlanets } = await req.json() as {
-      chart: NatalChart;
+    const { chart: clientChart, dashas: clientDashas, dashaLord, goals: clientGoals, weakPlanets } = await req.json() as {
+      chart: unknown;
+      dashas?: unknown;
       dashaLord: string;
       goals: string[];
       weakPlanets: string[];
     };
 
-    const prompt = buildHabitPrompt(chart, dashaLord, goals, weakPlanets, new Date().toISOString());
+    const grounding = await resolveNatalGrounding(
+      access.session?.user?.id,
+      clientChart,
+      clientDashas
+    );
+    if (grounding instanceof NextResponse) return grounding;
+
+    const goals =
+      grounding.source === "server"
+        ? grounding.goals.map((g) => g.description)
+        : (clientGoals ?? []);
+    const lord = dashaLord || grounding.dashas.current_maha;
+
+    const prompt = buildHabitPrompt(grounding.chart, lord, goals, weakPlanets ?? [], new Date().toISOString());
     const raw = await generateHabits(prompt);
     const habits = extractJsonArray(raw);
 

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "AstroCoach/1.0 (personal-vedic-astrology-app)",
+      "User-Agent": "AstroCoach/1.0 (https://github.com/sakti-bagchi/astro-coach)",
       "Accept-Language": "en",
     },
     next: { revalidate: 3600 },

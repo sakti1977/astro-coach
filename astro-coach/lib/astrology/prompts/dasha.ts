@@ -70,5 +70,6 @@ Rules:
 - Reference the specific house, sign, or yoga/dosha above in at least half of the themes/actions — generic statements that could apply to any ${dashaLord} dasha regardless of chart are not acceptable.
 - All strings must be practical and grounded (behavioral / life area language, not poetic or overly mystical).
 - Use the current date as the reference for "now".
-- Do not invent specific events or dates unless strongly indicated by the placements.`;
+- Do not invent specific events or dates unless strongly indicated by the placements.
+- Never assert a deterministic outcome ("you will fail", "this marriage will not work"). Frame tendencies within free will (purushartha) and offer agency.`;
 }
