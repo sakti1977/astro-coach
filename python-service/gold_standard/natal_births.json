@@ -1,0 +1,49 @@
+{
+  "schema": "astro-coach.gold.natal.v1",
+  "ephemeris": "Swiss Ephemeris Lahiri (SIDM_LAHIRI) via pyswisseph, FLG_SWIEPH|FLG_SIDEREAL. True lunar node. Whole-sign houses from true sidereal Lagna (houses_ex Placidus for the rising degree only).",
+  "kerykeion_pin": ">=5.12.0,<6",
+  "births": [
+    {
+      "id": "mumbai-1990-morning",
+      "name": "Mumbai morning",
+      "why": "Existing chart.py golden fixture; Cancer Lagna; IST, no DST.",
+      "year": 1990, "month": 6, "day": 15, "hour": 8, "minute": 30,
+      "lat": 19.0760, "lng": 72.8777, "tz_str": "Asia/Kolkata"
+    },
+    {
+      "id": "kolkata-1985-afternoon",
+      "name": "Kolkata afternoon",
+      "why": "Eastern India longitude; winter afternoon; same TZ as Mumbai.",
+      "year": 1985, "month": 1, "day": 26, "hour": 14, "minute": 15,
+      "lat": 22.5726, "lng": 88.3639, "tz_str": "Asia/Kolkata"
+    },
+    {
+      "id": "london-2000-equinox",
+      "name": "London spring equinox noon",
+      "why": "Western longitude, possible UK DST around late March, tropical-year boundary.",
+      "year": 2000, "month": 3, "day": 21, "hour": 12, "minute": 0,
+      "lat": 51.5074, "lng": -0.1278, "tz_str": "Europe/London"
+    },
+    {
+      "id": "delhi-1975-dawn",
+      "name": "Delhi Independence Day dawn",
+      "why": "Pre-1980s Lahiri ayanamsha, low altitude of Sun, early local time.",
+      "year": 1975, "month": 8, "day": 15, "hour": 5, "minute": 45,
+      "lat": 28.6139, "lng": 77.2090, "tz_str": "Asia/Kolkata"
+    },
+    {
+      "id": "nyc-1988-night",
+      "name": "New York late evening",
+      "why": "US Eastern timezone (UTC-5/-4), date-line-adjacent civil date vs UT.",
+      "year": 1988, "month": 11, "day": 8, "hour": 23, "minute": 11,
+      "lat": 40.7128, "lng": -74.0060, "tz_str": "America/New_York"
+    },
+    {
+      "id": "tokyo-1995-sunrise",
+      "name": "Tokyo July sunrise",
+      "why": "East Asia TZ (UTC+9), far-eastern longitude vs Indian birth set.",
+      "year": 1995, "month": 7, "day": 7, "hour": 6, "minute": 0,
+      "lat": 35.6762, "lng": 139.6503, "tz_str": "Asia/Tokyo"
+    }
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "schema": "astro-coach.gold.yoga_dosha.v1",
+  "notes": "Synthetic whole-sign placements. Expected names follow classical rules restated in gold_standard/oracle.py, not by importing yogas.py/doshas.py at fixture-authoring time.",
+  "cases": [
+    {
+      "id": "ruchaka-mars-own-kendra",
+      "asc_sign_num": 0,
+      "planets": {
+        "mars": {"sign_num": 0, "house": 1, "abs_pos": 10.0}
+      },
+      "expect_yogas": ["Ruchaka"],
+      "forbid_yogas": ["Hamsa", "Sasa", "Bhadra", "Malavya"],
+      "expect_doshas": ["Manglik (Kuja) Dosha"],
+      "rule": "Pancha Mahapurusha: Mars in own sign (Aries) in a kendra from Lagna. Mars H1 is also Kuja."
+    },
+    {
+      "id": "no-ruchaka-dignified-not-kendra",
+      "asc_sign_num": 0,
+      "planets": {
+        "mars": {"sign_num": 9, "house": 10, "abs_pos": 275.0}
+      },
+      "expect_yogas": ["Ruchaka"],
+      "expect_doshas": [],
+      "rule": "Mars exalted in Capricorn: from Aries Lagna Capricorn is H10 (kendra) — Ruchaka YES. House 10 is not a Kuja house and Moon absent so Manglik only from Lagna — H10 not Kuja, no Manglik."
+    },
+    {
+      "id": "mars-exalt-not-kendra",
+      "asc_sign_num": 1,
+      "planets": {
+        "mars": {"sign_num": 9, "house": 9, "abs_pos": 275.0},
+        "moon": {"sign_num": 1, "house": 1, "abs_pos": 35.0}
+      },
+      "expect_yogas": ["Kemadruma"],
+      "forbid_yogas": ["Ruchaka"],
+      "expect_doshas": [],
+      "rule": "Mars exalted but H9 from Taurus Lagna is not kendra — no Ruchaka. Moon isolated → Kemadruma. Mars H9 not Kuja; from Moon(Taurus) to Cap = H9 not Kuja."
+    },
+    {
+      "id": "gaja-kesari",
+      "asc_sign_num": 6,
+      "planets": {
+        "jupiter": {"sign_num": 3, "house": 10, "abs_pos": 95.0},
+        "moon": {"sign_num": 0, "house": 7, "abs_pos": 10.0}
+      },
+      "expect_yogas": ["Hamsa", "Gaja Kesari", "Kemadruma"],
+      "expect_doshas": [],
+      "rule": "Jupiter in kendra from Moon (Cancer vs Aries)."
+    },
+    {
+      "id": "budhaditya",
+      "asc_sign_num": 6,
+      "planets": {
+        "sun": {"sign_num": 4, "house": 11, "abs_pos": 130.0},
+        "mercury": {"sign_num": 4, "house": 11, "abs_pos": 132.0}
+      },
+      "expect_yogas": ["Budhaditya"],
+      "expect_doshas": [],
+      "rule": "Sun+Mercury same sign."
+    },
+    {
+      "id": "chandra-mangal",
+      "asc_sign_num": 0,
+      "planets": {
+        "moon": {"sign_num": 8, "house": 9, "abs_pos": 245.0},
+        "mars": {"sign_num": 8, "house": 9, "abs_pos": 250.0}
+      },
+      "expect_yogas": ["Chandra Mangal", "Kemadruma"],
+      "forbid_yogas": ["Ruchaka"],
+      "expect_doshas": [],
+      "rule": "Moon+Mars conjunct Sagittarius H9 — not Kuja, Mars not dignified kendra."
+    },
+    {
+      "id": "kemadruma-nodes-do-not-save",
+      "asc_sign_num": 0,
+      "planets": {
+        "moon": {"sign_num": 5, "house": 6, "abs_pos": 155.0},
+        "rahu": {"sign_num": 6, "house": 7, "abs_pos": 185.0},
+        "ketu": {"sign_num": 0, "house": 1, "abs_pos": 5.0}
+      },
+      "expect_yogas": ["Kemadruma"],
+      "expect_doshas": [],
+      "rule": "Nodes adjacent to Moon do not cancel Kemadruma."
+    },
+    {
+      "id": "kemadruma-cancelled-by-sun",
+      "asc_sign_num": 0,
+      "planets": {
+        "moon": {"sign_num": 5, "house": 6, "abs_pos": 155.0},
+        "sun": {"sign_num": 6, "house": 7, "abs_pos": 185.0}
+      },
+      "expect_yogas": [],
+      "forbid_yogas": ["Kemadruma"],
+      "expect_doshas": [],
+      "rule": "Sun in a sign adjacent to Moon cancels Kemadruma."
+    },
+    {
+      "id": "visha-yoga",
+      "asc_sign_num": 0,
+      "planets": {
+        "saturn": {"sign_num": 3, "house": 4, "abs_pos": 95.0},
+        "moon": {"sign_num": 3, "house": 4, "abs_pos": 100.0}
+      },
+      "expect_yogas": ["Visha Yoga"],
+      "forbid_yogas": ["Sasa"],
+      "expect_doshas": [],
+      "rule": "Saturn+Moon conjunct. Saturn in Cancer is kendra but not dignified — no Sasa."
+    },
+    {
+      "id": "sasa-saturn-own-kendra",
+      "asc_sign_num": 0,
+      "planets": {
+        "saturn": {"sign_num": 9, "house": 10, "abs_pos": 275.0}
+      },
+      "expect_yogas": ["Sasa"],
+      "expect_doshas": [],
+      "rule": "Saturn own sign Capricorn H10 kendra from Aries Lagna."
+    },
+    {
+      "id": "manglik-lagna-only",
+      "asc_sign_num": 0,
+      "planets": {
+        "mars": {"sign_num": 6, "house": 7, "abs_pos": 185.0},
+        "moon": {"sign_num": 0, "house": 1, "abs_pos": 10.0}
+      },
+      "expect_yogas": ["Kemadruma"],
+      "expect_doshas": ["Manglik (Kuja) Dosha"],
+      "rule": "Mars H7 from Lagna is Kuja; from Moon Aries to Libra is H7 also Kuja — actually BOTH. Wait: moon 0 mars 6 → house 7. Both. Strength strong in app but gold only checks name."
+    },
+    {
+      "id": "manglik-neither",
+      "asc_sign_num": 0,
+      "planets": {
+        "mars": {"sign_num": 4, "house": 5, "abs_pos": 125.0},
+        "moon": {"sign_num": 0, "house": 1, "abs_pos": 10.0}
+      },
+      "expect_doshas": [],
+      "forbid_doshas": ["Manglik (Kuja) Dosha"],
+      "expect_yogas": ["Kemadruma"],
+      "rule": "Mars H5 not Kuja; from Moon H5 not Kuja."
+    },
+    {
+      "id": "kaal-sarp-one-hemisphere",
+      "asc_sign_num": 0,
+      "planets": {
+        "sun": {"sign_num": 0, "house": 1, "abs_pos": 10.0},
+        "moon": {"sign_num": 0, "house": 1, "abs_pos": 20.0},
+        "mars": {"sign_num": 1, "house": 2, "abs_pos": 40.0},
+        "mercury": {"sign_num": 1, "house": 2, "abs_pos": 50.0},
+        "jupiter": {"sign_num": 2, "house": 3, "abs_pos": 70.0},
+        "venus": {"sign_num": 2, "house": 3, "abs_pos": 80.0},
+        "saturn": {"sign_num": 3, "house": 4, "abs_pos": 100.0},
+        "rahu": {"sign_num": 0, "house": 1, "abs_pos": 0.0},
+        "ketu": {"sign_num": 6, "house": 7, "abs_pos": 180.0}
+      },
+      "expect_doshas": ["Kaal Sarp Dosha", "Manglik (Kuja) Dosha"],
+      "expect_yogas": [],
+      "rule": "All seven grahas within 180° of Rahu at 0°."
+    },
+    {
+      "id": "kaal-sarp-split",
+      "asc_sign_num": 0,
+      "planets": {
+        "sun": {"sign_num": 0, "house": 1, "abs_pos": 10.0},
+        "moon": {"sign_num": 0, "house": 1, "abs_pos": 20.0},
+        "mars": {"sign_num": 1, "house": 2, "abs_pos": 40.0},
+        "mercury": {"sign_num": 1, "house": 2, "abs_pos": 50.0},
+        "jupiter": {"sign_num": 2, "house": 3, "abs_pos": 70.0},
+        "venus": {"sign_num": 2, "house": 3, "abs_pos": 80.0},
+        "saturn": {"sign_num": 8, "house": 9, "abs_pos": 250.0},
+        "rahu": {"sign_num": 0, "house": 1, "abs_pos": 0.0},
+        "ketu": {"sign_num": 6, "house": 7, "abs_pos": 180.0}
+      },
+      "expect_doshas": ["Manglik (Kuja) Dosha"],
+      "forbid_doshas": ["Kaal Sarp Dosha"],
+      "expect_yogas": [],
+      "rule": "Saturn at 250° is on the other side of the Rahu-Ketu axis."
+    },
+    {
+      "id": "pitru-node-h9",
+      "asc_sign_num": 0,
+      "planets": {
+        "sun": {"sign_num": 0, "house": 1, "abs_pos": 10.0},
+        "rahu": {"sign_num": 8, "house": 9, "abs_pos": 245.0},
+        "ketu": {"sign_num": 2, "house": 3, "abs_pos": 65.0}
+      },
+      "expect_doshas": ["Pitru Dosha"],
+      "expect_yogas": [],
+      "rule": "Rahu in H9 (one common Pitru reading)."
+    },
+    {
+      "id": "pitru-sun-conjunct-ketu",
+      "asc_sign_num": 0,
+      "planets": {
+        "sun": {"sign_num": 5, "house": 6, "abs_pos": 155.0},
+        "rahu": {"sign_num": 11, "house": 12, "abs_pos": 335.0},
+        "ketu": {"sign_num": 5, "house": 6, "abs_pos": 155.0}
+      },
+      "expect_doshas": ["Pitru Dosha"],
+      "expect_yogas": [],
+      "rule": "Sun conjunct Ketu, neither node in H9."
+    },
+    {
+      "id": "pitru-clean",
+      "asc_sign_num": 0,
+      "planets": {
+        "sun": {"sign_num": 0, "house": 1, "abs_pos": 10.0},
+        "rahu": {"sign_num": 5, "house": 6, "abs_pos": 155.0},
+        "ketu": {"sign_num": 11, "house": 12, "abs_pos": 335.0}
+      },
+      "expect_doshas": [],
+      "forbid_doshas": ["Pitru Dosha"],
+      "expect_yogas": [],
+      "rule": "No H9 node and Sun not with a node."
+    }
+  ]
+}

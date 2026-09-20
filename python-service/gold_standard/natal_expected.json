@@ -1,0 +1,911 @@
+{
+  "schema": "astro-coach.gold.natal_expected.v1",
+  "charts": [
+    {
+      "id": "mumbai-1990-morning",
+      "julian_day_ut": 2448057.625,
+      "ayanamsha_lahiri": 23.723722,
+      "ascendant": {
+        "sign": "Can",
+        "sign_num": 3,
+        "degree": 2.8341,
+        "abs_pos": 92.8341
+      },
+      "planets": {
+        "sun": {
+          "sign": "Gem",
+          "sign_num": 2,
+          "degree": 0.0441,
+          "abs_pos": 60.0441,
+          "house": 12,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 4,
+            "name": "Mrigashirsha",
+            "pada": 3,
+            "lord": "Mars"
+          }
+        },
+        "moon": {
+          "sign": "Aqu",
+          "sign_num": 10,
+          "degree": 16.6447,
+          "abs_pos": 316.6447,
+          "house": 8,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 23,
+            "name": "Shatabhisha",
+            "pada": 3,
+            "lord": "Rahu"
+          }
+        },
+        "mercury": {
+          "sign": "Tau",
+          "sign_num": 1,
+          "degree": 11.3232,
+          "abs_pos": 41.3232,
+          "house": 11,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 3,
+            "name": "Rohini",
+            "pada": 1,
+            "lord": "Moon"
+          }
+        },
+        "venus": {
+          "sign": "Ari",
+          "sign_num": 0,
+          "degree": 24.6094,
+          "abs_pos": 24.6094,
+          "house": 10,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 1,
+            "name": "Bharani",
+            "pada": 4,
+            "lord": "Venus"
+          }
+        },
+        "mars": {
+          "sign": "Pis",
+          "sign_num": 11,
+          "degree": 17.0443,
+          "abs_pos": 347.0443,
+          "house": 9,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 26,
+            "name": "Revati",
+            "pada": 1,
+            "lord": "Mercury"
+          }
+        },
+        "jupiter": {
+          "sign": "Gem",
+          "sign_num": 2,
+          "degree": 22.0809,
+          "abs_pos": 82.0809,
+          "house": 12,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 6,
+            "name": "Punarvasu",
+            "pada": 1,
+            "lord": "Jupiter"
+          }
+        },
+        "saturn": {
+          "sign": "Cap",
+          "sign_num": 9,
+          "degree": 0.3266,
+          "abs_pos": 270.3266,
+          "house": 7,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 20,
+            "name": "Uttara Ashadha",
+            "pada": 2,
+            "lord": "Sun"
+          }
+        },
+        "rahu": {
+          "sign": "Cap",
+          "sign_num": 9,
+          "degree": 14.3865,
+          "abs_pos": 284.3865,
+          "house": 7,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 21,
+            "name": "Shravana",
+            "pada": 2,
+            "lord": "Moon"
+          }
+        },
+        "ketu": {
+          "sign": "Can",
+          "sign_num": 3,
+          "degree": 14.3865,
+          "abs_pos": 104.3865,
+          "house": 1,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 7,
+            "name": "Pushya",
+            "pada": 4,
+            "lord": "Saturn"
+          }
+        }
+      },
+      "moon_nakshatra": {
+        "num": 23,
+        "name": "Shatabhisha",
+        "pada": 3,
+        "lord": "Rahu"
+      },
+      "yogas": [
+        "Sasa"
+      ],
+      "doshas": [
+        "Manglik (Kuja) Dosha"
+      ]
+    },
+    {
+      "id": "kolkata-1985-afternoon",
+      "julian_day_ut": 2446091.8645833335,
+      "ayanamsha_lahiri": 23.648546,
+      "ascendant": {
+        "sign": "Gem",
+        "sign_num": 2,
+        "degree": 2.2764,
+        "abs_pos": 62.2764
+      },
+      "planets": {
+        "sun": {
+          "sign": "Cap",
+          "sign_num": 9,
+          "degree": 12.7058,
+          "abs_pos": 282.7058,
+          "house": 8,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 21,
+            "name": "Shravana",
+            "pada": 1,
+            "lord": "Moon"
+          }
+        },
+        "moon": {
+          "sign": "Pis",
+          "sign_num": 11,
+          "degree": 12.6441,
+          "abs_pos": 342.6441,
+          "house": 10,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 25,
+            "name": "Uttara Bhadrapada",
+            "pada": 3,
+            "lord": "Saturn"
+          }
+        },
+        "mercury": {
+          "sign": "Sag",
+          "sign_num": 8,
+          "degree": 27.1207,
+          "abs_pos": 267.1207,
+          "house": 7,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 20,
+            "name": "Uttara Ashadha",
+            "pada": 1,
+            "lord": "Sun"
+          }
+        },
+        "venus": {
+          "sign": "Aqu",
+          "sign_num": 10,
+          "degree": 29.6786,
+          "abs_pos": 329.6786,
+          "house": 9,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 24,
+            "name": "Purva Bhadrapada",
+            "pada": 3,
+            "lord": "Jupiter"
+          }
+        },
+        "mars": {
+          "sign": "Pis",
+          "sign_num": 11,
+          "degree": 0.7988,
+          "abs_pos": 330.7988,
+          "house": 10,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 24,
+            "name": "Purva Bhadrapada",
+            "pada": 4,
+            "lord": "Jupiter"
+          }
+        },
+        "jupiter": {
+          "sign": "Cap",
+          "sign_num": 9,
+          "degree": 3.7431,
+          "abs_pos": 273.7431,
+          "house": 8,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 20,
+            "name": "Uttara Ashadha",
+            "pada": 3,
+            "lord": "Sun"
+          }
+        },
+        "saturn": {
+          "sign": "Sco",
+          "sign_num": 7,
+          "degree": 3.1377,
+          "abs_pos": 213.1377,
+          "house": 6,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 15,
+            "name": "Vishakha",
+            "pada": 4,
+            "lord": "Jupiter"
+          }
+        },
+        "rahu": {
+          "sign": "Tau",
+          "sign_num": 1,
+          "degree": 0.6392,
+          "abs_pos": 30.6392,
+          "house": 12,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 2,
+            "name": "Krittika",
+            "pada": 2,
+            "lord": "Sun"
+          }
+        },
+        "ketu": {
+          "sign": "Sco",
+          "sign_num": 7,
+          "degree": 0.6392,
+          "abs_pos": 210.6392,
+          "house": 6,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 15,
+            "name": "Vishakha",
+            "pada": 4,
+            "lord": "Jupiter"
+          }
+        }
+      },
+      "moon_nakshatra": {
+        "num": 25,
+        "name": "Uttara Bhadrapada",
+        "pada": 3,
+        "lord": "Saturn"
+      },
+      "yogas": [
+        "Chandra Mangal"
+      ],
+      "doshas": [
+        "Manglik (Kuja) Dosha",
+        "Kaal Sarp Dosha"
+      ]
+    },
+    {
+      "id": "london-2000-equinox",
+      "julian_day_ut": 2451625.0,
+      "ayanamsha_lahiri": 23.860152,
+      "ascendant": {
+        "sign": "Can",
+        "sign_num": 3,
+        "degree": 2.1155,
+        "abs_pos": 92.1155
+      },
+      "planets": {
+        "sun": {
+          "sign": "Pis",
+          "sign_num": 11,
+          "degree": 7.3192,
+          "abs_pos": 337.3192,
+          "house": 9,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 25,
+            "name": "Uttara Bhadrapada",
+            "pada": 2,
+            "lord": "Saturn"
+          }
+        },
+        "moon": {
+          "sign": "Vir",
+          "sign_num": 5,
+          "degree": 23.4752,
+          "abs_pos": 173.4752,
+          "house": 3,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 13,
+            "name": "Chitra",
+            "pada": 1,
+            "lord": "Mars"
+          }
+        },
+        "mercury": {
+          "sign": "Aqu",
+          "sign_num": 10,
+          "degree": 10.9397,
+          "abs_pos": 310.9397,
+          "house": 8,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 23,
+            "name": "Shatabhisha",
+            "pada": 2,
+            "lord": "Rahu"
+          }
+        },
+        "venus": {
+          "sign": "Aqu",
+          "sign_num": 10,
+          "degree": 16.0467,
+          "abs_pos": 316.0467,
+          "house": 8,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 23,
+            "name": "Shatabhisha",
+            "pada": 3,
+            "lord": "Rahu"
+          }
+        },
+        "mars": {
+          "sign": "Ari",
+          "sign_num": 0,
+          "degree": 4.997,
+          "abs_pos": 4.997,
+          "house": 10,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 0,
+            "name": "Ashwini",
+            "pada": 2,
+            "lord": "Ketu"
+          }
+        },
+        "jupiter": {
+          "sign": "Ari",
+          "sign_num": 0,
+          "degree": 12.9992,
+          "abs_pos": 12.9992,
+          "house": 10,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 0,
+            "name": "Ashwini",
+            "pada": 4,
+            "lord": "Ketu"
+          }
+        },
+        "saturn": {
+          "sign": "Ari",
+          "sign_num": 0,
+          "degree": 20.4885,
+          "abs_pos": 20.4885,
+          "house": 10,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 1,
+            "name": "Bharani",
+            "pada": 3,
+            "lord": "Venus"
+          }
+        },
+        "rahu": {
+          "sign": "Can",
+          "sign_num": 3,
+          "degree": 8.0599,
+          "abs_pos": 98.0599,
+          "house": 1,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 7,
+            "name": "Pushya",
+            "pada": 2,
+            "lord": "Saturn"
+          }
+        },
+        "ketu": {
+          "sign": "Cap",
+          "sign_num": 9,
+          "degree": 8.0599,
+          "abs_pos": 278.0599,
+          "house": 7,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 20,
+            "name": "Uttara Ashadha",
+            "pada": 4,
+            "lord": "Sun"
+          }
+        }
+      },
+      "moon_nakshatra": {
+        "num": 13,
+        "name": "Chitra",
+        "pada": 1,
+        "lord": "Mars"
+      },
+      "yogas": [
+        "Ruchaka",
+        "Kemadruma"
+      ],
+      "doshas": [
+        "Manglik (Kuja) Dosha"
+      ]
+    },
+    {
+      "id": "delhi-1975-dawn",
+      "julian_day_ut": 2442639.5104166665,
+      "ayanamsha_lahiri": 23.516523,
+      "ascendant": {
+        "sign": "Can",
+        "sign_num": 3,
+        "degree": 26.1695,
+        "abs_pos": 116.1695
+      },
+      "planets": {
+        "sun": {
+          "sign": "Can",
+          "sign_num": 3,
+          "degree": 28.0568,
+          "abs_pos": 118.0568,
+          "house": 1,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 8,
+            "name": "Ashlesha",
+            "pada": 4,
+            "lord": "Mercury"
+          }
+        },
+        "moon": {
+          "sign": "Sco",
+          "sign_num": 7,
+          "degree": 9.3935,
+          "abs_pos": 219.3935,
+          "house": 5,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 16,
+            "name": "Anuradha",
+            "pada": 2,
+            "lord": "Saturn"
+          }
+        },
+        "mercury": {
+          "sign": "Leo",
+          "sign_num": 4,
+          "degree": 11.469,
+          "abs_pos": 131.469,
+          "house": 2,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 9,
+            "name": "Magha",
+            "pada": 4,
+            "lord": "Ketu"
+          }
+        },
+        "venus": {
+          "sign": "Leo",
+          "sign_num": 4,
+          "degree": 16.6764,
+          "abs_pos": 136.6764,
+          "house": 2,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 10,
+            "name": "Purva Phalguni",
+            "pada": 2,
+            "lord": "Venus"
+          }
+        },
+        "mars": {
+          "sign": "Tau",
+          "sign_num": 1,
+          "degree": 6.5686,
+          "abs_pos": 36.5686,
+          "house": 11,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 2,
+            "name": "Krittika",
+            "pada": 3,
+            "lord": "Sun"
+          }
+        },
+        "jupiter": {
+          "sign": "Ari",
+          "sign_num": 0,
+          "degree": 1.1828,
+          "abs_pos": 1.1828,
+          "house": 10,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 0,
+            "name": "Ashwini",
+            "pada": 1,
+            "lord": "Ketu"
+          }
+        },
+        "saturn": {
+          "sign": "Can",
+          "sign_num": 3,
+          "degree": 2.8447,
+          "abs_pos": 92.8447,
+          "house": 1,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 6,
+            "name": "Punarvasu",
+            "pada": 4,
+            "lord": "Jupiter"
+          }
+        },
+        "rahu": {
+          "sign": "Sco",
+          "sign_num": 7,
+          "degree": 3.5502,
+          "abs_pos": 213.5502,
+          "house": 5,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 16,
+            "name": "Anuradha",
+            "pada": 1,
+            "lord": "Saturn"
+          }
+        },
+        "ketu": {
+          "sign": "Tau",
+          "sign_num": 1,
+          "degree": 3.5502,
+          "abs_pos": 33.5502,
+          "house": 11,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 2,
+            "name": "Krittika",
+            "pada": 3,
+            "lord": "Sun"
+          }
+        }
+      },
+      "moon_nakshatra": {
+        "num": 16,
+        "name": "Anuradha",
+        "pada": 2,
+        "lord": "Saturn"
+      },
+      "yogas": [
+        "Kemadruma"
+      ],
+      "doshas": [
+        "Manglik (Kuja) Dosha"
+      ]
+    },
+    {
+      "id": "nyc-1988-night",
+      "julian_day_ut": 2447474.6743055554,
+      "ayanamsha_lahiri": 23.701428,
+      "ascendant": {
+        "sign": "Can",
+        "sign_num": 3,
+        "degree": 24.772,
+        "abs_pos": 114.772
+      },
+      "planets": {
+        "sun": {
+          "sign": "Lib",
+          "sign_num": 6,
+          "degree": 23.2802,
+          "abs_pos": 203.2802,
+          "house": 4,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 15,
+            "name": "Vishakha",
+            "pada": 1,
+            "lord": "Jupiter"
+          }
+        },
+        "moon": {
+          "sign": "Lib",
+          "sign_num": 6,
+          "degree": 18.3963,
+          "abs_pos": 198.3963,
+          "house": 4,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 14,
+            "name": "Swati",
+            "pada": 4,
+            "lord": "Rahu"
+          }
+        },
+        "mercury": {
+          "sign": "Lib",
+          "sign_num": 6,
+          "degree": 10.3292,
+          "abs_pos": 190.3292,
+          "house": 4,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 14,
+            "name": "Swati",
+            "pada": 2,
+            "lord": "Rahu"
+          }
+        },
+        "venus": {
+          "sign": "Vir",
+          "sign_num": 5,
+          "degree": 18.6579,
+          "abs_pos": 168.6579,
+          "house": 3,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 12,
+            "name": "Hasta",
+            "pada": 3,
+            "lord": "Moon"
+          }
+        },
+        "mars": {
+          "sign": "Pis",
+          "sign_num": 11,
+          "degree": 7.0898,
+          "abs_pos": 337.0898,
+          "house": 9,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 25,
+            "name": "Uttara Bhadrapada",
+            "pada": 2,
+            "lord": "Saturn"
+          }
+        },
+        "jupiter": {
+          "sign": "Tau",
+          "sign_num": 1,
+          "degree": 9.2041,
+          "abs_pos": 39.2041,
+          "house": 11,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 2,
+            "name": "Krittika",
+            "pada": 4,
+            "lord": "Sun"
+          }
+        },
+        "saturn": {
+          "sign": "Sag",
+          "sign_num": 8,
+          "degree": 5.9809,
+          "abs_pos": 245.9809,
+          "house": 6,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 18,
+            "name": "Mula",
+            "pada": 2,
+            "lord": "Ketu"
+          }
+        },
+        "rahu": {
+          "sign": "Aqu",
+          "sign_num": 10,
+          "degree": 18.2686,
+          "abs_pos": 318.2686,
+          "house": 8,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 23,
+            "name": "Shatabhisha",
+            "pada": 4,
+            "lord": "Rahu"
+          }
+        },
+        "ketu": {
+          "sign": "Leo",
+          "sign_num": 4,
+          "degree": 18.2686,
+          "abs_pos": 138.2686,
+          "house": 2,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 10,
+            "name": "Purva Phalguni",
+            "pada": 2,
+            "lord": "Venus"
+          }
+        }
+      },
+      "moon_nakshatra": {
+        "num": 14,
+        "name": "Swati",
+        "pada": 4,
+        "lord": "Rahu"
+      },
+      "yogas": [
+        "Budhaditya"
+      ],
+      "doshas": []
+    },
+    {
+      "id": "tokyo-1995-sunrise",
+      "julian_day_ut": 2449905.375,
+      "ayanamsha_lahiri": 23.794386,
+      "ascendant": {
+        "sign": "Can",
+        "sign_num": 3,
+        "degree": 7.9337,
+        "abs_pos": 97.9337
+      },
+      "planets": {
+        "sun": {
+          "sign": "Gem",
+          "sign_num": 2,
+          "degree": 20.5271,
+          "abs_pos": 80.5271,
+          "house": 12,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 6,
+            "name": "Punarvasu",
+            "pada": 1,
+            "lord": "Jupiter"
+          }
+        },
+        "moon": {
+          "sign": "Lib",
+          "sign_num": 6,
+          "degree": 3.7119,
+          "abs_pos": 183.7119,
+          "house": 4,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 13,
+            "name": "Chitra",
+            "pada": 4,
+            "lord": "Mars"
+          }
+        },
+        "mercury": {
+          "sign": "Gem",
+          "sign_num": 2,
+          "degree": 0.3326,
+          "abs_pos": 60.3326,
+          "house": 12,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 4,
+            "name": "Mrigashirsha",
+            "pada": 3,
+            "lord": "Mars"
+          }
+        },
+        "venus": {
+          "sign": "Gem",
+          "sign_num": 2,
+          "degree": 8.1577,
+          "abs_pos": 68.1577,
+          "house": 12,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 5,
+            "name": "Ardra",
+            "pada": 1,
+            "lord": "Rahu"
+          }
+        },
+        "mars": {
+          "sign": "Leo",
+          "sign_num": 4,
+          "degree": 27.8412,
+          "abs_pos": 147.8412,
+          "house": 2,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 11,
+            "name": "Uttara Phalguni",
+            "pada": 1,
+            "lord": "Sun"
+          }
+        },
+        "jupiter": {
+          "sign": "Sco",
+          "sign_num": 7,
+          "degree": 12.811,
+          "abs_pos": 222.811,
+          "house": 5,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 16,
+            "name": "Anuradha",
+            "pada": 3,
+            "lord": "Saturn"
+          }
+        },
+        "saturn": {
+          "sign": "Pis",
+          "sign_num": 11,
+          "degree": 0.9548,
+          "abs_pos": 330.9548,
+          "house": 9,
+          "retrograde": true,
+          "nakshatra": {
+            "num": 24,
+            "name": "Purva Bhadrapada",
+            "pada": 4,
+            "lord": "Jupiter"
+          }
+        },
+        "rahu": {
+          "sign": "Lib",
+          "sign_num": 6,
+          "degree": 8.953,
+          "abs_pos": 188.953,
+          "house": 4,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 14,
+            "name": "Swati",
+            "pada": 1,
+            "lord": "Rahu"
+          }
+        },
+        "ketu": {
+          "sign": "Ari",
+          "sign_num": 0,
+          "degree": 8.953,
+          "abs_pos": 8.953,
+          "house": 10,
+          "retrograde": false,
+          "nakshatra": {
+            "num": 0,
+            "name": "Ashwini",
+            "pada": 3,
+            "lord": "Ketu"
+          }
+        }
+      },
+      "moon_nakshatra": {
+        "num": 13,
+        "name": "Chitra",
+        "pada": 4,
+        "lord": "Mars"
+      },
+      "yogas": [
+        "Budhaditya"
+      ],
+      "doshas": [
+        "Manglik (Kuja) Dosha"
+      ]
+    }
+  ]
+}
