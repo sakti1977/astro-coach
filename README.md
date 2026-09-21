@@ -13,7 +13,7 @@ Vedic Jyotish coaching app: **Next.js 16** (App Router) + a long-running **Pytho
 1. **Fly.io** — `fly.toml` + root `Dockerfile` (this repo’s default paid example). One Machine, port 3000 public, uvicorn on `127.0.0.1:8000`.
 2. **Same files on Render** — `render.yaml` Blueprint, one Docker web service.
 3. **Any VPS** (Hetzner/DigitalOcean/etc.) — Docker Engine + `docker compose up`.
-4. **Railway-only** — one Railway **service** using the root `Dockerfile` (not a second Railway service + Vercel). Then delete Vercel.
+4. **Railway-only** — one Railway **service** using the **root** `Dockerfile` + `railway.json` (not `python-service/railway.json`, not Vercel). Then delete Vercel.
 
 Local/free: `docker compose up` or `./start.sh`.
 
@@ -24,14 +24,14 @@ Local/free: `docker compose up` or `./start.sh`.
 | `EPHEMERIS_SHARED_SECRET` | Next **and** Python | **Required** in Docker/production, including localhost compose. `openssl rand -base64 32` |
 | `EPHEMERIS_SERVICE_URL` | Next only | Compose: `http://ephemeris:8000`. One container / `start.sh`: `http://127.0.0.1:8000` |
 | `EPHEMERIS_REQUIRE_SECRET` | Python | Compose and the one-host image set this to `1` |
-| `NEXTAUTH_URL` | Next | Public origin, no trailing slash (`https://your-app.fly.dev`) |
+| `NEXTAUTH_URL` | Next | Public origin, no trailing slash (`https://your-app.fly.dev` or `https://<app>.up.railway.app`) |
 | `NEXTAUTH_SECRET` | Next | Required for auth |
 | `NEXT_PUBLIC_SUPABASE_URL` | Next (build + runtime) | Keep existing Supabase project |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Next (build + runtime) | |
 | `SUPABASE_SERVICE_ROLE_KEY` | Next server | Never `NEXT_PUBLIC_*` |
 | `ANTHROPIC_API_KEY` | Next | Coaching |
 | `ALLOWED_ORIGINS` | Python | Public Next origin |
-| `CRON_SECRET` | Next | Host crontab, see `deploy/crontab.example` (replaces Vercel Cron) |
+| `CRON_SECRET` | Next | Host crontab or Railway curl cron, see `deploy/crontab.example` (replaces Vercel Cron) |
 | `UPSTASH_*` / VAPID / `SARVAM_API_KEY` | Next | Optional, same as before |
 
 Copy [`.env.example`](.env.example) to `.env` for Compose. Do not commit `.env`.
@@ -58,7 +58,7 @@ docker run --rm -p 3000:3000 \
   astro-coach
 ```
 
-`deploy/start-one-host.sh` starts uvicorn on loopback then `next start` on `:3000`.
+`deploy/start-one-host.sh` starts uvicorn on loopback then `next start` on `$PORT` (default `3000`). Railway injects `PORT`; do not hardcode 3000 in the dashboard unless you also want a stable healthcheck port.
 
 **Fly:**
 
@@ -75,7 +75,33 @@ Keep `min_machines_running = 1` and `auto_stop_machines = "off"`. Autostop is ho
 
 **Render:** New → Blueprint → this `render.yaml`. Set `NEXTAUTH_URL` to the Render URL. Copy the generated `EPHEMERIS_SHARED_SECRET` is already shared in-process.
 
-**Railway (only, if you already pay it):** New service from this repo, Dockerfile at `/Dockerfile`, **one** service. Set the same env as Fly. Remove the old Python-only service and the Vercel project.
+**Railway (one bill, drop Vercel) — do this in order:**
+
+1. In [Railway](https://railway.app): **New project** → **GitHub repo** (`sakti1977/astro-coach`) → **one** service. Root directory = repo root. Builder = Dockerfile (`/Dockerfile`). Ignore `python-service/railway.json` (that is the old Python-only Nixpacks app).
+2. **Do not** enable Serverless / app sleeping on this service. Uvicorn must stay warm; sleep is how you get “Ephemeris service is not running”. `railway.json` sets `restartPolicyType: ALWAYS`.
+3. Variables (Variables tab). Set **before** the first successful deploy if you can — `NEXT_PUBLIC_*` are Docker **build args**:
+
+   | Variable | Value |
+   | --- | --- |
+   | `NEXTAUTH_URL` | `https://<service>.up.railway.app` (no trailing slash). After the first deploy, copy the public URL from Settings → Networking. Custom domain later: change this and redeploy. |
+   | `NEXTAUTH_SECRET` | Copy from Vercel, or `openssl rand -base64 32` |
+   | `EPHEMERIS_SHARED_SECRET` | Same value Next and Python already share. Copy from Vercel **and** the old Railway Python service (must match). |
+   | `EPHEMERIS_SERVICE_URL` | `http://127.0.0.1:8000` (loopback in this container — not the old Railway public URL) |
+   | `EPHEMERIS_REQUIRE_SECRET` | `1` |
+   | `ALLOWED_ORIGINS` | Same as `NEXTAUTH_URL` |
+   | `NEXT_PUBLIC_SUPABASE_URL` | Copy from Vercel |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Copy from Vercel |
+   | `SUPABASE_SERVICE_ROLE_KEY` | Copy from Vercel |
+   | `ANTHROPIC_API_KEY` | Copy from Vercel |
+   | `CRON_SECRET` | Copy from Vercel |
+   | `SARVAM_API_KEY`, `UPSTASH_*`, `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` | Copy from Vercel if set |
+
+   Leave `PORT` unset unless healthchecks fail: Railway injects it; `start-one-host.sh` passes it to `next start`. Optional override: `PORT=3000`.
+4. Settings → Networking: generate a public domain (`*.up.railway.app`). Healthcheck path is `/api/health` (200 only when Next **and** uvicorn are up). Timeout 300s (image start + ephemeris wait).
+5. Deploy. Confirm `https://<app>.up.railway.app/api/health` returns `{"ok":true}`. Sign in once (NextAuth). Generate a guest chart to prove kerykeion.
+6. **Supabase stays.** Dashboard → Authentication → URL configuration: add the Railway origin to **Site URL** / **Redirect URLs** (`https://<app>.up.railway.app/**`). Do not delete the Supabase project.
+7. **Cron:** Vercel Cron is gone. Either a second Railway service (`curlimages/curl`, schedule `30 2 * * *`, start command in `deploy/crontab.example`) **or** skip until you need push notifications.
+8. **Cutover:** Point the custom domain at Railway (CNAME to the Railway domain). Update `NEXTAUTH_URL` + `ALLOWED_ORIGINS` + Supabase redirect URLs. Redeploy. Then **delete the Vercel project** and the **old Railway Python-only** service (Nixpacks / `python-service`). Keep this one Docker service.
 
 ### Local without Docker
 
@@ -89,11 +115,11 @@ Cloud Agent: `.cursor/environment.json` `start` is `./start.sh`; a tmux terminal
 
 | Stop paying / remove | Why |
 | --- | --- |
-| **Vercel project** | Next now runs on the VM (`next start`). `astro-coach/vercel.json` cron is replaced by `deploy/crontab.example`. |
-| **Railway Python service** (if you moved off Railway) | uvicorn is in the same container/compose project. |
+| **Vercel project** | Next now runs on the one-host container (`next start`). `astro-coach/vercel.json` cron is replaced by `deploy/crontab.example` / a Railway curl cron. |
+| **Old Railway Python-only service** | Root `Dockerfile` already runs uvicorn. Do not keep Nixpacks `python-service`. |
 | Do **not** delete Supabase | Auth + Postgres stay. |
 
-Leave `python-service/railway.json` and `astro-coach/vercel.json` in git as leftovers; they are unused once you cut over.
+Leave `python-service/railway.json` and `astro-coach/vercel.json` in git as leftovers; they are unused once you cut over. Use root `railway.json` for the one-host service.
 
 ### Why two processes still
 

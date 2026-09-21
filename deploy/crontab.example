@@ -1,7 +1,14 @@
-# Vercel Cron goes away with Vercel. On the one host, install a daily curl.
-# 02:30 UTC = 08:00 IST (same schedule as astro-coach/vercel.json).
+# Vercel Cron goes away with Vercel. Same schedule as astro-coach/vercel.json:
+# 02:30 UTC = 08:00 IST.
 #
-#   crontab -e
-# Paste, replacing HOST and CRON_SECRET:
-
-30 2 * * * curl -fsS -H "Authorization: Bearer CRON_SECRET" https://HOST/api/cron/notifications >/dev/null
+# VPS / Compose: crontab -e, replace HOST and CRON_SECRET:
+#
+#   30 2 * * * curl -fsS -H "Authorization: Bearer CRON_SECRET" https://HOST/api/cron/notifications >/dev/null
+#
+# Railway: do NOT put a cronSchedule on the web service (that would stop Next).
+# Add a second service in the same project:
+#   Source: Docker image  curlimages/curl
+#   Cron schedule:        30 2 * * *
+#   Start command:        curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$NEXTAUTH_URL/api/cron/notifications"
+# Copy CRON_SECRET and NEXTAUTH_URL from the web service variables.
+# The cron service must exit after curl (Railway skips the next run if it stays Active).
