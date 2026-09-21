@@ -16,18 +16,21 @@ app = FastAPI(title="Astro Coach Ephemeris Service")
 
 # SEC-01: shared-secret auth so anyone who learns the deployed URL can't call
 # /calculate, /dasha, /transits directly and bypass the Next.js rate limiter.
-# Set EPHEMERIS_SHARED_SECRET the same in both this service (Railway/Render)
-# and the Next.js app (server-only env var, never NEXT_PUBLIC_*). If unset,
-# auth is skipped — this keeps local dev (`./start.sh`) working with zero
-# extra setup, but MUST be set in any deployment reachable from the internet.
+# Set EPHEMERIS_SHARED_SECRET the same in Next.js and this process
+# (server-only env var, never NEXT_PUBLIC_*). If unset, auth is skipped —
+# local `./start.sh` still works with zero extra setup. Docker Compose and
+# the one-host image set EPHEMERIS_REQUIRE_SECRET=1 so the secret is
+# required even on a private Docker network (non-negotiable #3).
 _SHARED_SECRET = os.getenv("EPHEMERIS_SHARED_SECRET", "")
 
 
 def _deployed() -> bool:
-    """True on Railway/Render or when an operator explicitly requires the secret."""
+    """True on hosted runtimes or when an operator explicitly requires the secret."""
     return bool(
         os.getenv("RAILWAY_ENVIRONMENT")
         or os.getenv("RENDER")
+        or os.getenv("FLY_APP_NAME")
+        or os.getenv("K_SERVICE")
         or os.getenv("EPHEMERIS_REQUIRE_SECRET") == "1"
     )
 
@@ -46,9 +49,9 @@ def _verify_secret(x_ephemeris_secret: Optional[str] = Header(default=None)) -> 
         raise HTTPException(status_code=401, detail="Invalid or missing service credentials")
 
 # SCALE-03: restrict CORS to known origins instead of wildcard.
-# In Railway → Variables set ALLOWED_ORIGINS to your Vercel domain,
-# e.g. "https://your-app.vercel.app" (comma-separated for multiple).
-# Defaults to localhost for local development.
+# Set ALLOWED_ORIGINS to the public Next origin (comma-separated).
+# Defaults to localhost for local development. On one-host Docker the
+# browser never talks to this service; Next.js does, server-side.
 _raw = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001")
 ALLOWED_ORIGINS = [o.strip() for o in _raw.split(",") if o.strip()]
 

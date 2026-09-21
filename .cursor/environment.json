@@ -1,10 +1,11 @@
 {
   "name": "astro-coach",
   "install": "python3 -m venv python-service/.venv && python-service/.venv/bin/pip install -U pip && python-service/.venv/bin/pip install -r python-service/requirements-dev.txt && (cd astro-coach && npm install)",
+  "start": "./start.sh",
   "terminals": [
     {
       "name": "ephemeris-uvicorn",
-      "description": "Python FastAPI ephemeris service required for chart generation. Next.js defaults EPHEMERIS_SERVICE_URL to http://localhost:8000. Shared secret is optional in local/Cloud Agent; required on Railway/Render and Vercel production.",
+      "description": "Python FastAPI ephemeris sidecar. Next defaults EPHEMERIS_SERVICE_URL to http://127.0.0.1:8000. start.sh will skip starting a second copy if /health is already up. Shared secret is optional in Cloud Agent; required in Docker/production (EPHEMERIS_REQUIRE_SECRET=1).",
       "command": "cd python-service && .venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000"
     }
   ],

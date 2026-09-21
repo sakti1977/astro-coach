@@ -35,8 +35,9 @@ new copy against actual sync behavior for signed-in vs. signed-out state. Run `n
 ### 3. Ephemeris service auth
 **Rule:** `/calculate`, `/dasha`, `/transits`, and any new `python-service` endpoint that accepts
 birth data must keep `dependencies=[Depends(_verify_secret)]` (shared-secret header check).
-**Why:** Without it, anyone who learns the Railway URL can call the ephemeris service directly,
-bypassing the Next.js rate limiter entirely.
+**Why:** Without it, anyone who learns the ephemeris URL (Railway, Docker publish, Fly
+internal leak) can call the service directly, bypassing the Next.js rate limiter.
+Required on one-host Docker networks too (`EPHEMERIS_REQUIRE_SECRET=1`).
 **Check:** `grep -n "Depends(_verify_secret)" python-service/main.py` — every `@app.post` route
 taking user input must have it, including new ones.
 

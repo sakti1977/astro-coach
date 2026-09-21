@@ -1,3 +1,8 @@
+# Secrets (never commit)
+.env
+.env.local
+!.env.example
+
 # Next.js
 astro-coach/.next/
 astro-coach/node_modules/

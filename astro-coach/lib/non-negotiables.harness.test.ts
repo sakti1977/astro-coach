@@ -63,6 +63,10 @@ describe("NON_NEGOTIABLES harness", () => {
       expect(rest, path).toContain("Depends(_verify_secret)");
     }
     expect(src).toContain("EPHEMERIS_SHARED_SECRET must be set on a deployed");
+    expect(src).toContain("EPHEMERIS_REQUIRE_SECRET");
+    const compose = read(join(REPO_ROOT, "docker-compose.yml"));
+    expect(compose).toContain("EPHEMERIS_REQUIRE_SECRET");
+    expect(compose).toContain("http://ephemeris:8000");
   });
 
   it("#4 advice disclaimer is mounted in AppShell (covers every coaching surface)", () => {

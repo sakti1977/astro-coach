@@ -47,7 +47,7 @@ python3 -m venv .venv
 .venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Cloud Agent environments auto-start this service via `.cursor/environment.json` (tmux terminal `ephemeris-uvicorn`). Next.js defaults `EPHEMERIS_SERVICE_URL` to `http://localhost:8000`; leave the shared secret unset for local/Cloud Agent.
+Cloud Agent environments auto-start this service via `.cursor/environment.json` (`start`: `./start.sh`, plus tmux `ephemeris-uvicorn`). Next.js defaults `EPHEMERIS_SERVICE_URL` to `http://localhost:8000`; leave the shared secret unset for local/Cloud Agent. **Production one-host** (Docker Compose / Fly / Render / one Railway service) **requires** `EPHEMERIS_SHARED_SECRET` — see the repo-root [README One host](../README.md#one-host). Do not split Next onto Vercel and Python onto Railway.
 
 ### 4. Run the Development Server
 
@@ -98,8 +98,9 @@ through Next.js API handlers (rate-limited, session-gated except guest chart/geo
 
 ### Backend Services
 
-- **Python Service**: Swiss Ephemeris calculations (FastAPI). Deployed endpoints
-  require `EPHEMERIS_SHARED_SECRET`.
+- **Python Service**: Swiss Ephemeris calculations (FastAPI, long-running).
+  Deployed endpoints require `EPHEMERIS_SHARED_SECRET` (including Docker
+  networks). Not suitable for Vercel serverless.
 - **Supabase**: Auth identities + PostgreSQL. App writes use the service-role
   key on the server, scoped to the NextAuth `user.id`.
 - **NextAuth.js**: Session management (JWT)
@@ -174,7 +175,7 @@ See `.env.example` for template.
 - **Storage**: IndexedDB (idb) + localStorage
 - **AI**: Anthropic Claude API
 - **Ephemeris**: Swiss Ephemeris (Python/FastAPI)
-- **Deployment**: Vercel (recommended)
+- **Deployment**: one VM/container (Fly / Render / VPS / Railway-only). Not Vercel+Railway.
 
 ## Learn More
 
@@ -190,26 +191,11 @@ See `.env.example` for template.
 - Lahiri Ayanamsha: Government of India standard
 - Vimshottari Dasha: Classical timing system
 
-## Deploy on Vercel
+## Deploy (one host)
 
-1. Push your code to GitHub
-2. Import project in Vercel
-3. Add environment variables:
-   - `NEXTAUTH_URL` (your production URL)
-   - `NEXTAUTH_SECRET`
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `EPHEMERIS_SERVICE_URL` — public URL of the Python service (Railway/Render), **not** localhost. Chart generation 503s without this.
-   - `EPHEMERIS_SHARED_SECRET` — same value as on the Python service (required in production)
-   - `UPSTASH_REDIS_REST_URL` (recommended)
-   - `UPSTASH_REDIS_REST_TOKEN` (recommended)
-4. Deploy the Python service on Railway (see `python-service/railway.json`). Set:
-   - `EPHEMERIS_SHARED_SECRET` (same as Vercel)
-   - `ALLOWED_ORIGINS` to your Vercel origin, e.g. `https://your-app.vercel.app`
-5. Deploy the Next.js app on Vercel.
+Vercel cannot run Swiss Ephemeris. Paying Vercel **and** Railway is how you get “Ephemeris service is not running” when the sidecar sleeps.
 
-See [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for details.
+Run Next + uvicorn on **one** machine. Full steps, env list, `docker compose up`, Fly/Render/VPS/Railway-only, and what to delete: **[One host](../README.md#one-host)** in the repo root README.
 
 ## Development
 
