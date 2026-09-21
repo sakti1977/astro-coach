@@ -1,0 +1,23 @@
+# Render Blueprint: one Docker web service, Next + uvicorn in one container.
+# Dashboard → New → Blueprint → this repo. Then delete Vercel and Railway.
+
+services:
+  - type: web
+    name: astro-coach
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    plan: starter
+    envVars:
+      - key: EPHEMERIS_REQUIRE_SECRET
+        value: "1"
+      - key: EPHEMERIS_SERVICE_URL
+        value: http://127.0.0.1:8000
+      - key: EPHEMERIS_SHARED_SECRET
+        generateValue: true
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: NODE_ENV
+        value: production

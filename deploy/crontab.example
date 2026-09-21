@@ -1,0 +1,7 @@
+# Vercel Cron goes away with Vercel. On the one host, install a daily curl.
+# 02:30 UTC = 08:00 IST (same schedule as astro-coach/vercel.json).
+#
+#   crontab -e
+# Paste, replacing HOST and CRON_SECRET:
+
+30 2 * * * curl -fsS -H "Authorization: Bearer CRON_SECRET" https://HOST/api/cron/notifications >/dev/null

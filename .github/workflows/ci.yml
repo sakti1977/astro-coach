@@ -34,3 +34,13 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements-dev.txt
       - run: pytest -q
+
+  one-host-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker compose (no build)
+        run: |
+          EPHEMERIS_SHARED_SECRET=ci-not-a-real-secret \
+          NEXTAUTH_SECRET=ci-not-a-real-secret \
+          docker compose config

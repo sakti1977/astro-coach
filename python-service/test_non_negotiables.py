@@ -16,6 +16,16 @@ def test_every_post_route_requires_shared_secret():
 def test_deployed_service_fails_closed_without_secret():
     assert "EPHEMERIS_SHARED_SECRET must be set on a deployed" in MAIN
     assert "def _deployed()" in MAIN
+    assert "FLY_APP_NAME" in MAIN
+    assert 'os.getenv("EPHEMERIS_REQUIRE_SECRET") == "1"' in MAIN
+
+
+def test_one_host_compose_requires_shared_secret_on_docker_network():
+    compose = (ROOT.parent / "docker-compose.yml").read_text()
+    assert "EPHEMERIS_REQUIRE_SECRET" in compose
+    assert "EPHEMERIS_SHARED_SECRET" in compose
+    assert "http://ephemeris:8000" in compose
+    assert "127.0.0.1:8000:8000" in compose
 
 
 def test_every_remedy_has_behavioral_component():
