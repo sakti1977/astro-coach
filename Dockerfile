@@ -39,6 +39,7 @@ RUN npm run build && npm prune --omit=dev
 ENV NODE_ENV=production
 ENV EPHEMERIS_SERVICE_URL=http://127.0.0.1:8000
 ENV EPHEMERIS_REQUIRE_SECRET=1
+# Default for Fly/Render/compose. Railway overwrites PORT at runtime; start-one-host.sh honors it.
 ENV PORT=3000
 
 EXPOSE 3000

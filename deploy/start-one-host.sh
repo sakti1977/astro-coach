@@ -1,6 +1,7 @@
 #!/bin/bash
 # Production process manager for a single container / VM:
-# uvicorn (Swiss Ephemeris) on 127.0.0.1:8000 + Next.js on :3000.
+# uvicorn (Swiss Ephemeris) on 127.0.0.1:8000 + Next.js on $PORT (default 3000).
+# Railway injects PORT; Fly/Render/compose typically leave it at 3000.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -14,6 +15,8 @@ fi
 export EPHEMERIS_REQUIRE_SECRET=1
 export EPHEMERIS_SERVICE_URL="${EPHEMERIS_SERVICE_URL:-http://127.0.0.1:8000}"
 export NODE_ENV="${NODE_ENV:-production}"
+# Public HTTP port only. Do not reuse this for uvicorn (always 8000 on loopback).
+APP_PORT="${PORT:-3000}"
 
 if [ -x "$ROOT/python-service/.venv/bin/uvicorn" ]; then
   UVICORN="$ROOT/python-service/.venv/bin/uvicorn"
@@ -52,6 +55,6 @@ cleanup() {
 }
 trap cleanup INT TERM
 
-echo "→ Starting Next.js on :3000"
+echo "→ Starting Next.js on :${APP_PORT}"
 cd "$ROOT/astro-coach"
-exec npm run start -- -H 0.0.0.0 -p 3000
+exec npm run start -- -H 0.0.0.0 -p "$APP_PORT"
