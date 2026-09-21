@@ -41,8 +41,13 @@ Or manually:
 
 ```bash
 cd python-service
-uvicorn main:app --port 8000
+# Prefer the project venv (kerykeion==5.12.9 is pinned in requirements.txt)
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 ```
+
+Cloud Agent environments auto-start this service via `.cursor/environment.json` (tmux terminal `ephemeris-uvicorn`). Next.js defaults `EPHEMERIS_SERVICE_URL` to `http://localhost:8000`; leave the shared secret unset for local/Cloud Agent.
 
 ### 4. Run the Development Server
 
@@ -195,9 +200,14 @@ See `.env.example` for template.
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `EPHEMERIS_SERVICE_URL` — public URL of the Python service (Railway/Render), **not** localhost. Chart generation 503s without this.
+   - `EPHEMERIS_SHARED_SECRET` — same value as on the Python service (required in production)
    - `UPSTASH_REDIS_REST_URL` (recommended)
    - `UPSTASH_REDIS_REST_TOKEN` (recommended)
-4. Deploy!
+4. Deploy the Python service on Railway (see `python-service/railway.json`). Set:
+   - `EPHEMERIS_SHARED_SECRET` (same as Vercel)
+   - `ALLOWED_ORIGINS` to your Vercel origin, e.g. `https://your-app.vercel.app`
+5. Deploy the Next.js app on Vercel.
 
 See [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for details.
 
