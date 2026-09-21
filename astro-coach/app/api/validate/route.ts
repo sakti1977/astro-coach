@@ -5,7 +5,7 @@ import { validateChart } from "@/lib/claude";
 import { buildValidatorSystemPrompt, buildValidatorUserPrompt } from "@/lib/astrology/prompts";
 import { extractJsonArray } from "@/lib/claude-json";
 import { safeClientErrorMessage } from "@/lib/safe-error";
-import type { NatalChart } from "@/lib/profile";
+import { resolveNatalGrounding } from "@/lib/server-grounding";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -16,11 +16,24 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { chart, birthDate }: { chart: NatalChart; birthDate?: string } = await req.json();
-    if (!chart) return NextResponse.json({ error: "Chart required" }, { status: 400 });
+    const { chart: clientChart, dashas: clientDashas, birthDate }: {
+      chart: unknown;
+      dashas?: unknown;
+      birthDate?: string;
+    } = await req.json();
+
+    const grounding = await resolveNatalGrounding(
+      access.session?.user?.id,
+      clientChart,
+      clientDashas
+    );
+    if (grounding instanceof NextResponse) return grounding;
 
     const systemPrompt = buildValidatorSystemPrompt();
-    const userPrompt = buildValidatorUserPrompt(chart, birthDate);
+    const userPrompt = buildValidatorUserPrompt(
+      grounding.chart,
+      grounding.birthDate || birthDate
+    );
 
     const raw = await validateChart(systemPrompt, userPrompt);
     const questions = extractJsonArray(raw);

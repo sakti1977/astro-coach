@@ -24,11 +24,13 @@ inside `app/api/`). `grep` client components for `.from("user_profiles")` or
 ### 2. Honest privacy/sync copy
 **Rule:** UI text describing storage or sync must match what the code actually guarantees. No
 "encrypted and stored securely" or equivalent claims unless true end-to-end for the current auth
-state.
+state. Do not claim cloud writes are protected by "row-level security" — `/api/sync` uses the
+service-role client (bypasses RLS) scoped to the NextAuth session user id. Signed-in unsynced
+state must not read as "Local only (no Supabase)".
 **Why:** The signin page once claimed secure cloud storage while sync was silently broken (see #1)
 — a trust-critical inconsistency for a "personal coach" app handling sensitive life data.
-**Check:** `grep -ri "encrypted\|stored securely\|synced across devices"` across `app/` and diff
-new copy against actual sync behavior for signed-in vs. signed-out state.
+**Check:** `grep -ri "encrypted\|stored securely\|row-level security\|synced across devices"` across `app/` and diff
+new copy against actual sync behavior for signed-in vs. signed-out state. Run `npm test -- non-negotiables.harness.test.ts`.
 
 ### 3. Ephemeris service auth
 **Rule:** `/calculate`, `/dasha`, `/transits`, and any new `python-service` endpoint that accepts
@@ -57,11 +59,15 @@ messages are generic and any detail is server-side-only (logged, not returned).
 
 ### 6. Rate limiting on every API route
 **Rule:** Every route under `app/api/*` that does real work calls `checkRateLimit` /
-`getApiAccessContext` (or the shared wrapper, if one exists by the time this is read).
+`getApiAccessContext` (or the shared wrapper, if one exists by the time this is read). Custom
+limit/window pairs (guest chart, geocode, health) must still go through the same helper — which
+must use Redis when Upstash is configured, not silently fall back to per-instance memory.
+**Exemptions:** `app/api/auth/[...nextauth]/route.ts` (NextAuth). `app/api/cron/notifications/route.ts`
+must check `CRON_SECRET` instead of a user rate limit.
 **Why:** Rate limiting is applied per-route by convention, not centrally enforced by middleware —
-it's easy for a new route to ship without it.
-**Check:** For each new/changed file under `app/api/`, confirm `checkRateLimit`/
-`getApiAccessContext` is called before any real work happens.
+it's easy for a new route to ship without it. Guest limits used to skip Redis entirely.
+**Check:** Run the non-negotiables harness. For each new/changed file under `app/api/`, confirm `checkRateLimit`/
+`getApiAccessContext` is called before any real work happens (or the exemption above applies).
 
 ### 7. Schema-validated external input
 **Rule:** Backup import (`importProfile` in `app/page.tsx`) and any new code path accepting
@@ -139,3 +145,11 @@ chatbot fallback unrelated to the user's chart.
 all of which is written to route through the existing chart+chat-grounded core.
 **Check:** For any new coaching-adjacent surface, confirm it calls into the existing grounded
 coaching/remedy path rather than shipping independent, ungrounded advice logic.
+
+### 14. Automated non-negotiables harness
+**Rule:** `astro-coach/lib/non-negotiables.harness.test.ts` and `python-service/test_non_negotiables.py`
+must stay in CI and must fail the build if items 1–13 regress in the ways they can be grepped
+(client Supabase writes, missing rate limits, missing disclaimer, committed secrets, unauthenticated
+ephemeris POSTs, ritual-only remedies, backup import without `parseBackupPayload`).
+**Why:** These exact bugs shipped, were fixed, then similar ones returned because review was manual.
+**Check:** `npm test` in `astro-coach/` and `pytest` in `python-service/`. GitHub Actions `.github/workflows/ci.yml` runs both.

@@ -33,7 +33,7 @@ export default function SyncStatus() {
     ? "Sync error"
     : lastSyncedAt
     ? "Synced"
-    : "Local only";
+    : "Not yet synced";
 
   const handleClick = async () => {
     if (isSyncing) return;

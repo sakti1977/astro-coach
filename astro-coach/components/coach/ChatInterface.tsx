@@ -10,6 +10,7 @@ import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 import { buildTransitContext } from "@/lib/astrology/prompts";
 import { SARVAM_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "@/lib/languages";
+import AdviceDisclaimer from "@/components/AdviceDisclaimer";
 import {
   CHAT_HISTORY_DISPLAY,
   CHAT_WINDOW_API,
@@ -43,7 +44,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [exchangeCount, setExchangeCount] = useState(profile.coaching.exchangeCount ?? 0);
   const [planDelivered, setPlanDelivered] = useState(profile.coaching.planDelivered ?? false);
   const [includeReligiousSolutions, setIncludeReligiousSolutions] = useState(
-    profile.coaching.includeReligiousSolutions ?? true
+    profile.coaching.includeReligiousSolutions ?? false
   );
   const [tonePreference, setTonePreference] = useState<CoachTonePreference>(
     profile.coaching.tonePreference ?? "jyotish"
@@ -424,6 +425,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           chart,
           dashas,
           goals: currentProfile.goals.map((g) => g.description),
+          habits: currentProfile.habits,
           // Observations injected here — survive regardless of message window truncation
           profileContext: buildCoachingContext(currentProfile, observations),
           vargaContext,
@@ -433,10 +435,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           tonePreference,
           transitContext: transitContext || undefined,
           messages: (() => {
-            // Keep up to 20 messages, but the Anthropic API requires the first
-            // message to be a user turn. A slice of an odd-length array can
-            // start with an assistant message, which causes API errors.
-            const window = newMessages.slice(-20).map((m) => ({ role: m.role, content: m.content }));
+            const window = newMessages.slice(-CHAT_WINDOW_API).map((m) => ({ role: m.role, content: m.content }));
             const firstUser = window.findIndex((m) => m.role === "user");
             return firstUser > 0 ? window.slice(firstUser) : window;
           })(),
@@ -554,6 +553,15 @@ export default function ChatInterface({ chart, dashas }: Props) {
             <RotateCcw className="w-3 h-3" /> New Topic
           </button>
           {/* Skip discovery, get the plan immediately */}
+          {planDelivered && (
+            <Link
+              href="/habits"
+              className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors"
+              title="Turn the plan's behavioral items into tracked sadhana"
+            >
+              <CheckCircle2 className="w-3 h-3" /> Track on Sadhana
+            </Link>
+          )}
           {phase === "gathering" && (
             <button
               type="button"
@@ -749,9 +757,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
         {voiceError && (
           <p className="text-xs text-red-500 text-center mt-1.5">{voiceError}</p>
         )}
-        <p className="text-[10px] text-gray-500 text-center mt-2">
-          Jyotish guidance for reflection and remedial practice — not a substitute for professional medical, mental health, legal, or financial advice.
-        </p>
+        <AdviceDisclaimer className="mt-2" />
       </div>
     </div>
   );

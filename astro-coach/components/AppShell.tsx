@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import SyncStatus from "@/components/SyncStatus";
+import AdviceDisclaimer from "@/components/AdviceDisclaimer";
 
 const NAV_ITEMS = [
   { href: "/chart",      label: "Chart",      icon: Hexagon },
@@ -191,7 +192,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <main className="lg:pl-60">{children}</main>
+      <main className="lg:pl-60">
+        {children}
+        <div className="px-4 pb-6 pt-2">
+          <AdviceDisclaimer />
+        </div>
+      </main>
     </div>
   );
 }

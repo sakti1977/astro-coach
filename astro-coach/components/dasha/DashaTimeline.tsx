@@ -7,6 +7,7 @@ import type { DashaData } from "@/lib/profile";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
 import { dignityPhrase } from "@/lib/astrology/dignityFraming";
 import SignInRequired from "@/components/SignInRequired";
+import AdviceDisclaimer from "@/components/AdviceDisclaimer";
 
 interface Props {
   dashas: DashaData;
@@ -89,6 +90,7 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chart: profile.chart,
+          dashas: profile.dashas,
           dashaLord: maha.lord,
           years: maha.balance_years,
           ...(isCurrentMaha
@@ -216,6 +218,7 @@ export default function DashaTimeline({ dashas, birthDate }: Props) {
                   ) : prediction ? (
                     <div className="pt-3 space-y-3">
                       <p className="text-sm text-gray-700 italic">{prediction.summary}</p>
+                      <AdviceDisclaimer className="text-left" />
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <p className="text-xs font-medium text-gray-500 uppercase mb-1">Core Themes</p>

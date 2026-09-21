@@ -1,8 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { checkEphemerisHealth } from "@/lib/ephemeris";
-import { HEALTH_CACHE_SECS } from "@/lib/constants";
+import { HEALTH_CACHE_SECS, HEALTH_RATE_LIMIT_MAX, HEALTH_RATE_LIMIT_WINDOW_MS } from "@/lib/constants";
+import { getApiAccessContext } from "@/lib/api-auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const access = await getApiAccessContext(req, { allowAnonymous: true });
+  if (access instanceof NextResponse) return access;
+  if (!(await checkRateLimit(access.rateLimitKey, HEALTH_RATE_LIMIT_MAX, HEALTH_RATE_LIMIT_WINDOW_MS))) {
+    return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
+  }
+
   const ok = await checkEphemerisHealth();
   return NextResponse.json(
     { ok },

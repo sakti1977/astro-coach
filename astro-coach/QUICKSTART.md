@@ -53,7 +53,7 @@ This guide will help you set up authentication and cloud storage for Astro Coach
 
    With your actual values from Step 3.
 
-3. The `NEXTAUTH_SECRET` is already generated - leave it as is.
+3. Generate `NEXTAUTH_SECRET` with `openssl rand -base64 32` and put it in `.env.local`. Never commit a real secret; `.env.example` has a placeholder only.
 
 ### 5. Start the Application (1 minute)
 
@@ -86,7 +86,7 @@ Your authentication system is now fully configured:
 - ✅ Users can sign up and sign in
 - ✅ User data is stored in Supabase
 - ✅ Data syncs automatically across devices
-- ✅ Row-level security protects user data
+- ✅ Account copy goes through a session-verified API (not a silent browser write)
 
 ## Next Steps
 

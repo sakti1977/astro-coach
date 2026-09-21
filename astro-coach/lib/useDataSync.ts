@@ -51,7 +51,13 @@ export function useDataSync() {
           // syncFromServer also refuses that overwrite as a backstop, but
           // this is what actually gets the guest's chart onto their account.
           if (getProfile().chart) {
-            await storage.syncToServer(session.user.id);
+            try {
+              await storage.syncToServer(session.user.id);
+            } catch (error) {
+              const code = (error as Error & { code?: string }).code;
+              if (code !== "SYNC_CONFLICT") throw error;
+              // Cloud is newer — fall through to pull.
+            }
           }
           await performSyncFrom(session.user.id);
         } catch {

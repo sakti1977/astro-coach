@@ -109,6 +109,7 @@ export default function HabitsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chart: profile.chart,
+          dashas: profile.dashas,
           dashaLord: profile.dashas.current_maha,
           goals: profile.goals.map((g) => g.description),
           weakPlanets,

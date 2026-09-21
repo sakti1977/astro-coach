@@ -23,6 +23,22 @@ app = FastAPI(title="Astro Coach Ephemeris Service")
 _SHARED_SECRET = os.getenv("EPHEMERIS_SHARED_SECRET", "")
 
 
+def _deployed() -> bool:
+    """True on Railway/Render or when an operator explicitly requires the secret."""
+    return bool(
+        os.getenv("RAILWAY_ENVIRONMENT")
+        or os.getenv("RENDER")
+        or os.getenv("EPHEMERIS_REQUIRE_SECRET") == "1"
+    )
+
+
+if _deployed() and not _SHARED_SECRET:
+    raise RuntimeError(
+        "EPHEMERIS_SHARED_SECRET must be set on a deployed ephemeris service. "
+        "Without it, anyone who learns this URL can bypass the Next.js rate limiter."
+    )
+
+
 def _verify_secret(x_ephemeris_secret: Optional[str] = Header(default=None)) -> None:
     if not _SHARED_SECRET:
         return

@@ -4,7 +4,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Sparkles, Hexagon, Target, Orbit, Lock, Check, Loader2, MapPin, ChevronRight, Compass, LayoutGrid, Lightbulb, AlertTriangle } from "lucide-react";
-import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type UserProfile, type CoachTonePreference, type NatalChart, type DashaData } from "@/lib/profile";
+import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type CoachTonePreference, type NatalChart, type DashaData } from "@/lib/profile";
+import { parseBackupPayload } from "@/lib/profile-schema";
+import { buildDailyTransitNote } from "@/lib/transitNote";
 import ConfirmResetModal from "@/components/ConfirmResetModal";
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
@@ -58,7 +60,7 @@ interface GeoResult {
 export default function HomePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { syncToServer } = useDataSync();
+  const { syncToServer, lastSyncedAt, isSyncing } = useDataSync();
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -89,6 +91,8 @@ export default function HomePage() {
   const [hasExistingChart, setHasExistingChart] = useState(false);
   const [chart, setChart] = useState<NatalChart | null>(null);
   const [dashas, setDashas] = useState<DashaData | null>(null);
+  const [transitNote, setTransitNote] = useState<string | null>(null);
+  const [needsValidation, setNeedsValidation] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -103,6 +107,8 @@ export default function HomePage() {
       setHasExistingChart(hasExisting);
       setChart(p.chart ?? null);
       setDashas(p.dashas ?? null);
+      setTransitNote(buildDailyTransitNote(p.cachedTransits?.data));
+      setNeedsValidation(!p.validation?.isValidated);
     });
 
     if (p.birthData) {
@@ -296,13 +302,14 @@ export default function HomePage() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const parsed = JSON.parse(ev.target?.result as string) as UserProfile;
-        if (!parsed.chart || !parsed.dashas) {
-          setError("This file doesn't look like a valid Astro Coach backup.");
+        const parsed = JSON.parse(ev.target?.result as string);
+        const backup = parseBackupPayload(parsed);
+        if (!backup.ok) {
+          setError(backup.error);
           return;
         }
-        saveProfile(parsed);
-        router.push("/chart");
+        saveProfile(backup.value);
+        router.push(backup.value.validation?.isValidated ? "/chart" : "/validate");
       } catch {
         setError("Could not read the backup file. Make sure it's a valid JSON backup.");
       }
@@ -503,7 +510,7 @@ export default function HomePage() {
           {[
             { icon: Hexagon, label: "Accurate Chart", desc: "Swiss Ephemeris + Lahiri ayanamsha", color: "bg-blue-50 text-blue-600" },
             { icon: Target, label: "Life Validated", desc: "Yes/no questions calibrate accuracy", color: "bg-violet-50 text-violet-600" },
-            { icon: Sparkles, label: "Remedy & Sadhana", desc: "Mantra, gemstone, and dana matched to your chart", color: "bg-indigo-50 text-indigo-600" },
+            { icon: Sparkles, label: "Behavior-first coaching", desc: "Chart-grounded habits. Ritual remedies are opt-in, never upsold.", color: "bg-indigo-50 text-indigo-600" },
           ].map((f) => (
             <div key={f.label} className="border border-gray-100 rounded-2xl p-5 text-center hover:shadow-md hover:border-gray-200 transition-all">
               <div className={`w-10 h-10 ${f.color} rounded-xl flex items-center justify-center mx-auto mb-3`}>
@@ -541,8 +548,18 @@ export default function HomePage() {
                         planet: "☽",
                         header: `Moon in ${chart.planets.moon.sign} · House ${chart.planets.moon.house}`,
                         body: `Your natal Moon sits in ${chart.moon_nakshatra.name} nakshatra — this shapes your emotional baseline and, via Vimshottari, your entire dasha timeline.`,
-                        tag: "Personality",
-                        tagColor: "bg-blue-50 text-blue-600",
+                    tag: "Personality",
+                    tagColor: "bg-blue-50 text-blue-600",
+                  }
+                    : null,
+                  transitNote
+                    ? {
+                        key: "transit",
+                        planet: "♄",
+                        header: "Today, from your transits",
+                        body: transitNote,
+                        tag: "Now",
+                        tagColor: "bg-emerald-50 text-emerald-700",
                       }
                     : null,
                 ].filter((x): x is NonNullable<typeof x> => x !== null);
@@ -585,8 +602,13 @@ export default function HomePage() {
             <div className="mt-5 pt-4 border-t border-gray-100">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Recommended next steps</p>
               <div className="flex flex-wrap gap-2 text-sm">
+                {needsValidation && (
+                  <button onClick={() => router.push("/validate")} className="px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 font-medium">First: validate this chart against your life</button>
+                )}
                 <button onClick={() => router.push("/foundation")} className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100">Read your Foundation</button>
-                <button onClick={() => router.push("/validate")} className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100">Validate chart accuracy</button>
+                {!needsValidation && (
+                  <button onClick={() => router.push("/validate")} className="px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100">Re-check chart accuracy</button>
+                )}
                 <button onClick={() => router.push("/habits")} className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">Generate sadhana for current dasha</button>
                 <button onClick={() => router.push("/dasha")} className="px-3 py-1.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100 hover:bg-violet-100">Explore your dasha timeline</button>
               </div>
@@ -760,7 +782,7 @@ export default function HomePage() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => window.open("https://github.com", "_blank")}
+                    onClick={() => window.open("https://github.com/sakti-bagchi/astro-coach#quick-start", "_blank")}
                     className="text-xs bg-amber-200 hover:bg-amber-300 text-amber-900 px-3 py-1 rounded-lg"
                   >
                     View start.sh instructions
@@ -783,9 +805,13 @@ export default function HomePage() {
 
             <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1">
               <Lock className="w-3 h-3 flex-shrink-0" />
-              {session
-                ? "Synced to your account · Nothing shared except chart calculation"
-                : "Data stored locally on this device · Nothing shared except chart calculation · Sign in to sync across devices"}
+              {!session
+                ? "Data stored locally on this device · Nothing shared except chart calculation · Sign in to copy it to your account"
+                : isSyncing
+                ? "Copying this device to your account…"
+                : lastSyncedAt
+                ? "Copied to your account · Nothing shared except chart calculation"
+                : "Signed in — waiting for the first successful account copy"}
             </p>
           </form>
         </div>

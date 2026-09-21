@@ -244,11 +244,9 @@ const DEFAULT_PROFILE: UserProfile = {
     exchangeCount: 0,
     planDelivered: false,
     tonePreference: "jyotish" as const,
-    // Vedic remedies (mantra/gemstone/dana alongside behavioral practice) are
-    // the default — this app's premise is remedying astrological affliction
-    // through Jyotish itself, not generic self-help with a chart attached.
-    // Users who prefer behavioral-only guidance can turn this off in Coach.
-    includeReligiousSolutions: true,
+    // Behavioral practice is the default (SPEC.md G2). Ritual remedies are
+    // an opt-in layer the user can enable in Coach — never the other way around.
+    includeReligiousSolutions: false,
     preferredLanguage: "en-IN",
   },
 };
@@ -277,6 +275,7 @@ export function saveProfile(profile: UserProfile): void {
 export function updateProfile(updates: Partial<UserProfile>): UserProfile {
   const current = getProfile();
   const next = { ...current, ...updates };
+  next.coaching = { ...next.coaching, lastUpdated: new Date().toISOString() };
   saveProfile(next);
   return next;
 }

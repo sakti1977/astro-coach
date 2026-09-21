@@ -85,21 +85,27 @@ astro-coach/
 - **App Router**: Modern Next.js routing
 - **TypeScript**: Type-safe development
 - **Tailwind CSS**: Utility-first styling
-- **IndexedDB + localStorage**: Client-side caching
+- **IndexedDB + localStorage**: Client-side cache; cloud copy is pulled/pushed via `/api/sync`
+
+The browser never talks to the Python service or writes user rows to Supabase
+directly. Chart calculation, dasha, transits, muhurta, and all LLM routes go
+through Next.js API handlers (rate-limited, session-gated except guest chart/geocode).
 
 ### Backend Services
 
-- **Python Service**: Swiss Ephemeris calculations (FastAPI)
-- **Supabase**: Authentication + PostgreSQL database
-- **NextAuth.js**: Session management
+- **Python Service**: Swiss Ephemeris calculations (FastAPI). Deployed endpoints
+  require `EPHEMERIS_SHARED_SECRET`.
+- **Supabase**: Auth identities + PostgreSQL. App writes use the service-role
+  key on the server, scoped to the NextAuth `user.id`.
+- **NextAuth.js**: Session management (JWT)
 
 ### Data Flow
 
-1. User enters birth data
-2. Frontend calls Python service for chart calculation
-3. Chart data stored locally and synced to Supabase
-4. AI coaching uses Claude API with chart context
-5. All user data syncs across devices via Supabase
+1. User enters birth data (guest chart calc is allowed; coaching surfaces need sign-in)
+2. Next.js `/api/chart` calls the Python service
+3. Chart is stored on-device and, when signed in, synced through `/api/sync`
+4. Coaching uses Claude with the **stored** natal chart as the source of truth
+5. Habits/goals feed back into the coaching prompt so the tracker and the coach share state
 
 ## Authentication & Storage
 
@@ -109,7 +115,7 @@ The app supports two modes:
 - Create account with email/password
 - Data stored in Supabase PostgreSQL
 - Automatic sync across all devices
-- Secure with row-level security
+- Session-verified `/api/sync` (service-role, scoped to your user id)
 
 ### Without Authentication
 - Data stored locally (localStorage + IndexedDB)
@@ -124,6 +130,13 @@ See [AUTHENTICATION.md](./AUTHENTICATION.md) for setup instructions.
 Required for authentication (optional otherwise):
 
 ```bash
+# Claude
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Ephemeris
+EPHEMERIS_SERVICE_URL=http://localhost:8000
+EPHEMERIS_SHARED_SECRET=your-shared-secret-here
+
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-here
@@ -136,6 +149,13 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # Optional but recommended in production for distributed rate limiting
 UPSTASH_REDIS_REST_URL=https://your-upstash-redis.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-upstash-rest-token
+
+# Push / cron
+CRON_SECRET=your-cron-secret-here
+VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_PRIVATE_KEY=your-vapid-private-key
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+VAPID_SUBJECT=mailto:you@example.com
 ```
 
 See `.env.example` for template.

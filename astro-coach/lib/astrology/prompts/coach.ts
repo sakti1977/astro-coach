@@ -98,7 +98,7 @@ export function buildCoachSystemPrompt(
   chart: NatalChart,
   dashas: DashaData,
   todayIso: string,
-  includeReligiousSolutions: boolean = true,
+  includeReligiousSolutions: boolean = false,
   yogas: Yoga[] = [],
   doshas: Dosha[] = [],
   tonePreference: CoachTonePreference = "jyotish"
@@ -137,13 +137,12 @@ Use these dates to anchor all timing-based guidance. When the user asks about "n
   }
 
   const religiousSolutionsGuidance = includeReligiousSolutions
-    ? `UPAYA (REMEDIAL PRACTICE) — THIS IS THE CORE OF YOUR ROLE, NOT AN ADD-ON:
-This app's premise is remedying astrological affliction through Jyotish itself — mantra, gemstone, dana (charity), vrata (fasting/observance), and deity worship (upasana) — with behavioral coaching in service of that remedy, not the other way around. You are not a therapist who happens to know astrology; you are a Jyotish practitioner whose job is to help the person actually live the remedy.
+    ? `UPAYA (REMEDIAL PRACTICE) — BEHAVIOR FIRST, RITUAL AS AN OPT-IN LAYER:
+The product identity is a rational coach. Every resolution you offer must include a concrete behavioral/habit practice the person can actually do. Ritual remedies (mantra, gemstone, dana, vrata, upasana) are an opt-in layer on TOP of that practice — never a substitute for it, never the only thing you offer, and never invented outside the attached deterministic table.
 Every yoga/dosha/Sade Sati below arrives with its OWN pre-computed remedy set (mantra, gemstone, dana, vrata_day, and a behavioral sadhana). Use those exact remedies — do not invent alternate mantras or gemstones not provided; the table is deterministic on purpose so the same chart gets the same remedy every time.
-Your coaching job is to make the upaya sustainable: help the person actually chant the mantra daily, actually hold the vrata, actually build the sadhana into a rhythm — this is where behavioral technique earns its place, as the discipline (sadhana) that makes the remedy stick, never as a substitute for it.
-Present traditional remedies as living practice within a real tradition, not folklore — but never insist; if the user resists ritual, lead with the behavioral sadhana attached to the same remedy instead of abandoning the remedial frame entirely.`
-    : `UPAYA (REMEDIAL PRACTICE) — BEHAVIORAL MODE:
-The user has opted out of ritual-based remedies (mantra/gemstone/dana/deity worship). Every yoga/dosha/Sade Sati below still arrives with a behavioral sadhana — a concrete non-ritual practice aligned with the same planetary quality the traditional remedy would address. Use that sadhana as the remedy itself; this is still Jyotish-native (the practice is chosen because of what the planet signifies), not generic self-help with a chart attached.
+Lead with the behavioral sadhana. Then, because this person opted into Vedic remedies, name the matching traditional upaya as optional living practice within a real tradition — never as a hedge against doom, never as an upsell, never insisted upon. If they resist ritual, stay with the behavioral sadhana attached to the same planet.`
+    : `UPAYA (REMEDIAL PRACTICE) — BEHAVIORAL MODE (DEFAULT):
+Ritual-based remedies (mantra/gemstone/dana/deity worship) are off. Every yoga/dosha/Sade Sati below still arrives with a behavioral sadhana — a concrete non-ritual practice aligned with the same planetary quality the traditional remedy would address. Use that sadhana as the remedy itself; this is still Jyotish-native (the practice is chosen because of what the planet signifies), not generic self-help with a chart attached.
 Never suggest gemstones, mantras, fasting, or deity worship in this mode.`;
 
   function yogaDoshaLines(items: (Yoga | Dosha)[]): string {
@@ -268,14 +267,15 @@ export function buildCoachDynamicBlock(
   vargaContext: string | undefined,
   profileContext: string,
   transitContext?: string,
-  planDelivered: boolean = false
+  planDelivered: boolean = false,
+  habitsSummary?: string
 ): string {
   const groundingRule = `GROUNDING — NON-NEGOTIABLE: Every recommendation must trace to a placement, dasha period, yoga/dosha, or transit that is ACTUALLY present in the chart data above, or to something the user actually said in this conversation. Never invent a placement, remedy, timing, or life detail that isn't there. If you're extrapolating a general tendency rather than stating a documented fact from their chart, say so plainly ("this is a common pattern for this placement, though you haven't confirmed it") instead of asserting it as certain.`;
 
-  const planDomains = `1. **UPAYA**: The specific remedy attached to the relevant yoga/dosha/Sade Sati — lead with this, not last. Name the exact mantra/gemstone/dana/vrata (or behavioral sadhana in behavioral-only mode) already provided in the chart data.
+  const planDomains = `1. **BEHAVIOR**: Patterns to interrupt, habits to build, reactions to rewire, energy to redirect, communication styles to adopt, work approaches to experiment with — concrete, trackable, and tied to a real placement. This is the required core of the plan.
 2. **LIFESTYLE**: Daily routine shifts, environment changes, sleep hygiene, physical practices, relationship boundaries and adjustments, dietary considerations aligned to planetary nature
-3. **BEHAVIOR**: Patterns to interrupt, habits to build, reactions to rewire, energy to redirect, communication styles to adopt, work approaches to experiment with — framed as the sadhana that makes the upaya durable, not standalone self-help
-4. **THOUGHT PROCESS**: Mental models to adopt, beliefs to examine, reframes through dharma/karma rather than generic cognitive language`;
+3. **THOUGHT PROCESS**: Mental models to adopt, beliefs to examine, reframes through dharma/karma rather than generic cognitive language
+4. **UPAYA**: The specific remedy already attached to the relevant yoga/dosha/Sade Sati. Always include the behavioral sadhana. Include mantra/gemstone/dana/vrata only when Vedic remedies mode is on — as an optional layer, never instead of the behavioral item, never invented.`;
 
   let phaseInstructions: string;
 
@@ -317,6 +317,11 @@ ${groundingRule}`;
 
   const parts: string[] = [];
   parts.push(`USER'S GOALS: ${goals.length > 0 ? goals.join(", ") : "Not yet set"}`);
+  if (habitsSummary?.trim()) {
+    parts.push(
+      `TRACKED SADHANA / HABITS (from the user's actual tracker — reference these; do not invent a parallel list):\n${habitsSummary}`
+    );
+  }
   if (vargaContext) parts.push(`VARGA CHART INSIGHTS:\n${vargaContext}`);
   if (transitContext) parts.push(transitContext);
   parts.push(phaseInstructions);

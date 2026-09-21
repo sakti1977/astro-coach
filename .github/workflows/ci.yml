@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main, cursor/**]
+  pull_request:
+
+jobs:
+  astro-coach:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: astro-coach
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: astro-coach/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npx tsc --noEmit
+
+  python-service:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q

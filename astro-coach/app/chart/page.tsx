@@ -52,7 +52,7 @@ export default function ChartPage() {
       birthData: null, chart: null, dashas: null,
       validation: { questions: [], accuracyScore: 0, confirmedThemes: [], isValidated: false },
       goals: [], habits: [], chatHistory: [],
-      coaching: { behaviorProfile: [], lastUpdated: new Date().toISOString(), phase: "gathering", exchangeCount: 0, planDelivered: false, tonePreference: "jyotish", includeReligiousSolutions: true, preferredLanguage: "en-IN" },
+      coaching: { behaviorProfile: [], lastUpdated: new Date().toISOString(), phase: "gathering", exchangeCount: 0, planDelivered: false, tonePreference: "jyotish", includeReligiousSolutions: false, preferredLanguage: "en-IN" },
     });
     router.push("/");
   }
@@ -170,6 +170,21 @@ export default function ChartPage() {
                 })}
               </div>
             </div>
+
+            {!profile.validation?.isValidated && (
+              <div className="border border-amber-200 bg-amber-50 rounded-2xl p-4 text-sm text-amber-900">
+                <p className="font-semibold">Does this match your life?</p>
+                <p className="text-amber-800 mt-1 text-xs leading-relaxed">
+                  Validate the chart with yes/no questions before treating coaching as calibrated. The score is informational — it never rewrites the chart.
+                </p>
+                <button
+                  onClick={() => router.push("/validate")}
+                  className="mt-3 text-xs font-semibold text-amber-900 underline"
+                >
+                  Start validation →
+                </button>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-3">

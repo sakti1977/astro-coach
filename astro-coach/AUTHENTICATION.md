@@ -8,7 +8,7 @@ The application now includes:
 - **Authentication**: Email/password authentication using NextAuth.js
 - **Database**: Supabase PostgreSQL for persistent user data storage
 - **Sync**: Automatic synchronization between local storage and Supabase
-- **Security**: Row-level security policies to protect user data
+- **Security**: Session-verified API writes; RLS remains on as defense-in-depth against direct client access
 
 ## Architecture
 
@@ -57,7 +57,7 @@ Copy `.env.local.example` to `.env.local` and fill in your values:
 ```bash
 # NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=wB4uLfZ5ewiY0Pt0Ghwe4bleLH6KK8OmQpO5tO9cOyg=
+NEXTAUTH_SECRET=generate-with-openssl-rand-base64-32
 
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co

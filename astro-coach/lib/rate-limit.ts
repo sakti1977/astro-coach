@@ -2,8 +2,9 @@
  * Sliding-window rate limiter with an optional Upstash Redis backend.
  *
  * If Upstash env vars are configured, requests are counted in Redis so limits hold
- * across serverless instances. Otherwise, this falls back to a local in-memory
- * limiter that is fine for development and single-process deployments.
+ * across serverless instances — including anonymous chart/geocode windows that use
+ * a different limit than the default. Otherwise, this falls back to a local
+ * in-memory limiter that is fine for development and single-process deployments.
  */
 
 import { Ratelimit } from "@upstash/ratelimit";
@@ -21,17 +22,26 @@ const store = new Map<string, Counter>();
 const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
 const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-const distributedLimiter = upstashUrl && upstashToken
-  ? new Ratelimit({
-      redis: new Redis({ url: upstashUrl, token: upstashToken }),
-      limiter: Ratelimit.slidingWindow(
-        RATE_LIMIT_MAX,
-        `${Math.max(1, Math.ceil(RATE_LIMIT_WINDOW_MS / 1000))} s`
-      ),
-      prefix: "astro-coach:rate-limit",
-      analytics: false,
-    })
-  : null;
+const redis =
+  upstashUrl && upstashToken ? new Redis({ url: upstashUrl, token: upstashToken }) : null;
+
+const distributedLimiters = new Map<string, Ratelimit>();
+
+function getDistributedLimiter(limit: number, windowMs: number): Ratelimit | null {
+  if (!redis) return null;
+  const key = `${limit}:${windowMs}`;
+  const cached = distributedLimiters.get(key);
+  if (cached) return cached;
+
+  const limiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(limit, `${Math.max(1, Math.ceil(windowMs / 1000))} s`),
+    prefix: `astro-coach:rate-limit:${key}`,
+    analytics: false,
+  });
+  distributedLimiters.set(key, limiter);
+  return limiter;
+}
 
 function checkLocalRateLimit(
   key: string,
@@ -64,12 +74,13 @@ export async function checkRateLimit(
   limit = RATE_LIMIT_MAX,
   windowMs = RATE_LIMIT_WINDOW_MS
 ): Promise<boolean> {
-  if (!distributedLimiter || limit !== RATE_LIMIT_MAX || windowMs !== RATE_LIMIT_WINDOW_MS) {
+  const distributed = getDistributedLimiter(limit, windowMs);
+  if (!distributed) {
     return checkLocalRateLimit(key, limit, windowMs);
   }
 
   try {
-    const result = await distributedLimiter.limit(key);
+    const result = await distributed.limit(key);
     return result.success;
   } catch (error) {
     console.error("Upstash rate limit fallback:", error);

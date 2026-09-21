@@ -352,7 +352,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="text-sm space-y-1.5">
-            <div>Status: <span className="font-medium">{isSyncing ? "Syncing…" : lastSyncedAt ? "Up to date with cloud" : "Local only (no Supabase)"}</span></div>
+            <div>Status: <span className="font-medium">{isSyncing ? "Syncing…" : lastSyncedAt ? "Up to date with cloud" : session ? "Signed in — not yet synced this session" : "Local only (this device)"}</span></div>
             {lastSyncedAt && <div>Last synced: {new Date(lastSyncedAt).toLocaleString()}</div>}
             {syncError && <div className="text-red-600 text-xs">Error: {syncError}</div>}
             {!session && <div className="text-amber-600 text-xs">Sign in to enable cloud sync across devices.</div>}
@@ -389,7 +389,7 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 mt-4">Your chart, habits, coaching history, and validation data are stored locally and (when signed in) synced to Supabase with row-level security.</p>
+          <p className="text-xs text-gray-500 mt-4">Your chart, habits, coaching history, and validation data are stored on this device and, when you are signed in, copied to your account through a session-verified API. Cloud writes use a server credential scoped to your user id — not browser row-level security.</p>
         </div>
 
         {/* Account */}
@@ -400,7 +400,7 @@ export default function ProfilePage() {
               <div className="text-gray-500 text-xs">Signed in as</div>
               <div className="font-medium">{session?.user?.email || session?.user?.phone || "Unknown"}</div>
             </div>
-            <button onClick={() => signOut({ callbackUrl: "/auth/signin" })} className="text-xs text-red-600 hover:text-red-700">Sign out everywhere</button>
+            <button onClick={() => signOut({ callbackUrl: "/auth/signin" })} className="text-xs text-red-600 hover:text-red-700">Sign out</button>
           </div>
         </div>
 
