@@ -11,6 +11,8 @@ python-service/.venv/
 python-service/venv/
 python-service/.pytest_cache/
 python-service/.pylibs/
+python-service/gold_standard/last_scorecard.json
+python-service/gold_standard/__pycache__/
 
 # OS
 .DS_Store
