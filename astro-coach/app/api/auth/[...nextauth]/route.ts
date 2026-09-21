@@ -1,3 +1,4 @@
+import "@/lib/auth-env"
 import NextAuth from "next-auth"
 import { authOptions } from "@/lib/auth"
 
