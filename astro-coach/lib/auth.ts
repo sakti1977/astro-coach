@@ -1,8 +1,21 @@
+import "@/lib/auth-env"
+import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 import { NextAuthOptions, Session } from "next-auth"
 import { JWT } from "next-auth/jwt"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { supabase } from "@/lib/supabase"
 import { supabaseAdmin } from "@/lib/supabase-admin"
+
+function createAuthSupabase(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) return null
+  // Per-request server client. The shared browser client in lib/supabase.ts
+  // defaults to persistSession and is a process-wide singleton — on the
+  // NextAuth route that leaks Auth sessions across concurrent sign-ins.
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
 
 const DEFAULT_PROFILE = {
   birth_data: null,
@@ -29,10 +42,11 @@ const DEFAULT_PROFILE = {
   },
 }
 
-async function ensureProfile(userId: string) {
+async function ensureProfile(userId: string, fallback?: SupabaseClient | null) {
   // Service-role client: the anon client here has no Supabase Auth session
-  // (NextAuth holds the JWT), so RLS would reject this upsert.
-  const client = supabaseAdmin ?? supabase
+  // (NextAuth holds the JWT), so RLS would reject this upsert unless we
+  // just signed this user in on `fallback`.
+  const client = supabaseAdmin ?? fallback
   if (!client) return
   const { error } = await client
     .from("user_profiles")
@@ -59,6 +73,7 @@ export const authOptions: NextAuthOptions = {
         //   "phone-otp"  — phone OTP verified once on the server
       },
       async authorize(credentials: Record<string, string> | undefined) {
+        const supabase = createAuthSupabase()
         if (!supabase) {
           throw new Error(
             "Authentication is not configured. Please set Supabase environment variables."
@@ -85,7 +100,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Invalid or expired OTP session. Please try again.")
           }
 
-          await ensureProfile(user.id)
+          await ensureProfile(user.id, supabase)
 
           return {
             id: user.id,
@@ -125,7 +140,7 @@ export const authOptions: NextAuthOptions = {
               )
             }
 
-            await ensureProfile(authData.user.id)
+            await ensureProfile(authData.user.id, supabase)
 
             return {
               id: authData.user.id,
@@ -144,7 +159,7 @@ export const authOptions: NextAuthOptions = {
           if (signInError) throw signInError
           if (!authData.user) throw new Error("Invalid credentials")
 
-          await ensureProfile(authData.user.id)
+          await ensureProfile(authData.user.id, supabase)
 
           return {
             id: authData.user.id,
@@ -182,5 +197,5 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
 }
