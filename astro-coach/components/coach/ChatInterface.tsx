@@ -536,19 +536,29 @@ export default function ChatInterface({ chart, dashas }: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Context bar */}
-      <div className="flex items-center gap-2 p-3 border-b border-gray-100 bg-gray-50 text-sm">
-        <span className="text-xl">{currentMahaMeta?.symbol ?? "●"}</span>
-        <span className="text-gray-600">
-          <span className="font-medium text-gray-900">{dashas.current_maha}</span> Maha ·{" "}
-          <span className="font-medium text-gray-900">{dashas.current_antar}</span> Antar
-        </span>
-        <span className="ml-auto flex items-center gap-2 text-gray-500">
+      {/* Context bar. The chat column is max-w-3xl, which is too narrow for
+          every control on one line — a shrinking rounded-full button collapses
+          into a circle and clips "Lagna" / "How we work". */}
+      <div className="flex flex-col gap-2 p-3 border-b border-gray-100 bg-gray-50 text-sm">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+          <span className="text-xl shrink-0">{currentMahaMeta?.symbol ?? "●"}</span>
+          <span className="text-gray-600 min-w-0">
+            <span className="font-medium text-gray-900">{dashas.current_maha}</span> Maha ·{" "}
+            <span className="font-medium text-gray-900">{dashas.current_antar}</span> Antar
+          </span>
+          <span className="ml-auto shrink-0 whitespace-nowrap text-xs text-gray-500">
+            Lagna: {SIGN_NAMES[chart.ascendant.sign_num]}
+          </span>
+          <Link href="/trust" className="shrink-0 whitespace-nowrap text-xs text-gray-500 hover:text-gray-600 underline decoration-dotted underline-offset-2" title="How we calculate your chart, and why we never upsell remedies">
+            How we work
+          </Link>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-gray-500">
           {/* New Topic */}
           <button
             type="button"
             onClick={startNewTopic}
-            className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+            className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
             title="Clear conversation and start a new topic (keeps your chart and profile)"
           >
             <RotateCcw className="w-3 h-3" /> New Topic
@@ -557,7 +567,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           {planDelivered && (
             <Link
               href="/habits"
-              className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors"
+              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors"
               title="Turn the plan's behavioral items into tracked sadhana"
             >
               <CheckCircle2 className="w-3 h-3" /> Track on Sadhana
@@ -568,7 +578,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
               type="button"
               onClick={() => send("Please give me my complete plan now, based on everything so far.", true)}
               disabled={streaming}
-              className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 transition-colors disabled:opacity-40"
+              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 transition-colors disabled:opacity-40"
               title="Skip ahead — get your complete plan now instead of continuing discovery"
             >
               <Zap className="w-3 h-3" /> Get My Plan Now
@@ -577,7 +587,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           {/* Vedic remedies toggle */}
           <button
             onClick={toggleReligiousSolutions}
-            className={`text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
+            className={`shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
               includeReligiousSolutions
                 ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
                 : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
@@ -593,7 +603,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           {/* Voice/framing toggle — see SPEC.md §3 */}
           <button
             onClick={toggleTonePreference}
-            className={`text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
+            className={`shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
               tonePreference === "skeptic"
                 ? "bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100"
                 : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
@@ -611,7 +621,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
             value={preferredLanguage}
             onChange={(e) => changeLanguage(e.target.value)}
             title="Coaching language — your messages and the coach's replies are translated"
-            className="text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 focus:outline-none"
+            className="shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 focus:outline-none"
           >
             {SARVAM_LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>{l.label}</option>
@@ -619,7 +629,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           </select>
           {observations.length > 0 && (
             <span
-              className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
+              className={`inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
                 phase === "recommending"
                   ? "bg-green-50 text-green-700 border border-green-200"
                   : "bg-amber-50 text-amber-700 border border-amber-200"
@@ -641,11 +651,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
               )}
             </span>
           )}
-          <span>Lagna: {SIGN_NAMES[chart.ascendant.sign_num]}</span>
-          <Link href="/trust" className="hover:text-gray-600 underline decoration-dotted underline-offset-2" title="How we calculate your chart, and why we never upsell remedies">
-            How we work
-          </Link>
-        </span>
+        </div>
       </div>
 
       {/* Messages */}
