@@ -4,7 +4,8 @@
  * If Upstash env vars are configured, requests are counted in Redis so limits hold
  * across serverless instances — including anonymous chart/geocode windows that use
  * a different limit than the default. Otherwise, this falls back to a local
- * in-memory limiter that is fine for development and single-process deployments.
+ * in-memory limiter. That fallback is only correct for one process, so
+ * railway.json pins numReplicas to 1 until Upstash is configured.
  */
 
 import { Ratelimit } from "@upstash/ratelimit";

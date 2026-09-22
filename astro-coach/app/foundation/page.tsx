@@ -34,8 +34,7 @@ export default function FoundationPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chart: profile.chart,
-          dashas: profile.dashas,
+          birthData: profile.birthData,
           includeReligiousSolutions: profile.coaching.includeReligiousSolutions,
           tonePreference: profile.coaching.tonePreference,
         }),

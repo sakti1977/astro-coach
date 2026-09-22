@@ -5,6 +5,7 @@ import { streamCoachResponse } from "@/lib/claude";
 import { buildCoachSystemPrompt, buildCoachDynamicBlock } from "@/lib/astrology/prompts";
 import { safeClientErrorMessage } from "@/lib/safe-error";
 import { formatHabitsForCoach, resolveNatalGrounding } from "@/lib/server-grounding";
+import { guardCoachText } from "@/lib/coach-output";
 import type { ChatMessage, CoachingPhase, CoachTonePreference, Habit } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
@@ -16,8 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   const {
-    chart: clientChart,
-    dashas: clientDashas,
+    birthData: clientBirth,
     goals: clientGoals,
     habits: clientHabits,
     profileContext,
@@ -29,8 +29,7 @@ export async function POST(req: NextRequest) {
     transitContext,
     tonePreference,
   } = (await req.json()) as {
-    chart: unknown;
-    dashas: unknown;
+    birthData: unknown;
     goals: string[];
     habits?: Habit[];
     profileContext: string;
@@ -45,8 +44,7 @@ export async function POST(req: NextRequest) {
 
   const grounding = await resolveNatalGrounding(
     access.session?.user?.id,
-    clientChart,
-    clientDashas
+    clientBirth
   );
   if (grounding instanceof NextResponse) return grounding;
 
@@ -85,9 +83,13 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       try {
         const apiMessages = messages.map((m) => ({ role: m.role, content: m.content }));
+        const userText = apiMessages.filter((m) => m.role === "user").map((m) => m.content).join("\n");
+        let accumulated = "";
         for await (const chunk of streamCoachResponse(systemPrompt, apiMessages, dynamicBlock)) {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk })}\n\n`));
+          accumulated += chunk;
         }
+        const text = guardCoachText(accumulated, grounding.chart, grounding.dashas, userText);
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (e) {
         const msg = safeClientErrorMessage(e, "The coach hit a snag. Please try again shortly.", "coach-stream");

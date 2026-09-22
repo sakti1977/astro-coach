@@ -98,10 +98,26 @@ describe("NON_NEGOTIABLES harness", () => {
     }
   });
 
+  it("in-memory rate limit is pinned to one Railway replica", () => {
+    const railway = JSON.parse(read(join(REPO_ROOT, "railway.json"))) as {
+      deploy?: { numReplicas?: number };
+    };
+    expect(railway.deploy?.numReplicas).toBe(1);
+    const limiter = read(join(APP_ROOT, "lib/rate-limit.ts"));
+    expect(limiter).toContain("upstashUrl && upstashToken");
+    expect(limiter).not.toContain("throw new Error(\"Upstash");
+  });
+
   it("#6 custom rate-limit windows still use Redis when configured", () => {
     const src = read(join(APP_ROOT, "lib/rate-limit.ts"));
     expect(src).toContain("getDistributedLimiter");
     expect(src).not.toMatch(/limit !== RATE_LIMIT_MAX/);
+  });
+
+  it("#10 LLM routes recompute a missing chart instead of trusting the browser", () => {
+    const src = read(join(APP_ROOT, "lib/server-grounding.ts"));
+    expect(src).toContain("fetchChart");
+    expect(src).not.toContain('source: "client"');
   });
 
   it("#7 backup import validates through parseBackupPayload", () => {
@@ -140,6 +156,16 @@ describe("NON_NEGOTIABLES harness", () => {
       expect(blockMatch, planet).toBeTruthy();
       expect(blockMatch![1], planet).toContain('"behavioral"');
     }
+  });
+
+  it("one-host supervisor exits when ephemeris dies, and health is not cached", () => {
+    const start = read(join(REPO_ROOT, "deploy/start-one-host.sh"));
+    expect(start).toContain("supervise-children.sh");
+    expect(start).toContain("supervise_children");
+    expect(start).not.toMatch(/^exec npm run start/m);
+    const health = read(join(APP_ROOT, "app/api/health/route.ts"));
+    expect(health).toContain("no-store");
+    expect(health).not.toContain("max-age");
   });
 
   it("#13 foundation reuses the coach system prompt", () => {

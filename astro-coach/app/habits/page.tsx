@@ -108,8 +108,7 @@ export default function HabitsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chart: profile.chart,
-          dashas: profile.dashas,
+          birthData: profile.birthData,
           dashaLord: profile.dashas.current_maha,
           goals: profile.goals.map((g) => g.description),
           weakPlanets,

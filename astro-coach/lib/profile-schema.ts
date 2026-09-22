@@ -71,7 +71,7 @@ export const dashaDataSchema = z
   })
   .passthrough();
 
-const birthDataSchema = z.object({
+export const birthDataSchema = z.object({
   name: z.string().min(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Birth date must be YYYY-MM-DD"),
   time: z.string().min(1),
@@ -129,6 +129,11 @@ export type ParseResult<T> =
 
 function fail(error: z.ZodError): string {
   return error.issues[0]?.message ?? "Invalid data shape";
+}
+
+export function parseBirthData(input: unknown): ParseResult<z.infer<typeof birthDataSchema>> {
+  const result = birthDataSchema.safeParse(input);
+  return result.success ? { ok: true, value: result.data } : { ok: false, error: fail(result.error) };
 }
 
 export function parseNatalChart(input: unknown): ParseResult<z.infer<typeof natalChartSchema>> {

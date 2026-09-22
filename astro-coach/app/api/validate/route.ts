@@ -16,16 +16,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { chart: clientChart, dashas: clientDashas, birthDate }: {
-      chart: unknown;
-      dashas?: unknown;
+    const { birthData: clientBirth, birthDate }: {
+      birthData?: unknown;
       birthDate?: string;
     } = await req.json();
 
     const grounding = await resolveNatalGrounding(
       access.session?.user?.id,
-      clientChart,
-      clientDashas
+      clientBirth
     );
     if (grounding instanceof NextResponse) return grounding;
 

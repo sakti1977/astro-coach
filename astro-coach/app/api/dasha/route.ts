@@ -6,6 +6,7 @@ import { buildDashaPredictionPrompt } from "@/lib/astrology/prompts";
 import { prepareJsonString } from "@/lib/claude-json";
 import { safeClientErrorMessage } from "@/lib/safe-error";
 import { resolveNatalGrounding } from "@/lib/server-grounding";
+import { guardCoachText } from "@/lib/coach-output";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -16,9 +17,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { chart: clientChart, dashas: clientDashas, dashaLord, years, currentAntarLord, currentPratyantarLord } = await req.json() as {
-      chart: unknown;
-      dashas?: unknown;
+    const { birthData: clientBirth, dashaLord, years, currentAntarLord, currentPratyantarLord } = await req.json() as {
+      birthData: unknown;
       dashaLord: string;
       years: number;
       currentAntarLord?: string;
@@ -27,8 +27,7 @@ export async function POST(req: NextRequest) {
 
     const grounding = await resolveNatalGrounding(
       access.session?.user?.id,
-      clientChart,
-      clientDashas
+      clientBirth
     );
     if (grounding instanceof NextResponse) return grounding;
     const chart = grounding.chart;
@@ -102,6 +101,22 @@ export async function POST(req: NextRequest) {
     }
     if (!pred.summary || typeof pred.summary !== "string") {
       pred.summary = `A ${dashaLord} Maha Dasha${houseNote} — a period shaped by this planet's placement in your chart.`;
+    }
+
+    const joined = ["themes", "cultivate", "challenges", "actions", "summary"]
+      .flatMap((key) => {
+        const value = pred[key];
+        if (typeof value === "string") return [value];
+        return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+      })
+      .join("\n");
+    const guarded = guardCoachText(joined, chart, grounding.dashas, "");
+    if (guarded !== joined) {
+      pred.themes = [`${dashaLord}'s themes${houseNote}`];
+      pred.cultivate = [`A practice tied to ${dashaLord}, not a fixed outcome`];
+      pred.challenges = [`Pressure typical of ${dashaLord}${houseNote} — a tendency, not a sentence`];
+      pred.actions = [`Work with ${dashaLord}'s placement in one concrete habit`];
+      pred.summary = `A ${dashaLord} period${houseNote}. The chart shows a tendency you can work with, not an outcome that is already decided.`;
     }
 
     return NextResponse.json({ prediction });

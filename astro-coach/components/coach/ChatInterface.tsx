@@ -422,6 +422,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          birthData: currentProfile.birthData,
           chart,
           dashas,
           goals: currentProfile.goals.map((g) => g.description),

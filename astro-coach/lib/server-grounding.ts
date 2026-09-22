@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { parseDashaData, parseNatalChart } from "@/lib/profile-schema";
+import { ephemerisClientErrorMessage, fetchChart, fetchDashas } from "@/lib/ephemeris";
+import { parseBirthData, parseDashaData, parseNatalChart } from "@/lib/profile-schema";
 import type { DashaData, Goal, Habit, NatalChart } from "@/lib/profile";
+
+type BirthData = {
+  name: string;
+  date: string;
+  time: string;
+  lat: number;
+  lng: number;
+  timezone: string;
+  city: string;
+};
 
 export interface StoredGrounding {
   chart: NatalChart | null;
   dashas: DashaData | null;
   goals: Goal[];
   habits: Habit[];
+  birth: BirthData | null;
   birthDate?: string;
   updatedAt?: string;
 }
@@ -18,7 +30,7 @@ export interface NatalGrounding {
   goals: Goal[];
   habits: Habit[];
   birthDate?: string;
-  source: "server" | "client";
+  source: "server" | "computed";
 }
 
 /**
@@ -37,28 +49,83 @@ export async function loadStoredGrounding(userId: string): Promise<StoredGroundi
 
   const chartParsed = parseNatalChart(data.chart);
   const dashasParsed = parseDashaData(data.dashas);
+  const birthParsed = parseBirthData(data.birth_data);
   return {
     chart: chartParsed.ok ? (chartParsed.value as NatalChart) : null,
     dashas: dashasParsed.ok ? (dashasParsed.value as DashaData) : null,
     goals: Array.isArray(data.goals) ? (data.goals as Goal[]) : [],
     habits: Array.isArray(data.habits) ? (data.habits as Habit[]) : [],
-    birthDate:
-      data.birth_data && typeof data.birth_data === "object" && "date" in data.birth_data
-        ? String((data.birth_data as { date?: string }).date ?? "")
-        : undefined,
+    birth: birthParsed.ok ? birthParsed.value : null,
+    birthDate: birthParsed.ok ? birthParsed.value.date : undefined,
     updatedAt: typeof data.updated_at === "string" ? data.updated_at : undefined,
   };
 }
 
+/** Chart and dashas from birth data. Client-supplied longitudes are never used. */
+async function computeFromBirth(
+  birth: BirthData,
+  goals: Goal[] = [],
+  habits: Habit[] = []
+): Promise<NatalGrounding | NextResponse> {
+  const [year, month, day] = birth.date.split("-").map(Number);
+  const [hour, minute] = birth.time.split(":").map(Number);
+  if (![year, month, day, hour, minute].every((n) => Number.isInteger(n))) {
+    return NextResponse.json({ error: "Birth date and time must be numeric." }, { status: 400 });
+  }
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: birth.timezone });
+  } catch {
+    return NextResponse.json({ error: "Invalid timezone" }, { status: 400 });
+  }
+
+  try {
+    const chartRaw = await fetchChart({
+      name: birth.name,
+      year, month, day, hour, minute,
+      lat: birth.lat,
+      lng: birth.lng,
+      tz_str: birth.timezone,
+    });
+    const planets = chartRaw.planets as Record<string, { sign_num: number; abs_pos: number }>;
+    const dashasRaw = await fetchDashas({
+      moon_abs_pos: planets.moon.abs_pos,
+      birth_year: year,
+      birth_month: month,
+      birth_day: day,
+      natal_planet_signs: Object.fromEntries(
+        Object.entries(planets).map(([key, planet]) => [key, planet.sign_num])
+      ),
+    });
+    const chart = parseNatalChart(chartRaw);
+    const dashas = parseDashaData(dashasRaw);
+    if (!chart.ok || !dashas.ok) {
+      return NextResponse.json(
+        { error: "Chart calculation returned an unexpected shape." },
+        { status: 500 }
+      );
+    }
+    return {
+      chart: chart.value as NatalChart,
+      dashas: dashas.value as DashaData,
+      goals,
+      habits,
+      birthDate: birth.date,
+      source: "computed",
+    };
+  } catch (err: unknown) {
+    const msg = ephemerisClientErrorMessage(err, "Chart calculation failed. Please try again shortly.");
+    return NextResponse.json({ error: msg }, { status: 503 });
+  }
+}
+
 /**
- * Prefer the stored natal chart so LLM routes cannot be fed a forged chart
- * from the browser. If the account has no chart yet (guest just signed in,
- * sync still in flight), fall back to a schema-validated client payload.
+ * Prefer the stored natal chart. If that row has no chart yet, recompute
+ * from birth data (the stored row, otherwise the request). Never trust
+ * planet positions sent by the browser.
  */
 export async function resolveNatalGrounding(
   userId: string | undefined,
-  clientChart: unknown,
-  clientDashas: unknown
+  clientBirth: unknown
 ): Promise<NatalGrounding | NextResponse> {
   if (userId) {
     const stored = await loadStoredGrounding(userId);
@@ -72,23 +139,19 @@ export async function resolveNatalGrounding(
         source: "server",
       };
     }
+    if (stored?.birth) {
+      return computeFromBirth(stored.birth, stored.goals, stored.habits);
+    }
   }
 
-  const chart = parseNatalChart(clientChart);
-  const dashas = parseDashaData(clientDashas);
-  if (!chart.ok || !dashas.ok) {
+  const birth = parseBirthData(clientBirth);
+  if (!birth.ok) {
     return NextResponse.json(
-      { error: "A valid natal chart is required. Calculate your chart first, then try again." },
+      { error: "Birth data is required so the chart can be calculated on the server." },
       { status: 400 }
     );
   }
-  return {
-    chart: chart.value as NatalChart,
-    dashas: dashas.value as DashaData,
-    goals: [],
-    habits: [],
-    source: "client",
-  };
+  return computeFromBirth(birth.value);
 }
 
 export function formatHabitsForCoach(habits: Habit[]): string {

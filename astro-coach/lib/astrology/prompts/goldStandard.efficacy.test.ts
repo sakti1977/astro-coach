@@ -161,7 +161,7 @@ describe("gold-standard coaching efficacy (Mumbai 1990 natal)", () => {
     const block = buildCoachDynamicBlock("recommending", ["partnership"], undefined, "user mentioned conflict with spouse", undefined, false);
     expect(block).toContain("UPAYA");
     expect(block).toContain("BEHAVIOR");
-    expect(block).toContain("sadhana that makes the upaya durable");
+    expect(block).toContain("Always include the behavioral sadhana");
     expect(block).toContain("Do NOT end with a new question");
   });
 });

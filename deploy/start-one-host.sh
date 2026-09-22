@@ -2,9 +2,15 @@
 # Production process manager for a single container / VM:
 # uvicorn (Swiss Ephemeris) on 127.0.0.1:8000 + Next.js on $PORT (default 3000).
 # Railway injects PORT; Fly/Render/compose typically leave it at 3000.
+#
+# Both children stay under this script. Railway restarts the container when
+# PID 1 exits, not when /api/health later returns 503 — so if uvicorn dies we
+# must exit too. `exec next` would make Next.js PID 1 and hide that crash.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=supervise-children.sh
+source "$ROOT/deploy/supervise-children.sh"
 
 if [ -z "${EPHEMERIS_SHARED_SECRET:-}" ]; then
   echo "EPHEMERIS_SHARED_SECRET is required on one-host production." >&2
@@ -50,11 +56,9 @@ if [ "$ok" != "1" ]; then
   exit 1
 fi
 
-cleanup() {
-  kill "$PYTHON_PID" 2>/dev/null || true
-}
-trap cleanup INT TERM
-
 echo "→ Starting Next.js on :${APP_PORT}"
 cd "$ROOT/astro-coach"
-exec npm run start -- -H 0.0.0.0 -p "$APP_PORT"
+npm run start -- -H 0.0.0.0 -p "$APP_PORT" &
+NEXT_PID=$!
+
+supervise_children "$PYTHON_PID" "$NEXT_PID"

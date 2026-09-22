@@ -63,10 +63,6 @@ export const ANON_GEOCODE_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 /** Maximum number of localStorage profile archives to retain. */
 export const MAX_ARCHIVES = 5;
 
-// ── Health check cache (ARCH-01) ──────────────────────────────────────────────
-/** Cache-Control max-age for the /api/health endpoint (seconds). */
-export const HEALTH_CACHE_SECS = 60;
-
 /** Visible on every coaching-output surface (NON_NEGOTIABLES.md #4). */
 export const ADVICE_DISCLAIMER =
   "Jyotish guidance for reflection and remedial practice — not a substitute for professional medical, mental health, legal, or financial advice.";

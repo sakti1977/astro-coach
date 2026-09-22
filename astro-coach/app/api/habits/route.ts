@@ -16,9 +16,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { chart: clientChart, dashas: clientDashas, dashaLord, goals: clientGoals, weakPlanets } = await req.json() as {
-      chart: unknown;
-      dashas?: unknown;
+    const { birthData: clientBirth, dashaLord, goals: clientGoals, weakPlanets } = await req.json() as {
+      birthData: unknown;
       dashaLord: string;
       goals: string[];
       weakPlanets: string[];
@@ -26,8 +25,7 @@ export async function POST(req: NextRequest) {
 
     const grounding = await resolveNatalGrounding(
       access.session?.user?.id,
-      clientChart,
-      clientDashas
+      clientBirth
     );
     if (grounding instanceof NextResponse) return grounding;
 

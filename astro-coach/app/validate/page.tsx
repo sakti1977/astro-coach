@@ -46,7 +46,7 @@ export default function ValidatePage() {
       const res = await fetch("/api/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chart: profile.chart, dashas: profile.dashas, birthDate: profile.birthData?.date }),
+        body: JSON.stringify({ birthData: profile.birthData, birthDate: profile.birthData?.date }),
       });
       if (!res.ok) throw new Error("Validation failed");
       const data = await res.json();

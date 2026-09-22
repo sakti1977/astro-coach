@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkEphemerisHealth } from "@/lib/ephemeris";
-import { HEALTH_CACHE_SECS, HEALTH_RATE_LIMIT_MAX, HEALTH_RATE_LIMIT_WINDOW_MS } from "@/lib/constants";
+import { HEALTH_RATE_LIMIT_MAX, HEALTH_RATE_LIMIT_WINDOW_MS } from "@/lib/constants";
 import { getApiAccessContext } from "@/lib/api-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -16,8 +16,9 @@ export async function GET(req: NextRequest) {
     { ok },
     {
       status: ok ? 200 : 503,
-      // ARCH-01: allow CDN/browser to cache a healthy response for 60 s
-      headers: ok ? { "Cache-Control": `public, max-age=${HEALTH_CACHE_SECS}` } : {},
+      // A cached 200 hides a dead ephemeris process. This route is the
+      // liveness signal; it must describe the current check.
+      headers: { "Cache-Control": "no-store" },
     }
   );
 }

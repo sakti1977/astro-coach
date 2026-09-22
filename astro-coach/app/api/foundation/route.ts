@@ -5,6 +5,7 @@ import { streamFoundationProfile } from "@/lib/claude";
 import { buildCoachSystemPrompt, buildFoundationTask } from "@/lib/astrology/prompts";
 import { safeClientErrorMessage } from "@/lib/safe-error";
 import { resolveNatalGrounding } from "@/lib/server-grounding";
+import { guardCoachText } from "@/lib/coach-output";
 import type { CoachTonePreference } from "@/lib/profile";
 
 export async function POST(req: NextRequest) {
@@ -15,18 +16,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
-  const { chart: clientChart, dashas: clientDashas, includeReligiousSolutions, tonePreference } =
+  const { birthData: clientBirth, includeReligiousSolutions, tonePreference } =
     (await req.json()) as {
-      chart: unknown;
-      dashas: unknown;
+      birthData: unknown;
       includeReligiousSolutions?: boolean;
       tonePreference?: CoachTonePreference;
     };
 
   const grounding = await resolveNatalGrounding(
     access.session?.user?.id,
-    clientChart,
-    clientDashas
+    clientBirth
   );
   if (grounding instanceof NextResponse) return grounding;
 
@@ -47,9 +46,12 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
+        let accumulated = "";
         for await (const chunk of streamFoundationProfile(systemPrompt, task)) {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk })}\n\n`));
+          accumulated += chunk;
         }
+        const text = guardCoachText(accumulated, grounding.chart, grounding.dashas, "");
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (e) {
         const msg = safeClientErrorMessage(e, "Generating your Foundation hit a snag. Please try again shortly.", "foundation-stream");
