@@ -8,7 +8,15 @@ import {
   MAX_TOKENS_SUMMARISE,
   MAX_TOKENS_FOUNDATION,
   MAX_TOKENS_PLAN_HABITS,
+  MODEL_PRIMARY,
+  MODEL_LIGHT,
 } from "@/lib/constants";
+
+// Sonnet 5 runs adaptive thinking when `thinking` is omitted, and thinking
+// tokens count against max_tokens. The chat and JSON calls below were tuned
+// thinking-off (fast first token, predictable length), so they say so
+// explicitly. Sonnet 5 also rejects non-default temperature/top_p/top_k.
+const NO_THINKING = { type: "disabled" } as const;
 
 let _client: Anthropic | null = null;
 
@@ -25,8 +33,9 @@ export async function validateChart(
 ): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",  // TOKEN-01: was claude-opus-4-7 (~80% cost reduction)
+    model: MODEL_PRIMARY,
     max_tokens: MAX_TOKENS_VALIDATE,
+    thinking: NO_THINKING,
     system: [
       {
         type: "text",
@@ -76,8 +85,11 @@ export async function* streamCoachResponse(
 
   const stream = await client.messages.stream(
     {
-      model: "claude-haiku-4-5",   // 5–8× faster than Sonnet; ideal for real-time chat
+      model: MODEL_PRIMARY,
       max_tokens: MAX_TOKENS_COACH,
+      // Off so the reply starts streaming immediately; the chart analysis the
+      // model used to reason out is now precomputed (chartFacts.ts).
+      thinking: NO_THINKING,
       system: systemBlocks,
       messages,
     },
@@ -109,8 +121,11 @@ export async function* streamFoundationProfile(
   const client = getClient();
 
   const stream = await client.messages.stream({
-    model: "claude-sonnet-4-6",
+    model: MODEL_PRIMARY,
     max_tokens: MAX_TOKENS_FOUNDATION,
+    // One-off, reread artifact: worth letting the model think.
+    thinking: { type: "adaptive" },
+    output_config: { effort: "medium" },
     system: [
       {
         type: "text",
@@ -136,9 +151,9 @@ export async function generateDashaPrediction(
 ): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: MODEL_PRIMARY,
     max_tokens: MAX_TOKENS_DASHA,
-    temperature: 0.1,
+    thinking: NO_THINKING,
     system: "You are a strict JSON-only API. Output EXACTLY one valid JSON object and nothing else. Do not add any explanation, greeting, or markdown. Do not wrap the JSON in code fences. The output must start with { and end with }.",
     messages: [
       { role: "user", content: prompt },
@@ -152,8 +167,9 @@ export async function generateDashaPrediction(
 export async function generateHabits(prompt: string): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: MODEL_PRIMARY,
     max_tokens: MAX_TOKENS_HABITS,
+    thinking: NO_THINKING,
     messages: [{ role: "user", content: prompt }],
   });
   const block = response.content[0];
@@ -165,7 +181,7 @@ export async function generateHabits(prompt: string): Promise<string> {
 export async function extractObservations(prompt: string): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
-    model: "claude-haiku-4-5",
+    model: MODEL_LIGHT,
     max_tokens: MAX_TOKENS_EXTRACT,
     messages: [{ role: "user", content: prompt }],
   });
@@ -178,7 +194,7 @@ export async function extractObservations(prompt: string): Promise<string> {
 export async function summariseObservations(prompt: string): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
-    model: "claude-haiku-4-5",
+    model: MODEL_LIGHT,
     max_tokens: MAX_TOKENS_SUMMARISE,
     messages: [{ role: "user", content: prompt }],
   });
@@ -191,7 +207,7 @@ export async function summariseObservations(prompt: string): Promise<string> {
 export async function extractPlanHabits(prompt: string): Promise<string> {
   const client = getClient();
   const response = await client.messages.create({
-    model: "claude-haiku-4-5",
+    model: MODEL_LIGHT,
     max_tokens: MAX_TOKENS_PLAN_HABITS,
     temperature: 0,
     messages: [{ role: "user", content: prompt }],

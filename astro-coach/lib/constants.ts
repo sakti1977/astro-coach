@@ -13,14 +13,22 @@ export const CHAT_HISTORY_MAX = 100;
 /** Earlier topics' plans kept when the user starts a New Topic. */
 export const MAX_PAST_TOPICS = 5;
 
+// ── Claude models ──────────────────────────────────────────────────────────────
+/** Coaching chat, Foundation, dasha predictions, validation, habit generation. */
+export const MODEL_PRIMARY = "claude-sonnet-5";
+/** Background restructuring only (observation extraction/summary, plan → habits). */
+export const MODEL_LIGHT = "claude-haiku-4-5";
+
 // ── Claude token budgets ───────────────────────────────────────────────────────
-export const MAX_TOKENS_COACH     = 2048;  // streaming coach replies (doubled to prevent mid-thought cutoff)
-export const MAX_TOKENS_DASHA     = 1200;  // dasha prediction JSON (5 arrays × 4 items needs headroom)
-export const MAX_TOKENS_VALIDATE  = 1024;  // chart validation questions
-export const MAX_TOKENS_HABITS    = 1024;  // habit list JSON
+// Sonnet 5's tokenizer produces ~30% more tokens for the same text than the
+// Haiku 4.5 / Sonnet 4.6 limits below were tuned for, hence the headroom.
+export const MAX_TOKENS_COACH     = 3072;  // streaming coach replies
+export const MAX_TOKENS_DASHA     = 1600;  // dasha prediction JSON (5 arrays × 4 items needs headroom)
+export const MAX_TOKENS_VALIDATE  = 1400;  // chart validation questions
+export const MAX_TOKENS_HABITS    = 1400;  // habit list JSON
 export const MAX_TOKENS_EXTRACT   = 512;   // observation extraction
 export const MAX_TOKENS_SUMMARISE = 250;   // observation summarisation
-export const MAX_TOKENS_FOUNDATION = 3072; // "Your Foundation" static profile — 5 sections of considered prose
+export const MAX_TOKENS_FOUNDATION = 12000; // "Your Foundation" — ~3K of prose plus adaptive thinking (counts toward the limit)
 export const MAX_TOKENS_PLAN_HABITS = 800;  // plan → up to 5 trackable habits
 
 // ── Observation management ─────────────────────────────────────────────────────
