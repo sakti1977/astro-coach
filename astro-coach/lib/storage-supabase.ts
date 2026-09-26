@@ -2,7 +2,7 @@
 
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { UserProfile, CoachingObservation } from "./profile";
-import { getProfile, saveProfile } from "./profile";
+import { getProfile, saveProfile, PROFILE_SYNCED_EVENT } from "./profile";
 
 // ─── Storage Adapter Interface ────────────────────────────────────────────────
 export interface StorageAdapter {
@@ -155,6 +155,9 @@ class SupabaseStorageAdapter implements StorageAdapter {
         };
 
         saveProfile(profile);
+        // Pages read the profile once on mount, usually before this pull
+        // lands; without this a new device showed the empty chart form.
+        window.dispatchEvent(new Event(PROFILE_SYNCED_EVENT));
       }
 
       if (obsData && obsData.length > 0) {
