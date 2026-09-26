@@ -57,14 +57,14 @@ body {
 /* Chart SVGs (North/South Indian grids, behaviour radar) set colours as
    presentation attributes. CSS outranks those, so dark mode remaps them here
    instead of threading theme state through every <line>/<text>. */
-.dark svg [stroke="#D1D5DB"], .dark svg [stroke="#E5E7EB"] { stroke: #374151; }
-.dark svg [stroke="#1D4ED8"] { stroke: #93C5FD; }
-.dark svg [stroke="#111827"] { stroke: #E5E7EB; }
-.dark svg [fill="#111827"] { fill: #F3F4F6; }
-.dark svg [fill="#1F2937"] { fill: #E5E7EB; }
-.dark svg [fill="#374151"] { fill: #D1D5DB; }
-.dark svg [fill="#6B7280"] { fill: #9CA3AF; }
-.dark svg [fill="#9CA3AF"] { fill: #6B7280; }
-.dark svg [fill="#EFF6FF"] { fill: #1E293B; }
-.dark svg [fill="#F9FAFB"] { fill: #111827; }
-.dark svg [fill="#1D4ED8"] { fill: #93C5FD; }
+.dark svg:not(.jyotish-wheel) [stroke="#D1D5DB"], .dark svg:not(.jyotish-wheel) [stroke="#E5E7EB"] { stroke: #374151; }
+.dark svg:not(.jyotish-wheel) [stroke="#1D4ED8"] { stroke: #93C5FD; }
+.dark svg:not(.jyotish-wheel) [stroke="#111827"] { stroke: #E5E7EB; }
+.dark svg:not(.jyotish-wheel) [fill="#111827"] { fill: #F3F4F6; }
+.dark svg:not(.jyotish-wheel) [fill="#1F2937"] { fill: #E5E7EB; }
+.dark svg:not(.jyotish-wheel) [fill="#374151"] { fill: #D1D5DB; }
+.dark svg:not(.jyotish-wheel) [fill="#6B7280"] { fill: #9CA3AF; }
+.dark svg:not(.jyotish-wheel) [fill="#9CA3AF"] { fill: #6B7280; }
+.dark svg:not(.jyotish-wheel) [fill="#EFF6FF"] { fill: #1E293B; }
+.dark svg:not(.jyotish-wheel) [fill="#F9FAFB"] { fill: #111827; }
+.dark svg:not(.jyotish-wheel) [fill="#1D4ED8"] { fill: #93C5FD; }

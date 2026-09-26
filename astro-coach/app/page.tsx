@@ -1,5 +1,7 @@
 "use client";
 
+import JyotishWheel from "@/components/home/JyotishWheel";
+import JyotishPrimer from "@/components/home/JyotishPrimer";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -402,7 +404,7 @@ export default function HomePage() {
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900 dark:text-gray-100 tracking-tight">Astro Coach</span>
+            <span className="font-bold text-gray-900 dark:text-gray-100 tracking-tight">Jyotish Coach</span>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => router.push("/trust")}
@@ -441,18 +443,24 @@ export default function HomePage() {
 
       {/* Hero */}
       <div className="bg-gradient-to-b from-indigo-50/60 dark:from-indigo-950/40 to-white dark:to-gray-950 border-b border-indigo-100/50 dark:border-indigo-900/60">
-        <div className="max-w-2xl mx-auto px-6 py-16 text-center">
-          <div className="inline-flex items-center gap-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-            <Sparkles className="w-3.5 h-3.5" /> Vedic Jyotish · Swiss Ephemeris Precision
+        <div className="max-w-4xl mx-auto px-6 py-12 md:py-16 grid md:grid-cols-[1fr_300px] gap-8 md:gap-10 items-center">
+          <div className="text-center md:text-left">
+            <div className="inline-flex items-center gap-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
+              <Sparkles className="w-3.5 h-3.5" /> Vedic Jyotish · Swiss Ephemeris Precision
+            </div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 tracking-tight leading-tight">
+              Your Personal<br />Jyotish Remedy Guide
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg mx-auto md:mx-0 text-base">
+              Built on Jyotish — the ancient Indian science of light. Your chart calculated with
+              Swiss Ephemeris precision, validated against your real life, and worked through with
+              mantra, practice, and dharma.
+            </p>
+            <a href="#what-is-jyotish" className="inline-block mt-5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200">
+              New to Jyotish? Start here ↓
+            </a>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4 tracking-tight leading-tight">
-            Your Personal<br />Jyotish Remedy Guide
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 leading-relaxed max-w-lg mx-auto text-base">
-            Built on Jyotish — the ancient Indian science of light. Your chart calculated with
-            Swiss Ephemeris precision, validated against your real life, and worked through with
-            mantra, practice, and dharma.
-          </p>
+          <JyotishWheel className="w-56 sm:w-64 md:w-full mx-auto drop-shadow-xl" />
         </div>
       </div>
 
@@ -521,6 +529,8 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+
+        <JyotishPrimer />
 
         {/* Real chart-derived highlights — deterministic, no LLM call (G1: read-only display of already-computed data) */}
         {hasExistingChart && ready && chart && dashas && (
@@ -782,7 +792,7 @@ export default function HomePage() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => window.open("https://github.com/sakti-bagchi/astro-coach#quick-start", "_blank")}
+                    onClick={() => window.open("https://github.com/sakti1977/astro-coach#quick-start", "_blank")}
                     className="text-xs bg-amber-200 dark:bg-amber-800/50 hover:bg-amber-300 dark:hover:bg-amber-700/60 text-amber-900 dark:text-amber-100 px-3 py-1 rounded-lg"
                   >
                     View start.sh instructions
