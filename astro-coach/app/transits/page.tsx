@@ -102,10 +102,10 @@ export default function TransitsPage() {
 
   if (!profile?.chart) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/40 to-white dark:to-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Loading…</p>
+          <div className="w-10 h-10 border-2 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
         </div>
       </div>
     );
@@ -117,21 +117,21 @@ export default function TransitsPage() {
 
   return (
     <AppShell>
-      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+      <div className="border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 py-5 flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Current Transits</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Current Transits</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Gochar — planetary positions today relative to your natal chart
             </p>
             {calcTime && (
-              <p className="text-xs text-gray-500 mt-0.5">Calculated at {calcTime}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Calculated at {calcTime}</p>
             )}
           </div>
           <button
             onClick={() => fetchTransits(profile.chart!.ascendant.sign_num, profile.chart!.planets.moon?.sign_num, profile.birthData?.timezone ?? "UTC")}
             disabled={loading}
-            className="inline-flex items-center gap-1 text-xs text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 disabled:opacity-40 transition-colors font-medium"
+            className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/40 disabled:opacity-40 transition-colors font-medium"
           >
             {loading ? "Refreshing…" : <><RotateCw className="w-3 h-3" /> Refresh</>}
           </button>
@@ -140,7 +140,7 @@ export default function TransitsPage() {
       <div className="max-w-3xl mx-auto px-4 py-8">
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-700 mb-6">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-4 text-sm text-red-700 dark:text-red-300 mb-6">
             {error}
           </div>
         )}
@@ -148,18 +148,18 @@ export default function TransitsPage() {
         {loading && !transits && (
           <div className="text-center py-20">
             <Orbit className="w-9 h-9 mb-3 mx-auto text-indigo-300 animate-pulse" />
-            <p className="text-gray-500 text-sm">Calculating planetary positions…</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Calculating planetary positions…</p>
           </div>
         )}
 
         {transits?.sade_sati && (
-          <div className="mb-6 border border-amber-200 bg-amber-50 rounded-2xl p-5">
-            <p className="text-sm font-semibold text-amber-900 inline-flex items-center gap-1.5">
+          <div className="mb-6 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 rounded-2xl p-5">
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-100 inline-flex items-center gap-1.5">
               <AlertTriangle className="w-4 h-4" /> Sade Sati — {transits.sade_sati.phase} phase
             </p>
-            <p className="text-sm text-amber-800 mt-1.5 leading-relaxed">{transits.sade_sati.description}</p>
+            <p className="text-sm text-amber-800 dark:text-amber-200 mt-1.5 leading-relaxed">{transits.sade_sati.description}</p>
             {transits.sade_sati.remedies?.[0] && (
-              <p className="text-xs text-amber-700 mt-3 leading-relaxed">
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-3 leading-relaxed">
                 <span className="font-medium">Practice:</span> {transits.sade_sati.remedies[0].behavioral}
               </p>
             )}
@@ -169,8 +169,8 @@ export default function TransitsPage() {
         {transits && (
           <div className="space-y-3">
             {/* Legend */}
-            <div className="flex items-center gap-4 text-xs text-gray-500 pb-1 border-b border-gray-100">
-              <span className="font-medium text-gray-600">Planet</span>
+            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 pb-1 border-b border-gray-100 dark:border-gray-800">
+              <span className="font-medium text-gray-600 dark:text-gray-400">Planet</span>
               <span className="ml-auto">Transit Sign</span>
               <span className="w-20 text-center">House</span>
               <span className="w-28 hidden sm:block">Theme</span>
@@ -187,16 +187,16 @@ export default function TransitsPage() {
               return (
                 <div
                   key={key}
-                  className={`rounded-xl border p-4 transition-all ${isKeyHouse ? "border-indigo-100 bg-indigo-50/50" : "border-gray-100 bg-white"}`}
+                  className={`rounded-xl border p-4 transition-all ${isKeyHouse ? "border-indigo-100 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/40" : "border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"}`}
                 >
                   <div className="flex items-center gap-3">
                     {/* Planet */}
                     <div className="flex items-center gap-2 w-28 flex-shrink-0">
                       <span className="text-xl">{meta.symbol}</span>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{meta.label}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{meta.label}</p>
                         {tp.retrograde && (
-                          <p className="text-xs text-gray-500">Retrograde ®</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Retrograde ®</p>
                         )}
                       </div>
                     </div>
@@ -204,16 +204,16 @@ export default function TransitsPage() {
                     {/* Arrow from natal to transit */}
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {natal && (
-                        <span className="text-xs text-gray-500 hidden sm:block flex-shrink-0">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block flex-shrink-0">
                           {SIGN_NAMES[natal.sign_num].slice(0, 3)} →
                         </span>
                       )}
-                      <span className={`text-sm font-medium ${sameSign ? "text-blue-700" : "text-gray-900"}`}>
+                      <span className={`text-sm font-medium ${sameSign ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-gray-100"}`}>
                         {SIGN_NAMES[tp.sign_num]}
                       </span>
-                      <span className="text-xs text-gray-500">{tp.degree.toFixed(1)}°</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{tp.degree.toFixed(1)}°</span>
                       {sameSign && (
-                        <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        <span className="text-xs bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full flex-shrink-0">
                           natal sign
                         </span>
                       )}
@@ -221,15 +221,15 @@ export default function TransitsPage() {
 
                     {/* House badge */}
                     <div className={`flex-shrink-0 w-12 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
-                      isKeyHouse ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"
+                      isKeyHouse ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
                     }`}>
                       {houseSuffix(h)}
                     </div>
                   </div>
 
                   {/* Theme */}
-                  <p className="text-xs text-gray-500 mt-2 ml-1">
-                    <span className="font-medium text-gray-500">{meta.label} in {houseSuffix(h)} house —</span>{" "}
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-1">
+                    <span className="font-medium text-gray-500 dark:text-gray-400">{meta.label} in {houseSuffix(h)} house —</span>{" "}
                     {HOUSE_THEMES[h]}
                   </p>
                 </div>
@@ -237,10 +237,10 @@ export default function TransitsPage() {
             })}
 
             {/* Natal lagna reference */}
-            <div className="mt-4 border border-dashed border-gray-200 rounded-xl p-4 text-sm text-gray-500">
-              <span className="font-medium text-gray-700">Natal Lagna:</span>{" "}
+            <div className="mt-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-sm text-gray-500 dark:text-gray-400">
+              <span className="font-medium text-gray-700 dark:text-gray-300">Natal Lagna:</span>{" "}
               {SIGN_NAMES[profile.chart.ascendant.sign_num]} · Houses counted from {SIGN_NAMES[profile.chart.ascendant.sign_num]} as 1st
-              <span className="ml-3 text-gray-500">· Kendra (1/4/7/10) transits highlighted</span>
+              <span className="ml-3 text-gray-500 dark:text-gray-400">· Kendra (1/4/7/10) transits highlighted</span>
             </div>
           </div>
         )}

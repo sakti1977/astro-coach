@@ -14,11 +14,11 @@ export default function SignInRequired({ feature }: Props) {
   return (
     <div className="min-h-[50vh] flex items-center justify-center px-4">
       <div className="text-center max-w-sm">
-        <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Lock className="w-5 h-5 text-indigo-600" />
+        <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Lock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
         </div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">Sign in to unlock {feature}</h2>
-        <p className="text-sm text-gray-500 mb-5">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Sign in to unlock {feature}</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
           Your chart is saved on this device. Create a free account to unlock {feature.toLowerCase()} and sync across devices.
         </p>
         <button

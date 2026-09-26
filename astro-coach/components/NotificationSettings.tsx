@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Bell } from "lucide-react";
 
 type SupportState = "checking" | "unsupported" | "supported";
 type Prefs = { notify_dasha: boolean; notify_sade_sati: boolean; notify_sadhana: boolean };
@@ -140,19 +141,24 @@ export default function NotificationSettings() {
   if (support === "checking") return null;
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-6">
-      <h2 className="font-semibold text-gray-900 mb-2">Notifications</h2>
-      <p className="text-xs text-gray-500 mb-4">
+    <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+      <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-3">
+        <span className="w-8 h-8 shrink-0 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+          <Bell className="w-4 h-4" />
+        </span>
+        Notifications
+      </h2>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
         A gentle nudge when your dasha shifts, Sade Sati changes phase, or a day&apos;s sadhana is still undone —
         sent once, around your local morning.
       </p>
 
       {support === "unsupported" && (
-        <p className="text-sm text-gray-500">Not supported on this browser/device.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Not supported on this browser/device.</p>
       )}
 
       {support === "supported" && permission === "denied" && (
-        <p className="text-sm text-amber-600">
+        <p className="text-sm text-amber-600 dark:text-amber-400">
           Notifications are blocked for this site. Re-enable them in your browser&apos;s site settings to turn this on.
         </p>
       )}
@@ -175,7 +181,7 @@ export default function NotificationSettings() {
             ["notify_sadhana", "Daily sadhana reminder"],
           ] as [keyof Prefs, string][]).map(([key, label]) => (
             <label key={key} className="flex items-center justify-between text-sm">
-              <span className="text-gray-700">{label}</span>
+              <span className="text-gray-700 dark:text-gray-300">{label}</span>
               <input
                 type="checkbox"
                 checked={prefs[key]}
@@ -187,14 +193,14 @@ export default function NotificationSettings() {
           <button
             onClick={disable}
             disabled={busy}
-            className="text-xs text-red-600 hover:text-red-700 disabled:opacity-50 mt-2"
+            className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 mt-2"
           >
             {busy ? "Disabling…" : "Disable notifications on this device"}
           </button>
         </div>
       )}
 
-      {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+      {error && <p className="text-xs text-red-500 dark:text-red-400 mt-2">{error}</p>}
     </div>
   );
 }

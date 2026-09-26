@@ -1,6 +1,6 @@
 # Supabase Setup Guide
 
-This guide explains how to set up Supabase for the Astro Coach application.
+This guide explains how to set up Supabase for the Jyotish Coach application.
 
 ## Prerequisites
 
@@ -24,6 +24,10 @@ This guide explains how to set up Supabase for the Astro Coach application.
 3. Copy the contents of `supabase/migrations/001_initial_schema.sql`
 4. Paste it into the SQL editor
 5. Click "Run" to execute the migration
+
+Then run the remaining files in `supabase/migrations/` in order, the same way:
+`002_auto_create_profile.sql`, `003_push_notifications.sql`, `004_behavioral_default.sql`,
+`005_coach_feedback.sql` (thumbs up/down on coaching replies).
 
 This will create:
 - `user_profiles` table with JSONB columns for flexible data storage

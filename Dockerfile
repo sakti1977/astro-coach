@@ -21,8 +21,8 @@ RUN npm ci
 
 COPY python-service /app/python-service
 COPY astro-coach /app/astro-coach
-COPY deploy/start-one-host.sh deploy/supervise-children.sh /app/deploy/
-RUN chmod +x /app/deploy/start-one-host.sh /app/deploy/supervise-children.sh
+COPY deploy/start-one-host.sh deploy/supervise-children.sh deploy/daily-cron.sh /app/deploy/
+RUN chmod +x /app/deploy/start-one-host.sh /app/deploy/supervise-children.sh /app/deploy/daily-cron.sh
 
 ARG NEXT_PUBLIC_SUPABASE_URL=
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=

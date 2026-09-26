@@ -1,4 +1,4 @@
-# Astro Coach — Vedic Astrology Personal Coach
+# Jyotish Coach — Vedic Astrology Personal Coach
 
 A personal AI coaching system grounded in Vedic Jyotish astrology. Your chart is calculated with Swiss Ephemeris precision, validated against your real life, and translated into practical guidance.
 

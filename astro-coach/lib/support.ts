@@ -5,15 +5,15 @@
  * (NON_NEGOTIABLES.md #15 — contributions never buy a remedy).
  *
  * Configured at build time (NEXT_PUBLIC_* is inlined into the client bundle):
- *   NEXT_PUBLIC_UPI_ID          e.g. astrocoach@ybl   — feature hidden when unset
+ *   NEXT_PUBLIC_UPI_ID          e.g. jyotishcoach@ybl   — feature hidden when unset
  *   NEXT_PUBLIC_UPI_PAYEE_NAME  shown in the payer's UPI app
  */
 
 export const SUPPORT_PRESET_AMOUNTS = [51, 101, 251] as const;
 export const SUPPORT_MIN_AMOUNT = 1;
 export const SUPPORT_MAX_AMOUNT = 100_000; // UPI's standard per-transaction ceiling
-const DEFAULT_PAYEE_NAME = "Astro Coach";
-const NOTE = "Support Astro Coach";
+const DEFAULT_PAYEE_NAME = "Jyotish Coach";
+const NOTE = "Support Jyotish Coach";
 
 // handle@psp — the handle allows letters, digits, dot, hyphen, underscore.
 const VPA = /^[a-zA-Z0-9._-]{2,256}@[a-zA-Z][a-zA-Z0-9.-]{1,63}$/;

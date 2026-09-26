@@ -69,8 +69,8 @@ export default function ChartToggle({ chart, highlightHouse }: Props) {
             onClick={() => setVarga(v.key)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
               varga === v.key
-                ? "bg-gray-900 text-white border-gray-900"
-                : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                ? "bg-gray-900 dark:bg-indigo-600 text-white border-gray-900 dark:border-indigo-500"
+                : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-400"
             }`}
           >
             {v.label}
@@ -80,10 +80,10 @@ export default function ChartToggle({ chart, highlightHouse }: Props) {
 
       {/* Varga meaning strip */}
       {varga !== "d1" && (
-        <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5">
-          <p className="text-xs font-semibold text-blue-800">{vargaMeta.meaning}</p>
-          <p className="text-xs text-blue-600 mt-0.5">{vargaMeta.domain}</p>
-          <p className="text-xs text-blue-500 mt-1">
+        <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-lg px-4 py-2.5">
+          <p className="text-xs font-semibold text-blue-800 dark:text-blue-200">{vargaMeta.meaning}</p>
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">{vargaMeta.domain}</p>
+          <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
             Ascendant: <span className="font-semibold">{display.ascendant.sign}</span>
           </p>
         </div>
@@ -91,16 +91,16 @@ export default function ChartToggle({ chart, highlightHouse }: Props) {
 
       {/* North / South toggle */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500">Style:</span>
-        <div className="flex rounded-md border border-gray-200 overflow-hidden">
+        <span className="text-xs text-gray-500 dark:text-gray-400">Style:</span>
+        <div className="flex rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
           {(["north", "south"] as GridView[]).map((v) => (
             <button
               key={v}
               onClick={() => setGridView(v)}
               className={`px-3 py-1 text-xs font-medium transition-colors ${
                 gridView === v
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-500 hover:bg-gray-50"
+                  ? "bg-gray-900 dark:bg-indigo-600 text-white"
+                  : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
               }`}
             >
               {v === "north" ? "North Indian" : "South Indian"}
@@ -127,8 +127,8 @@ export default function ChartToggle({ chart, highlightHouse }: Props) {
           return (
             <div key={key} className="flex items-center gap-1.5 text-xs">
               <span className="text-base leading-none">{meta.symbol}</span>
-              <span className="text-gray-700 font-medium">{meta.label}</span>
-              <span className="text-gray-500">
+              <span className="text-gray-700 dark:text-gray-300 font-medium">{meta.label}</span>
+              <span className="text-gray-500 dark:text-gray-400">
                 {disp.sign.slice(0, 3)} H{disp.house}
                 {natal.retrograde ? " ®" : ""}
               </span>

@@ -2,6 +2,8 @@
 
 import { CHAT_HISTORY_MAX, MAX_ARCHIVES } from "@/lib/constants";
 
+// Storage keys keep the product's original name: renaming them would strand
+// every existing user's saved chart and history.
 const PROFILE_KEY = "astro_coach_profile";
 
 /** A single concrete remedy tied to one planet — deterministic, computed by the
@@ -139,6 +141,9 @@ export interface ChatMessage {
    * isn't English. Falls back to `content` when absent. */
   displayContent?: string;
   timestamp: string;
+  /** The user's thumbs up/down on an assistant reply (also sent to /api/coach/feedback). */
+  feedback?: "up" | "down";
+  feedbackReason?: string;
 }
 
 export type CoachingPhase = "gathering" | "recommending";

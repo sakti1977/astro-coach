@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
   const res = await fetch(url, {
     headers: {
-      "User-Agent": "AstroCoach/1.0 (https://github.com/sakti-bagchi/astro-coach)",
+      "User-Agent": "JyotishCoach/1.0 (https://github.com/sakti1977/astro-coach)",
       "Accept-Language": "en",
     },
     next: { revalidate: 3600 },

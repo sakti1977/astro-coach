@@ -57,7 +57,7 @@ export default function NorthIndianGrid({ chart, size, highlightHouse }: Props) 
       width={size ?? "100%"}
       height={size ?? undefined}
       style={size ? undefined : { height: "auto" }}
-      className="border border-gray-200 rounded-lg bg-white"
+      className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
     >
       {/* Outer grid lines */}
       <rect x={0} y={0} width={SIZE} height={SIZE} fill="none" stroke="#D1D5DB" strokeWidth={1} />

@@ -5,15 +5,15 @@ import { fetchTransits } from "@/lib/ephemeris";
 import { safeClientErrorMessage } from "@/lib/safe-error";
 import type { DashaData, Habit, NatalChart } from "@/lib/profile";
 
-// Runs once daily (Vercel Hobby plan allows only one cron invocation/day —
-// see vercel.json). Scheduled for 02:30 UTC = 08:00 IST, tuned for this app's
-// primary market. On Vercel Pro this could be split into per-timezone
-// schedules for more precise local-morning delivery.
+// Runs once daily, called by deploy/daily-cron.sh inside the one-host
+// container (or a host crontab — see deploy/crontab.example). Scheduled for
+// 02:30 UTC = 08:00 IST, tuned for this app's primary market; CRON_UTC_TIME
+// changes it.
 //
 // Idempotency: every trigger type stores what it last notified about
 // (last_dasha_notified_end / last_sade_sati_phase / last_sadhana_reminder_date)
 // so a duplicate or re-run invocation never re-sends the same alert — required
-// since Vercel cron delivery is best-effort and can occasionally double-fire.
+// since the scheduler retries failed calls and runs a catch-up after a restart.
 
 const DASHA_LOOKAHEAD_HOURS = 36; // > 24h so a daily run can't ever skip a transition
 const NONE_SENTINEL = "none";

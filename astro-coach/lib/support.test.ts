@@ -13,12 +13,12 @@ describe("readSupportConfig", () => {
   });
 
   it("defaults the payee name", () => {
-    expect(readSupportConfig("astro.coach@ybl", "")).toEqual({ upiId: "astro.coach@ybl", payeeName: "Astro Coach" });
+    expect(readSupportConfig("jyotish.coach@ybl", "")).toEqual({ upiId: "jyotish.coach@ybl", payeeName: "Jyotish Coach" });
   });
 });
 
 describe("isValidUpiId", () => {
-  it.each(["astrocoach@ybl", "sakti.b-1@okhdfcbank", "98xxxxxx10@paytm"])("accepts %s", (id) => {
+  it.each(["jyotishcoach@ybl", "first.last-1@okhdfcbank", "98xxxxxx10@paytm"])("accepts %s", (id) => {
     expect(isValidUpiId(id)).toBe(true);
   });
   it.each(["no-at-sign", "a@b", "a b@ybl", "x@ybl&am=1"])("rejects %s", (id) => {
@@ -37,11 +37,11 @@ describe("normaliseAmount", () => {
 });
 
 describe("buildUpiLink", () => {
-  const config = { upiId: "astrocoach@ybl", payeeName: "Astro Coach" };
+  const config = { upiId: "jyotishcoach@ybl", payeeName: "Jyotish Coach" };
 
   it("builds an NPCI deep link with the amount in rupees", () => {
     expect(buildUpiLink(config, 101)).toBe(
-      "upi://pay?pa=astrocoach%40ybl&pn=Astro%20Coach&cu=INR&tn=Support%20Astro%20Coach&am=101.00"
+      "upi://pay?pa=jyotishcoach%40ybl&pn=Jyotish%20Coach&cu=INR&tn=Support%20Jyotish%20Coach&am=101.00"
     );
   });
 

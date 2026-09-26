@@ -1,6 +1,6 @@
 # Quick Start: Setting Up Authentication
 
-This guide will help you set up authentication and cloud storage for Astro Coach in under 10 minutes.
+This guide will help you set up authentication and cloud storage for Jyotish Coach in under 10 minutes.
 
 ## Prerequisites
 

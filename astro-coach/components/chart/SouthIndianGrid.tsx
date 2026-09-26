@@ -46,7 +46,7 @@ export default function SouthIndianGrid({ chart, size }: Props) {
       width={size ?? "100%"}
       height={size ?? undefined}
       style={size ? undefined : { height: "auto" }}
-      className="border border-gray-200 rounded-lg bg-white"
+      className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
     >
 
       {/* Grid lines */}
@@ -64,7 +64,7 @@ export default function SouthIndianGrid({ chart, size }: Props) {
       ))}
       {/* Center label */}
       <text x={renderSize / 2} y={renderSize / 2 - 8} textAnchor="middle" fontSize={12}
-        fill="#9CA3AF" fontWeight="bold">ASTRO</text>
+        fill="#9CA3AF" fontWeight="bold">JYOTISH</text>
       <text x={renderSize / 2} y={renderSize / 2 + 8} textAnchor="middle" fontSize={12}
         fill="#9CA3AF" fontWeight="bold">COACH</text>
 
