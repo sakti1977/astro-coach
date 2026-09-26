@@ -8,6 +8,8 @@ import { getProfile, updateProfile, clearProfile, archiveProfile, type UserProfi
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
 import NotificationSettings from "@/components/NotificationSettings";
+import ThemeToggle from "@/components/ThemeToggle";
+import { UserRound, MessageCircle, Palette, Calculator, Cloud, Bell, Database, KeyRound, type LucideIcon } from "lucide-react";
 import CoachPreferences, { readCoachPreferences, saveCoachPreferences, type CoachPreferenceValues } from "@/components/settings/CoachPreferences";
 import { Sparkles } from "lucide-react";
 
@@ -24,6 +26,25 @@ const ALL_TIMEZONES = [
   "America/Mexico_City", "Australia/Sydney", "Australia/Perth",
   "Pacific/Auckland", "Pacific/Honolulu",
 ];
+
+const SECTIONS: Array<{ id: string; label: string; icon: LucideIcon }> = [
+  { id: "birth", label: "Birth data", icon: UserRound },
+  { id: "coaching", label: "Coaching", icon: MessageCircle },
+  { id: "appearance", label: "Appearance", icon: Palette },
+  { id: "chart", label: "Chart", icon: Calculator },
+  { id: "sync", label: "Sync", icon: Cloud },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "data", label: "Your data", icon: Database },
+  { id: "account", label: "Account", icon: KeyRound },
+];
+
+function SectionIcon({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <span className="w-8 h-8 shrink-0 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+      <Icon className="w-4 h-4" />
+    </span>
+  );
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -213,10 +234,10 @@ export default function ProfilePage() {
 
   if (authStatus === "loading" || !profile) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
-          <p className="text-sm text-gray-500">Loading profile…</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading profile…</p>
         </div>
       </div>
     );
@@ -227,32 +248,45 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
-        <div className="max-w-3xl mx-auto px-4 py-5">
-          <h1 className="text-xl font-bold text-gray-900">Profile &amp; Settings</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage your birth data, sync, and export your information</p>
+      <div className="border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto px-4 py-5">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Profile &amp; Settings</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your birth data, sync, and export your information</p>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-8 lg:grid lg:grid-cols-[180px_1fr] lg:gap-8">
+        {/* Section menu: a long settings page needs a way to jump around. */}
+        <nav aria-label="Settings sections" className="hidden lg:block">
+          <ul className="sticky top-6 space-y-0.5">
+            {SECTIONS.map((sec) => (
+              <li key={sec.id}>
+                <a href={`#${sec.id}`} className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100">
+                  <sec.icon className="w-3.5 h-3.5" /> {sec.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="space-y-6 min-w-0">
         {message && (
-          <div className={`${message.type === "success" ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"} border rounded-xl p-4 text-sm`}>
+          <div className={`${message.type === "success" ? "bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300" : "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"} border rounded-xl p-4 text-sm`}>
             {message.text}
             <button onClick={() => setMessage(null)} className="ml-3 underline text-xs">Dismiss</button>
           </div>
         )}
 
         {/* Birth Data */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6">
+        <section id="birth" className="scroll-mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="font-semibold text-gray-900">Birth Data</h2>
-              <p className="text-xs text-gray-500">Used for all chart, dasha, and coaching calculations</p>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3"><SectionIcon icon={UserRound} /> Birth Data</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Used for all chart, dasha, and coaching calculations</p>
             </div>
             {!editingBirth && (
               <button
                 onClick={() => setEditingBirth(true)}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 font-medium"
               >
                 {bd ? "Edit" : "Add"} birth data
               </button>
@@ -260,17 +294,17 @@ export default function ProfilePage() {
           </div>
 
           {!bd && !editingBirth && (
-            <p className="text-sm text-gray-500">No birth data yet. <button onClick={() => router.push("/")} className="text-indigo-600 underline">Calculate your chart</button></p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">No birth data yet. <button onClick={() => router.push("/")} className="text-indigo-600 dark:text-indigo-400 underline">Calculate your chart</button></p>
           )}
 
           {bd && !editingBirth && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
-              <div><span className="text-gray-500">Name:</span> <span className="font-medium text-gray-900">{bd.name}</span></div>
-              <div><span className="text-gray-500">Date:</span> {bd.date}</div>
-              <div><span className="text-gray-500">Time:</span> {bd.time}</div>
-              <div><span className="text-gray-500">Place:</span> {bd.city}</div>
-              <div><span className="text-gray-500">Coordinates:</span> {bd.lat.toFixed(4)}, {bd.lng.toFixed(4)}</div>
-              <div><span className="text-gray-500">Timezone:</span> {bd.timezone}</div>
+              <div><span className="text-gray-500 dark:text-gray-400">Name:</span> <span className="font-medium text-gray-900 dark:text-gray-100">{bd.name}</span></div>
+              <div><span className="text-gray-500 dark:text-gray-400">Date:</span> {bd.date}</div>
+              <div><span className="text-gray-500 dark:text-gray-400">Time:</span> {bd.time}</div>
+              <div><span className="text-gray-500 dark:text-gray-400">Place:</span> {bd.city}</div>
+              <div><span className="text-gray-500 dark:text-gray-400">Coordinates:</span> {bd.lat.toFixed(4)}, {bd.lng.toFixed(4)}</div>
+              <div><span className="text-gray-500 dark:text-gray-400">Timezone:</span> {bd.timezone}</div>
             </div>
           )}
 
@@ -278,38 +312,38 @@ export default function ProfilePage() {
             <div className="space-y-4 mt-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                  <input type="text" value={birthForm.name} onChange={(e) => setField("name", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Full Name</label>
+                  <input type="text" value={birthForm.name} onChange={(e) => setField("name", e.target.value)} className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Date of Birth</label>
-                  <input type="date" value={birthForm.date} onChange={(e) => setField("date", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Date of Birth</label>
+                  <input type="date" value={birthForm.date} onChange={(e) => setField("date", e.target.value)} className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Time of Birth (exact)</label>
-                  <input type="time" value={birthForm.time} onChange={(e) => setField("time", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Time of Birth (exact)</label>
+                  <input type="time" value={birthForm.time} onChange={(e) => setField("time", e.target.value)} className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Timezone</label>
-                  <select value={birthForm.timezone} onChange={(e) => setField("timezone", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 bg-white">
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Timezone</label>
+                  <select value={birthForm.timezone} onChange={(e) => setField("timezone", e.target.value)} className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900">
                     {ALL_TIMEZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">City / Place</label>
-                <input type="text" value={birthForm.city} onChange={(e) => setField("city", e.target.value)} placeholder="Mumbai, London…" className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">City / Place</label>
+                <input type="text" value={birthForm.city} onChange={(e) => setField("city", e.target.value)} placeholder="Mumbai, London…" className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Latitude</label>
-                  <input type="number" step="0.0001" value={birthForm.lat} onChange={(e) => setField("lat", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Latitude</label>
+                  <input type="number" step="0.0001" value={birthForm.lat} onChange={(e) => setField("lat", e.target.value)} className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Longitude</label>
-                  <input type="number" step="0.0001" value={birthForm.lng} onChange={(e) => setField("lng", e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900" />
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Longitude</label>
+                  <input type="number" step="0.0001" value={birthForm.lng} onChange={(e) => setField("lng", e.target.value)} className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100" />
                 </div>
               </div>
 
@@ -317,25 +351,32 @@ export default function ProfilePage() {
                 <button onClick={saveBirthData} disabled={savingBirth} className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60">
                   {savingBirth ? "Saving…" : "Save Birth Data"}
                 </button>
-                <button onClick={() => { setEditingBirth(false); setMessage(null); }} className="flex-1 border border-gray-200 py-2.5 rounded-xl text-sm font-medium">Cancel</button>
+                <button onClick={() => { setEditingBirth(false); setMessage(null); }} className="flex-1 border border-gray-200 dark:border-gray-700 py-2.5 rounded-xl text-sm font-medium">Cancel</button>
               </div>
-              <p className="text-[10px] text-gray-500">Changing birth data requires recalculating the chart (below) to see updated positions and predictions.</p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400">Changing birth data requires recalculating the chart (below) to see updated positions and predictions.</p>
             </div>
           )}
-        </div>
+        </section>
 
         {/* Coaching preferences — same control as the chat's Settings panel */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900">Coaching</h2>
-          <p className="text-xs text-gray-500 mb-4">How the coach speaks to you. Changes apply from your next message.</p>
+        <section id="coaching" className="scroll-mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3"><SectionIcon icon={MessageCircle} /> Coaching</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">How the coach speaks to you. Changes apply from your next message.</p>
           <CoachPreferences value={coachPrefs} onChange={updateCoachPrefs} />
-        </div>
+        </section>
+
+        {/* Appearance */}
+        <section id="appearance" className="scroll-mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3"><SectionIcon icon={Palette} /> Appearance</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">System follows your device&apos;s light or dark setting. Saved on this device.</p>
+          <ThemeToggle />
+        </section>
 
         {/* Recalculate Chart */}
         {bd && (
-          <div className="bg-white border border-gray-100 rounded-2xl p-6">
-            <h2 className="font-semibold text-gray-900 mb-2">Chart Calculation</h2>
-            <p className="text-sm text-gray-500 mb-4">Re-run the Swiss Ephemeris calculation with your (updated) birth data.</p>
+          <section id="chart" className="scroll-mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-3"><SectionIcon icon={Calculator} /> Chart Calculation</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Re-run the Swiss Ephemeris calculation with your (updated) birth data.</p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button
@@ -349,78 +390,81 @@ export default function ProfilePage() {
                 <button
                   onClick={() => recalculateChart(false)}
                   disabled={recalcLoading}
-                  className="flex-1 border border-gray-200 py-3 rounded-xl text-sm font-medium disabled:opacity-50"
+                  className="flex-1 border border-gray-200 dark:border-gray-700 py-3 rounded-xl text-sm font-medium disabled:opacity-50"
                 >
                   Recalculate (overwrite current)
                 </button>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">Archiving creates a local backup you can restore from if needed.</p>
-          </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Archiving creates a local backup you can restore from if needed.</p>
+          </section>
         )}
 
         {/* Sync & Cloud */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6">
+        <section id="sync" className="scroll-mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-900">Sync &amp; Cloud Storage</h2>
-            <button onClick={() => manualSync("pull")} disabled={isSyncing} className="text-xs text-indigo-600 hover:underline">Pull latest</button>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3"><SectionIcon icon={Cloud} /> Sync &amp; Cloud Storage</h2>
+            <button onClick={() => manualSync("pull")} disabled={isSyncing} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Pull latest</button>
           </div>
 
           <div className="text-sm space-y-1.5">
             <div>Status: <span className="font-medium">{isSyncing ? "Syncing…" : lastSyncedAt ? "Up to date with cloud" : session ? "Signed in — not yet synced this session" : "Local only (this device)"}</span></div>
             {lastSyncedAt && <div>Last synced: {new Date(lastSyncedAt).toLocaleString()}</div>}
-            {syncError && <div className="text-red-600 text-xs">Error: {syncError}</div>}
-            {!session && <div className="text-amber-600 text-xs">Sign in to enable cloud sync across devices.</div>}
+            {syncError && <div className="text-red-600 dark:text-red-400 text-xs">Error: {syncError}</div>}
+            {!session && <div className="text-amber-600 dark:text-amber-400 text-xs">Sign in to enable cloud sync across devices.</div>}
           </div>
 
           <div className="flex gap-3 mt-4">
-            <button onClick={() => manualSync("push")} disabled={isSyncing || !session} className="text-sm bg-white border border-gray-200 px-4 py-2 rounded-lg disabled:opacity-50">Push to cloud</button>
-            <button onClick={() => manualSync("pull")} disabled={isSyncing || !session} className="text-sm bg-white border border-gray-200 px-4 py-2 rounded-lg disabled:opacity-50">Pull from cloud</button>
+            <button onClick={() => manualSync("push")} disabled={isSyncing || !session} className="text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg disabled:opacity-50">Push to cloud</button>
+            <button onClick={() => manualSync("pull")} disabled={isSyncing || !session} className="text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg disabled:opacity-50">Pull from cloud</button>
           </div>
+        </section>
+
+        <div id="notifications" className="scroll-mt-6">
+          <NotificationSettings />
         </div>
 
-        <NotificationSettings />
-
         {/* Data Management */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6">
-          <h2 className="font-semibold text-gray-900 mb-4">Data Management</h2>
+        <section id="data" className="scroll-mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-3"><SectionIcon icon={Database} /> Data Management</h2>
 
           <div className="space-y-3 text-sm">
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="w-full text-left border border-gray-200 hover:bg-gray-50 rounded-xl px-4 py-3 flex justify-between items-center"
+              className="w-full text-left border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl px-4 py-3 flex justify-between items-center"
             >
               <span>Export all my data (JSON)</span>
-              <span className="text-xs text-gray-500">{exporting ? "Exporting…" : "Download"}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{exporting ? "Exporting…" : "Download"}</span>
             </button>
 
             <button
               onClick={handleClearLocal}
-              className="w-full text-left border border-red-200 hover:bg-red-50 text-red-700 rounded-xl px-4 py-3 flex justify-between items-center"
+              className="w-full text-left border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-red-700 dark:text-red-300 rounded-xl px-4 py-3 flex justify-between items-center"
             >
               <span>Clear local data only</span>
               <span className="text-xs">Keeps cloud copy</span>
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 mt-4">Your chart, habits, coaching history, and validation data are stored on this device and, when you are signed in, copied to your account through a session-verified API. Cloud writes use a server credential scoped to your user id — not browser row-level security.</p>
-        </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">Your chart, habits, coaching history, and validation data are stored on this device and, when you are signed in, copied to your account through a session-verified API. Cloud writes use a server credential scoped to your user id — not browser row-level security.</p>
+        </section>
 
         {/* Account */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 text-sm">
-          <h2 className="font-semibold text-gray-900 mb-3">Account</h2>
+        <section id="account" className="scroll-mt-6 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 text-sm">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-3"><SectionIcon icon={KeyRound} /> Account</h2>
           <div className="flex justify-between items-center">
             <div>
-              <div className="text-gray-500 text-xs">Signed in as</div>
+              <div className="text-gray-500 dark:text-gray-400 text-xs">Signed in as</div>
               <div className="font-medium">{session?.user?.email || session?.user?.phone || "Unknown"}</div>
             </div>
-            <button onClick={() => signOut({ callbackUrl: "/auth/signin" })} className="text-xs text-red-600 hover:text-red-700">Sign out</button>
+            <button onClick={() => signOut({ callbackUrl: "/auth/signin" })} className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">Sign out</button>
           </div>
-        </div>
+        </section>
 
         <div className="pt-2 text-center">
-          <button onClick={() => router.push(hasChart ? "/chart" : "/")} className="text-sm text-indigo-600 hover:text-indigo-800">← Back to {hasChart ? "Chart" : "Home"}</button>
+          <button onClick={() => router.push(hasChart ? "/chart" : "/")} className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200">← Back to {hasChart ? "Chart" : "Home"}</button>
+        </div>
         </div>
       </div>
     </AppShell>

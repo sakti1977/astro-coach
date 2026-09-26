@@ -33,6 +33,7 @@ export default function BehaviorRadar({ axes, size = 260 }: Props) {
   const prescribedPoly = axes.map((a, i) => getPoint(i, a.prescribed)).map(([x, y]) => `${x},${y}`).join(" ");
 
   return (
+    <div className="flex flex-col items-center gap-2">
     <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
       {/* Grid */}
       {gridLevels.map((lvl) => {
@@ -63,13 +64,16 @@ export default function BehaviorRadar({ axes, size = 260 }: Props) {
         );
       })}
 
-      {/* Legend — top-left to avoid overlapping axis labels */}
-      <g transform="translate(4, 4)">
-        <rect width={10} height={10} fill="#1F2937" fillOpacity={0.3} rx={2} />
-        <text x={14} y={8} fontSize={8} fill="#6B7280">Current</text>
-        <rect x={60} width={10} height={10} fill="#93C5FD" fillOpacity={0.6} rx={2} />
-        <text x={74} y={8} fontSize={8} fill="#6B7280">Prescribed</text>
-      </g>
     </svg>
+      {/* Legend as HTML under the chart: inside the SVG it collided with axis labels. */}
+      <div className="flex items-center gap-4 text-[10px] text-gray-500 dark:text-gray-400">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-gray-800/30 dark:bg-gray-200/30" /> Current
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-sm bg-blue-300/60" /> Prescribed
+        </span>
+      </div>
+    </div>
   );
 }

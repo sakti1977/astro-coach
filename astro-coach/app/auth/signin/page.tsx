@@ -39,10 +39,10 @@ type PhoneStep = "enter-phone" | "enter-otp";
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
       <div className="text-center">
         <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading…</p>
       </div>
     </div>
   );
@@ -149,15 +149,15 @@ function EmailAuthForm({
   if (info) {
     return (
       <div className="space-y-4">
-        <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
-          <Mail className="w-7 h-7 mb-2 mx-auto text-green-600" />
-          <p className="text-sm font-medium text-green-800 mb-1">Check your inbox!</p>
-          <p className="text-sm text-green-700">{info}</p>
+        <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl p-5 text-center">
+          <Mail className="w-7 h-7 mb-2 mx-auto text-green-600 dark:text-green-400" />
+          <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Check your inbox!</p>
+          <p className="text-sm text-green-700 dark:text-green-300">{info}</p>
         </div>
         <button
           type="button"
           onClick={() => { setInfo(""); setMode("signin"); }}
-          className="w-full border border-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors"
+          className="w-full border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
         >
           Back to Sign In
         </button>
@@ -169,32 +169,32 @@ function EmailAuthForm({
     return (
       <form onSubmit={handleForgotPassword} className="space-y-4">
         <div className="text-center">
-          <h2 className="text-base font-semibold text-gray-900">Reset your password</h2>
-          <p className="text-xs text-gray-500 mt-1">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Reset your password</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Enter your account email and we&apos;ll send a secure reset link.
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="you@example.com"
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
         {resetSent && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700">
+          <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl p-3 text-sm text-green-700 dark:text-green-300">
             If an account exists for this email, a password reset link has been sent.
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-3 text-sm text-red-700 dark:text-red-300">
             {error}
           </div>
         )}
@@ -202,7 +202,7 @@ function EmailAuthForm({
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
+          className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200 dark:shadow-black/30"
         >
           {loading ? "Sending reset link…" : "Send reset link"}
         </button>
@@ -210,7 +210,7 @@ function EmailAuthForm({
         <button
           type="button"
           onClick={() => { setShowForgotPassword(false); setResetSent(false); setError(""); }}
-          className="w-full border border-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors"
+          className="w-full border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
         >
           Back to Sign In
         </button>
@@ -221,7 +221,7 @@ function EmailAuthForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Mode toggle */}
-      <div className="flex rounded-xl bg-gray-100 p-0.5 gap-0.5">
+      <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-0.5 gap-0.5">
         {(["signin", "signup"] as EmailMode[]).map((m) => (
           <button
             key={m}
@@ -236,8 +236,8 @@ function EmailAuthForm({
             }}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
               mode === m
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             }`}
           >
             {m === "signin" ? "Sign In" : "Sign Up"}
@@ -246,22 +246,22 @@ function EmailAuthForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="you@example.com"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Password
           {mode === "signup" && (
-            <span className="text-gray-500 font-normal ml-1">(min. 6 characters)</span>
+            <span className="text-gray-500 dark:text-gray-400 font-normal ml-1">(min. 6 characters)</span>
           )}
         </label>
         <input
@@ -270,14 +270,14 @@ function EmailAuthForm({
           onChange={(e) => setPassword(e.target.value)}
           required
           placeholder="••••••••"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         {mode === "signin" && (
           <div className="text-right mt-1.5">
             <button
               type="button"
               onClick={() => { setShowForgotPassword(true); setError(""); setInfo(""); }}
-              className="text-xs text-indigo-700 hover:text-indigo-900 underline"
+              className="text-xs text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-100 underline"
             >
               Forgot password?
             </button>
@@ -287,7 +287,7 @@ function EmailAuthForm({
 
       {mode === "signup" && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Confirm Password
           </label>
           <input
@@ -296,20 +296,20 @@ function EmailAuthForm({
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+            className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               confirmPassword && confirmPassword !== password
-                ? "border-red-300 bg-red-50"
-                : "border-gray-200"
+                ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/40"
+                : "border-gray-200 dark:border-gray-700"
             }`}
           />
           {confirmPassword && confirmPassword !== password && (
-            <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1">Passwords do not match</p>
           )}
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -317,7 +317,7 @@ function EmailAuthForm({
       <button
         type="submit"
         disabled={loading || (mode === "signup" && !!confirmPassword && confirmPassword !== password)}
-        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
+        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200 dark:shadow-black/30"
       >
         {loading
           ? mode === "signin" ? "Signing in…" : "Creating account…"
@@ -325,10 +325,10 @@ function EmailAuthForm({
       </button>
 
       {mode === "signin" && (
-        <p className="text-center text-xs text-gray-500">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400">
           Don&apos;t have an account?{" "}
           <button type="button" onClick={() => { setMode("signup"); setError(""); }}
-            className="text-gray-900 font-medium hover:underline">
+            className="text-gray-900 dark:text-gray-100 font-medium hover:underline">
             Sign up free
           </button>
         </p>
@@ -421,7 +421,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
     return (
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Phone Number
           </label>
           <div className="flex gap-2">
@@ -430,7 +430,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
               onChange={(e) => setCountryCode(e.target.value)}
               aria-label="Country code"
               title="Country code"
-              className="border border-gray-200 rounded-xl px-3 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+              className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-900"
             >
               {COUNTRY_CODES.map((c) => (
                 <option key={`${c.code}-${c.label}`} value={c.code}>
@@ -443,17 +443,17 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="98765 43210"
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onKeyDown={(e) => e.key === "Enter" && sendOtp()}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
             A 6-digit OTP will be sent via SMS
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-3 text-sm text-red-700 dark:text-red-300">
             {error}
           </div>
         )}
@@ -462,7 +462,7 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
           type="button"
           onClick={sendOtp}
           disabled={loading || !phoneNumber.trim()}
-          className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
+          className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200 dark:shadow-black/30"
         >
           {loading ? "Sending OTP…" : "Send OTP"}
         </button>
@@ -473,22 +473,22 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
   // ── Step 2: OTP input ────────────────────────────────────────────────────
   return (
     <div className="space-y-4">
-      <div className="text-center p-4 bg-gray-50 rounded-xl">
-        <p className="text-sm text-gray-600">
+      <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Code sent to{" "}
-          <span className="font-semibold text-gray-900">{fullPhone}</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">{fullPhone}</span>
         </p>
         <button
           type="button"
           onClick={() => { setStep("enter-phone"); setOtp(""); setError(""); }}
-          className="text-xs text-gray-500 hover:text-gray-600 underline mt-1"
+          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-400 underline mt-1"
         >
           Change number
         </button>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Enter 6-digit OTP
         </label>
         <input
@@ -499,14 +499,14 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
           value={otp}
           onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
           placeholder="• • • • • •"
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 text-center tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 text-center tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
           onKeyDown={(e) => e.key === "Enter" && otp.length === 6 && verifyOtp()}
           autoFocus
         />
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -515,20 +515,20 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
         type="button"
         onClick={verifyOtp}
         disabled={loading || otp.length !== 6}
-        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
+        className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200 dark:shadow-black/30"
       >
         {loading ? "Verifying…" : "Verify & Sign In"}
       </button>
 
       <div className="text-center">
         {resendCooldown > 0 ? (
-          <p className="text-xs text-gray-500">Resend OTP in {resendCooldown}s</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Resend OTP in {resendCooldown}s</p>
         ) : (
           <button
             type="button"
             onClick={() => { sendOtp(); setOtp(""); setError(""); }}
             disabled={loading}
-            className="text-xs text-gray-600 hover:text-gray-900 underline disabled:opacity-50"
+            className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 underline disabled:opacity-50"
           >
             Resend OTP
           </button>
@@ -545,20 +545,20 @@ function SignInForm() {
   const [tab, setTab] = useState<AuthTab>("email");
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-slate-50 flex items-center justify-center px-6 py-12">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-50 dark:from-indigo-950/40 via-white dark:via-gray-950 to-slate-50 dark:to-gray-950 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2.5 mb-5">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 dark:shadow-black/30">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-gray-900 text-xl tracking-tight">Astro Coach</span>
+            <span className="font-bold text-gray-900 dark:text-gray-100 text-xl tracking-tight">Astro Coach</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {tab === "email" ? "Welcome back" : "Sign in with phone"}
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {tab === "email"
               ? "Enter your email and password to continue"
               : "We'll send a one-time code via SMS"}
@@ -566,7 +566,7 @@ function SignInForm() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex rounded-2xl bg-gray-100 p-1 mb-6 gap-1">
+        <div className="flex rounded-2xl bg-gray-100 dark:bg-gray-800 p-1 mb-6 gap-1">
           {(["email", "phone"] as AuthTab[]).map((t) => (
             <button
               key={t}
@@ -574,8 +574,8 @@ function SignInForm() {
               onClick={() => setTab(t)}
               className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 rounded-xl transition-all ${
                 tab === t
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               }`}
             >
               {t === "email" ? (
@@ -588,7 +588,7 @@ function SignInForm() {
         </div>
 
         {/* Form card */}
-        <div className="bg-white rounded-2xl p-8 shadow-xl shadow-gray-100/80 border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-xl shadow-gray-100/80 dark:shadow-black/30 border border-gray-100 dark:border-gray-800">
           {tab === "email" ? (
             <EmailAuthForm callbackUrl={callbackUrl} />
           ) : (
@@ -597,7 +597,7 @@ function SignInForm() {
         </div>
 
         {/* Privacy note */}
-        <p className="text-center text-xs text-gray-500 mt-6 flex items-center justify-center gap-1">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6 flex items-center justify-center gap-1">
           <Lock className="w-3 h-3 flex-shrink-0" />
           Signing in syncs your chart across devices, in an access-controlled database scoped to your account only
         </p>

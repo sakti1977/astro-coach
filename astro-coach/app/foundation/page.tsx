@@ -102,8 +102,8 @@ export default function FoundationPage() {
       <AppShell>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Loading…</p>
+            <div className="w-10 h-10 border-2 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
           </div>
         </div>
       </AppShell>
@@ -123,13 +123,13 @@ export default function FoundationPage() {
 
   return (
     <AppShell>
-      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+      <div className="border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-4 py-5 flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-indigo-500" /> Your Foundation
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-indigo-500 dark:text-indigo-400" /> Your Foundation
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               A single, considered read — grounded in your chart, written once, worth returning to.
             </p>
           </div>
@@ -137,14 +137,14 @@ export default function FoundationPage() {
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={copyToClipboard}
-                className="inline-flex items-center gap-1 text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               >
-                {copied ? <CheckCheck className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <CheckCheck className="w-3.5 h-3.5 text-green-600 dark:text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? "Copied" : "Copy"}
               </button>
               <button
                 onClick={generate}
-                className="inline-flex items-center gap-1 text-xs text-indigo-600 border border-indigo-200 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
+                className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
               >
                 <RotateCw className="w-3.5 h-3.5" /> Regenerate
               </button>
@@ -155,22 +155,22 @@ export default function FoundationPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-8">
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-700 mb-6">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-4 text-sm text-red-700 dark:text-red-300 mb-6">
             {error}
           </div>
         )}
 
         {!saved && !generating && (
-          <div className="border border-dashed border-gray-200 rounded-xl p-12 text-center">
+          <div className="border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
             <BookOpen className="w-9 h-9 mb-3 mx-auto text-indigo-300" />
-            <p className="text-gray-500 text-sm mb-4 max-w-sm mx-auto">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 max-w-sm mx-auto">
               A complete, standalone read of your chart — core nature, inner world, what this
               period is asking of you, your natural strengths, and where the real friction lives.
               Generated once from your chart; read it whenever you want.
             </p>
             <button
               onClick={generate}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
+              className="bg-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 shadow-sm shadow-indigo-200 dark:shadow-black/30 transition-colors"
             >
               Generate My Foundation →
             </button>
@@ -180,17 +180,17 @@ export default function FoundationPage() {
         {generating && !displayContent && (
           <div className="text-center py-16">
             <Loader2 className="w-8 h-8 mb-3 mx-auto text-indigo-300 animate-spin" />
-            <p className="text-gray-500 text-sm">Reading your chart…</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Reading your chart…</p>
           </div>
         )}
 
         {displayContent && (
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 sm:p-8 shadow-sm">
-            <div className="chat-markdown text-[15px] leading-relaxed text-gray-800">
+          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div className="chat-markdown text-[15px] leading-relaxed text-gray-800 dark:text-gray-200">
               <ReactMarkdown>{displayContent}</ReactMarkdown>
             </div>
             {generating && (
-              <span className="inline-flex items-center gap-1 text-xs text-gray-500 mt-3">
+              <span className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-3">
                 <Loader2 className="w-3 h-3 animate-spin" /> Writing…
               </span>
             )}
@@ -199,7 +199,7 @@ export default function FoundationPage() {
 
         {saved && !generating && (
           <>
-            <p className="text-center text-xs text-gray-500 mt-4">
+            <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
               Generated {new Date(saved.generatedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}
             </p>
             <SupportNudge

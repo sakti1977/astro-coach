@@ -214,11 +214,11 @@ Method note: done as a code-level read of every page's Tailwind/JSX (no live bro
 3. ~~Fix `YesNoQuestion.tsx`'s color to indigo-600~~ — done, plus the same `gray-900` inconsistency found and fixed in `auth/error/page.tsx`'s CTA button during the sweep.
 4. ~~Fix light-mode text/input contrast bug~~ — `color-scheme: light` forced globally, explicit `text-gray-900` added to form inputs lacking a text color, worst-offending `text-gray-300`/`text-gray-400` secondary-text instances bumped to `text-gray-500`/`600` for WCAG AA. Full dark mode is still Tier 2 item #2 above, not done.
 
-**Tier 2 — moderate effort, meaningful differentiation:**
-4. Dark mode via Tailwind `dark:` variants across the existing color usage.
-5. Bring Profile/Settings up to the visual bar of Chart/Habits (icons, hierarchy, possibly a section nav).
-6. Rationalize the 12-color house-badge rainbow on Chart into a smaller, semantic palette.
+**Tier 2 — moderate effort, meaningful differentiation:** — **shipped** (2026-09-26)
+4. ~~Dark mode via Tailwind `dark:` variants~~ — class-based (`@custom-variant dark` in `globals.css`), System / Light / Dark toggle in the sidebar and Profile → Appearance, applied before first paint by `lib/theme.ts`. Chart SVG colours are remapped in CSS. `lib/dark-mode.harness.test.ts` fails the build if a light surface or text colour ships without its dark counterpart.
+5. ~~Bring Profile/Settings up to the visual bar~~ — section icons, a sticky section menu on wide screens, and new Coaching and Appearance sections.
+6. ~~Rationalize the 12-color house-badge rainbow~~ — four groups (kendra, trikona, dusthana, other) with a legend.
 
 **Tier 3 — bigger investment, brand-level differentiation:**
 7. A more distinctive visual identity beyond stock Tailwind indigo — a signature gradient or restrained celestial texture, considered rather than decorative.
-8. A real mobile-breakpoint pass once live browser/device testing is available — this review could reason about responsive grid classes but not verify actual touch-target sizing or spacing rhythm at 375px.
+8. ~~A real mobile-breakpoint pass~~ — checked at 390px in both themes (home, chart, chat, habits, profile, support) with headless Chromium; fixed the chat placeholder wrapping and the habits radar legend overlapping an axis label. Still worth a pass on real devices for touch-target sizing.

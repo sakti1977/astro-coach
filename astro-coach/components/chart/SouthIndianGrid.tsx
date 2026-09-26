@@ -46,7 +46,7 @@ export default function SouthIndianGrid({ chart, size }: Props) {
       width={size ?? "100%"}
       height={size ?? undefined}
       style={size ? undefined : { height: "auto" }}
-      className="border border-gray-200 rounded-lg bg-white"
+      className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900"
     >
 
       {/* Grid lines */}

@@ -124,8 +124,8 @@ export default function HabitsPage() {
       <AppShell>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Loading habits…</p>
+            <div className="w-10 h-10 border-2 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading habits…</p>
           </div>
         </div>
       </AppShell>
@@ -155,10 +155,10 @@ export default function HabitsPage() {
 
   return (
     <AppShell>
-      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+      <div className="border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 py-5">
-          <h1 className="text-xl font-bold text-gray-900">Sadhana — Daily Practice</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Sadhana — Daily Practice</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Practices aligned to your {dashas?.current_maha} Maha Dasha · {dashas?.current_antar} Antardasha
           </p>
         </div>
@@ -169,37 +169,37 @@ export default function HabitsPage() {
           {/* Left: Radar + Goals */}
           <div className="space-y-6">
             {/* Behavior radar */}
-            <div className="border border-gray-100 rounded-xl p-5">
-              <p className="text-xs font-medium text-gray-500 uppercase mb-4">Behavior Meter</p>
+            <div className="border border-gray-100 dark:border-gray-800 rounded-xl p-5">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-4">Behavior Meter</p>
               <div className="flex justify-center">
                 <BehaviorRadar axes={radarAxes} size={240} />
               </div>
               {currentMahaMeta && (
-                <p className="text-xs text-gray-500 text-center mt-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
                   Blue zone = what {dashas?.current_maha} Dasha prescribes
                 </p>
               )}
             </div>
 
             {/* Goals */}
-            <div className="border border-gray-100 rounded-xl p-5">
+            <div className="border border-gray-100 dark:border-gray-800 rounded-xl p-5">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-medium text-gray-500 uppercase">Your Goals</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Your Goals</p>
                 <button
                   onClick={() => setShowGoalForm((s) => !s)}
-                  className="text-xs text-indigo-600 font-medium hover:underline"
+                  className="text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
                 >
                   + Add Goal
                 </button>
               </div>
 
               {showGoalForm && (
-                <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="space-y-2 mb-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                   <select
                     title="Goal category"
                     value={newGoal.category}
                     onChange={(e) => setNewGoal((g) => ({ ...g, category: e.target.value as typeof GOAL_CATEGORIES[number] }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900"
                   >
                     {GOAL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -209,7 +209,7 @@ export default function HabitsPage() {
                     value={newGoal.description}
                     onChange={(e) => setNewGoal((g) => ({ ...g, description: e.target.value }))}
                     onKeyDown={(e) => e.key === "Enter" && addGoal()}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
                   />
                   <button onClick={addGoal}
                     className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">
@@ -219,17 +219,17 @@ export default function HabitsPage() {
               )}
 
               {goals.length === 0 ? (
-                <p className="text-sm text-gray-500">No goals yet. Add one to get personalized habit recommendations.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No goals yet. Add one to get personalized habit recommendations.</p>
               ) : (
                 <div className="space-y-2">
                   {goals.map((g) => (
                     <div key={g.id} className="flex items-start gap-2">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">
+                      <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full mt-0.5 flex-shrink-0">
                         {g.category}
                       </span>
-                      <p className="text-sm text-gray-700 flex-1">{g.description}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 flex-1">{g.description}</p>
                       <button onClick={() => removeGoal(g.id)}
-                        className="text-gray-500 hover:text-gray-600 flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
+                        className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-400 flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
                 </div>
@@ -240,37 +240,37 @@ export default function HabitsPage() {
           {/* Right: Habit tracker */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Today&apos;s Habits
-                <span className="ml-2 text-gray-500 font-normal">
+                <span className="ml-2 text-gray-500 dark:text-gray-400 font-normal">
                   {habits.filter((h) => h.completedDates.includes(todayStr)).length}/{habits.length} done
                 </span>
               </p>
               <button
                 onClick={generateHabits}
                 disabled={loadingHabits}
-                className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors disabled:opacity-50"
+                className="text-sm bg-indigo-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-indigo-700 shadow-sm shadow-indigo-200 dark:shadow-black/30 transition-colors disabled:opacity-50"
               >
                 {loadingHabits ? "Generating..." : habits.length > 0 ? "Refresh Habits" : "Generate Habits →"}
               </button>
             </div>
 
             {habitError && (
-              <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-700">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
                 {habitError}
               </div>
             )}
 
             {habits.length === 0 ? (
-              <div className="border border-dashed border-gray-200 rounded-xl p-12 text-center">
+              <div className="border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
                 <Sprout className="w-9 h-9 mb-3 mx-auto text-indigo-300" />
-                <p className="text-gray-500 text-sm mb-4">
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
                   No habits yet. Generate personalized habits based on your {dashas?.current_maha} Dasha and goals.
                 </p>
                 <button
                   onClick={generateHabits}
                   disabled={loadingHabits}
-                  className="bg-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors disabled:opacity-50"
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 shadow-sm shadow-indigo-200 dark:shadow-black/30 transition-colors disabled:opacity-50"
                 >
                   {loadingHabits ? "Claude is generating habits..." : "Generate My Habits →"}
                 </button>
@@ -282,36 +282,36 @@ export default function HabitsPage() {
                   const meta = PLANET_META[h.planet?.toLowerCase() as PlanetKey];
                   return (
                     <div key={h.id}
-                      className={`border rounded-xl p-4 transition-all ${done ? "border-indigo-200 bg-indigo-50/40" : "border-gray-100 bg-white"}`}>
+                      className={`border rounded-xl p-4 transition-all ${done ? "border-indigo-200 dark:border-indigo-800 bg-indigo-50/40 dark:bg-indigo-950/40" : "border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900"}`}>
                       <div className="flex items-start gap-3">
                         <button
                           onClick={() => toggleHabitToday(h.id)}
                           className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                            done ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-300 hover:border-indigo-500"
+                            done ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-300 dark:border-gray-600 hover:border-indigo-500"
                           }`}
                         >
                           {done && <Check className="w-3.5 h-3.5" />}
                         </button>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className={`font-medium text-sm ${done ? "line-through text-gray-500" : "text-gray-900"}`}>
+                            <p className={`font-medium text-sm ${done ? "line-through text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-gray-100"}`}>
                               {h.habit}
                             </p>
-                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                            <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
                               {h.frequency}
                             </span>
                             {meta && (
                               <span className="text-base" title={meta.label}>{meta.symbol}</span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">{h.why}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{h.why}</p>
                           {computeStreak(h.completedDates) > 0 && (
-                            <p className="text-xs text-gray-500 mt-1 inline-flex items-center gap-1">
-                              <Flame className="w-3 h-3 text-orange-500" /> {computeStreak(h.completedDates)}-day streak
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 inline-flex items-center gap-1">
+                              <Flame className="w-3 h-3 text-orange-500 dark:text-orange-400" /> {computeStreak(h.completedDates)}-day streak
                             </p>
                           )}
                         </div>
-                        <span className="text-xs text-gray-500 flex-shrink-0 mt-1 capitalize">{h.category}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 mt-1 capitalize">{h.category}</span>
                       </div>
                     </div>
                   );
@@ -321,8 +321,8 @@ export default function HabitsPage() {
 
             {/* Weekly summary */}
             {habits.length > 0 && (
-              <div className="border border-gray-100 rounded-xl p-5 mt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase mb-3">This Week</p>
+              <div className="border border-gray-100 dark:border-gray-800 rounded-xl p-5 mt-4">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-3">This Week</p>
                 <div className="grid grid-cols-7 gap-1">
                   {Array.from({ length: 7 }, (_, i) => {
                     const d = new Date();
@@ -332,8 +332,8 @@ export default function HabitsPage() {
                     const allDone = habits.every((h) => h.completedDates.includes(ds));
                     return (
                       <div key={ds} className="text-center">
-                        <div className={`h-8 rounded-md ${allDone ? "bg-indigo-600" : anyDone ? "bg-indigo-200" : "bg-gray-50 border border-gray-100"}`} />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <div className={`h-8 rounded-md ${allDone ? "bg-indigo-600" : anyDone ? "bg-indigo-200 dark:bg-indigo-800/50" : "bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800"}`} />
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {["Su","Mo","Tu","We","Th","Fr","Sa"][d.getDay()]}
                         </p>
                       </div>

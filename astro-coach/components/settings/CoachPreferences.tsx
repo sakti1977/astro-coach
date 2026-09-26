@@ -40,9 +40,9 @@ function Segmented<T extends string>({
 }) {
   return (
     <div>
-      <p className="text-sm font-medium text-gray-900">{label}</p>
-      <p className="text-xs text-gray-500 mb-2">{hint}</p>
-      <div role="radiogroup" aria-label={label} className="inline-flex rounded-xl border border-gray-200 bg-gray-50 p-0.5">
+      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{hint}</p>
+      <div role="radiogroup" aria-label={label} className="inline-flex rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-0.5">
         {options.map((o) => (
           <button
             key={o.value}
@@ -50,8 +50,8 @@ function Segmented<T extends string>({
             role="radio"
             aria-checked={value === o.value}
             onClick={() => onChange(o.value)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-              value === o.value ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"
+            className={`whitespace-nowrap px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              value === o.value ? "bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
           >
             {o.label}
@@ -74,7 +74,7 @@ export default function CoachPreferences({
   onChange: (change: Partial<CoachPreferenceValues>) => void;
 }) {
   return (
-    <div className="grid gap-5 sm:grid-cols-3">
+    <div className="flex flex-wrap gap-x-8 gap-y-5">
       <Segmented
         label="Remedies"
         hint="Behavioral practice is always included."
@@ -95,14 +95,14 @@ export default function CoachPreferences({
         ]}
         onChange={(v) => onChange({ tonePreference: v })}
       />
-      <div>
-        <label htmlFor="coach-language" className="text-sm font-medium text-gray-900">Language</label>
-        <p className="text-xs text-gray-500 mb-2">Your messages and replies are translated.</p>
+      <div className="min-w-48">
+        <label htmlFor="coach-language" className="text-sm font-medium text-gray-900 dark:text-gray-100">Language</label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Your messages and replies are translated.</p>
         <select
           id="coach-language"
           value={value.preferredLanguage}
           onChange={(e) => onChange({ preferredLanguage: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           {SARVAM_LANGUAGES.map((l) => (
             <option key={l.code} value={l.code}>{l.label}</option>

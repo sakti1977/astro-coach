@@ -8,10 +8,10 @@ import { Sparkles } from "lucide-react";
 
 function LoadingScreen() {
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-6">
+    <main className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center px-6">
       <div className="text-center">
         <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading...</p>
       </div>
     </main>
   );
@@ -109,32 +109,32 @@ function ResetPasswordForm() {
 
   if (checkingLink) {
     return (
-      <main className="min-h-screen bg-white flex items-center justify-center px-6">
+      <main className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center px-6">
         <div className="text-center">
           <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
-          <p className="text-gray-500">Verifying reset link...</p>
+          <p className="text-gray-500 dark:text-gray-400">Verifying reset link...</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-slate-50 flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-xl shadow-gray-100/80 border border-gray-100">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-50 dark:from-indigo-950/40 via-white dark:via-gray-950 to-slate-50 dark:to-gray-950 flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-xl shadow-gray-100/80 dark:shadow-black/30 border border-gray-100 dark:border-gray-800">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2.5 mb-4">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 dark:shadow-black/30">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-gray-900 text-xl tracking-tight">Astro Coach</span>
+            <span className="font-bold text-gray-900 dark:text-gray-100 text-xl tracking-tight">Astro Coach</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Reset password</h1>
-          <p className="text-sm text-gray-500 mt-1">Choose a new password for your account</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Reset password</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Choose a new password for your account</p>
         </div>
 
         {success ? (
           <div className="space-y-4">
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-700">
+            <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl p-4 text-sm text-green-700 dark:text-green-300">
               Password updated successfully. Please sign in again with your new password.
             </div>
             <Link
@@ -146,12 +146,12 @@ function ResetPasswordForm() {
           </div>
         ) : !hasRecoverySession ? (
           <div className="space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+            <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
               {error || "This reset link is invalid or has expired. Please request a new one."}
             </div>
             <Link
               href="/auth/signin"
-              className="block w-full bg-gray-900 text-white py-3 rounded-xl font-medium text-sm hover:bg-gray-700 transition-colors text-center"
+              className="block w-full bg-gray-900 dark:bg-gray-700 text-white py-3 rounded-xl font-medium text-sm hover:bg-gray-700 transition-colors text-center"
             >
               Back to Sign In
             </Link>
@@ -159,31 +159,31 @@ function ResetPasswordForm() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-sm text-red-700">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-3 text-sm text-red-700 dark:text-red-300">
                 {error}
               </div>
             )}
@@ -191,14 +191,14 @@ function ResetPasswordForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200"
+              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200 dark:shadow-black/30"
             >
               {loading ? "Updating password..." : "Update password"}
             </button>
 
             <Link
               href="/auth/signin"
-              className="block text-center text-xs text-gray-500 hover:text-gray-700"
+              className="block text-center text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               Cancel and return to Sign In
             </Link>

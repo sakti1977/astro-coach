@@ -25,8 +25,8 @@ export default function CoachPage() {
       <AppShell>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Loading your coach…</p>
+            <div className="w-10 h-10 border-2 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading your coach…</p>
           </div>
         </div>
       </AppShell>
@@ -45,22 +45,22 @@ export default function CoachPage() {
     <AppShell>
       <div className="min-h-screen flex flex-col">
         {/* Coach header */}
-        <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+        <div className="border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
           <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-sm shadow-indigo-200">
+              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-sm shadow-indigo-200 dark:shadow-black/30">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-base font-bold text-gray-900">Your Jyotish Guidance</h1>
-                <p className="text-[11px] text-gray-500 leading-none mt-0.5">
+                <h1 className="text-base font-bold text-gray-900 dark:text-gray-100">Your Jyotish Guidance</h1>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-none mt-0.5">
                   Remedy and practice, grounded in your natal chart
                 </p>
               </div>
             </div>
             <button
               onClick={() => router.push("/chart")}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors flex items-center gap-1"
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 font-medium transition-colors flex items-center gap-1"
             >
               <Hexagon className="w-3.5 h-3.5" /> View Chart
             </button>
@@ -69,7 +69,7 @@ export default function CoachPage() {
 
         {/* Chat area */}
         <div className="flex-1 min-h-0 max-w-3xl mx-auto w-full flex flex-col px-4 pb-0">
-          <div className="flex-1 overflow-hidden bg-white rounded-t-2xl border border-gray-100 border-b-0 shadow-sm mt-4">
+          <div className="flex-1 overflow-hidden bg-white dark:bg-gray-900 rounded-t-2xl border border-gray-100 dark:border-gray-800 border-b-0 shadow-sm mt-4">
             <ChatInterface chart={profile.chart} dashas={profile.dashas} />
           </div>
         </div>

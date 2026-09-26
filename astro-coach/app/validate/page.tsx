@@ -93,8 +93,8 @@ export default function ValidatePage() {
       <AppShell>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Loading validation…</p>
+            <div className="w-10 h-10 border-2 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading validation…</p>
           </div>
         </div>
       </AppShell>
@@ -113,10 +113,10 @@ export default function ValidatePage() {
 
   return (
     <AppShell>
-      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+      <div className="border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
         <div className="max-w-2xl mx-auto px-4 py-5">
-          <h1 className="text-xl font-bold text-gray-900">Chart Validation</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Chart Validation</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Claude analyzes your chart and asks questions to confirm accuracy
           </p>
         </div>
@@ -126,39 +126,39 @@ export default function ValidatePage() {
         {phase === "intro" && (
           <div className="space-y-6">
             {alreadyValidated && (
-              <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
-                <p className="text-sm font-medium text-gray-700">Previous validation</p>
+              <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-xl p-5">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Previous validation</p>
                 <div className="mt-2 flex items-center gap-3">
-                  <div className="text-3xl font-bold text-indigo-700">
+                  <div className="text-3xl font-bold text-indigo-700 dark:text-indigo-300">
                     {Math.round(profile.validation.accuracyScore * 100)}%
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Chart accuracy score</p>
-                    <p className="text-xs text-gray-500">{profile.validation.questions.length} questions answered</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Chart accuracy score</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{profile.validation.questions.length} questions answered</p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="border border-gray-100 rounded-xl p-6">
-              <h2 className="font-semibold text-gray-900 mb-2">How validation works</h2>
-              <ol className="space-y-2 text-sm text-gray-600">
-                <li className="flex gap-2"><span className="font-mono text-gray-500">1.</span>Claude analyzes your birth chart</li>
-                <li className="flex gap-2"><span className="font-mono text-gray-500">2.</span>It generates 10 yes/no questions about life events derived from your chart</li>
-                <li className="flex gap-2"><span className="font-mono text-gray-500">3.</span>Your answers calibrate the chart interpretation accuracy</li>
-                <li className="flex gap-2"><span className="font-mono text-gray-500">4.</span>Future predictions are weighted by this accuracy score</li>
+            <div className="border border-gray-100 dark:border-gray-800 rounded-xl p-6">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">How validation works</h2>
+              <ol className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li className="flex gap-2"><span className="font-mono text-gray-500 dark:text-gray-400">1.</span>Claude analyzes your birth chart</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-500 dark:text-gray-400">2.</span>It generates 10 yes/no questions about life events derived from your chart</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-500 dark:text-gray-400">3.</span>Your answers calibrate the chart interpretation accuracy</li>
+                <li className="flex gap-2"><span className="font-mono text-gray-500 dark:text-gray-400">4.</span>Future predictions are weighted by this accuracy score</li>
               </ol>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-700">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
                 {error}
               </div>
             )}
 
             <button
               onClick={startValidation}
-              className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold text-sm hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
+              className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold text-sm hover:bg-indigo-700 shadow-sm shadow-indigo-200 dark:shadow-black/30 transition-colors"
             >
               {alreadyValidated ? "Run Validation Again →" : "Start Chart Validation →"}
             </button>
@@ -168,8 +168,8 @@ export default function ValidatePage() {
         {phase === "loading" && (
           <div className="text-center py-20">
             <Sparkles className="w-10 h-10 mb-4 mx-auto text-indigo-300 animate-pulse" />
-            <p className="text-gray-500">Claude is reading your chart...</p>
-            <p className="text-xs text-gray-500 mt-2">This takes about 10–15 seconds</p>
+            <p className="text-gray-500 dark:text-gray-400">Claude is reading your chart...</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">This takes about 10–15 seconds</p>
           </div>
         )}
 
@@ -180,19 +180,19 @@ export default function ValidatePage() {
         {phase === "result" && (
           <div className="text-center py-12 space-y-6">
             <div>
-              <p className="text-6xl font-bold text-indigo-700">
+              <p className="text-6xl font-bold text-indigo-700 dark:text-indigo-300">
                 {Math.round(accuracyScore * 100)}%
               </p>
-              <p className="text-gray-500 mt-2">Chart accuracy score</p>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Chart accuracy score</p>
             </div>
 
-            <div className={`rounded-xl p-5 ${accuracyScore >= 0.7 ? "bg-green-50 border border-green-100" : "bg-amber-50 border border-amber-100"}`}>
+            <div className={`rounded-xl p-5 ${accuracyScore >= 0.7 ? "bg-green-50 dark:bg-green-950/40 border border-green-100 dark:border-green-900/60" : "bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/60"}`}>
               {accuracyScore >= 0.7 ? (
-                <p className="text-green-800 text-sm">
+                <p className="text-green-800 dark:text-green-200 text-sm">
                   Your chart is well-calibrated. Predictions and coaching will be highly accurate.
                 </p>
               ) : (
-                <p className="text-amber-800 text-sm">
+                <p className="text-amber-800 dark:text-amber-200 text-sm">
                   Your chart shows {Math.round(accuracyScore * 100)}% accuracy. This may indicate a slightly different birth time. The coach will still provide valuable guidance based on confirmed placements.
                 </p>
               )}
@@ -201,13 +201,13 @@ export default function ValidatePage() {
             <div className="flex gap-3">
               <button
                 onClick={() => router.push("/dasha")}
-                className="flex-1 border border-gray-200 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="flex-1 border border-gray-200 dark:border-gray-700 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               >
                 View Dasha Timeline →
               </button>
               <button
                 onClick={() => router.push("/coach")}
-                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-indigo-200 dark:shadow-black/30 transition-colors"
               >
                 Talk to Coach →
               </button>

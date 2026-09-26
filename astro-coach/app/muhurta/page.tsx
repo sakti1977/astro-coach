@@ -93,10 +93,10 @@ export default function MuhurtaPage() {
 
   if (!profile?.birthData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50/40 dark:from-indigo-950/40 to-white dark:to-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-10 h-10 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-500">Loading…</p>
+          <div className="w-10 h-10 border-2 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
         </div>
       </div>
     );
@@ -109,11 +109,11 @@ export default function MuhurtaPage() {
 
   return (
     <AppShell>
-      <div className="border-b border-gray-100 bg-white/70 backdrop-blur-sm">
+      <div className="border-b border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-4 py-5 flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Muhurta</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Muhurta</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Panchang and timing windows for {profile.birthData.city || "your saved location"}
             </p>
           </div>
@@ -121,14 +121,14 @@ export default function MuhurtaPage() {
             type="date"
             value={dateStr}
             onChange={(e) => setDateStr(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-700"
+            className="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-gray-700 dark:text-gray-300"
           />
         </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-700 mb-6">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-4 text-sm text-red-700 dark:text-red-300 mb-6">
             {error}
           </div>
         )}
@@ -136,7 +136,7 @@ export default function MuhurtaPage() {
         {loading && !data && (
           <div className="text-center py-20">
             <Clock className="w-9 h-9 mb-3 mx-auto text-indigo-300 animate-pulse" />
-            <p className="text-gray-500 text-sm">Calculating panchang…</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Calculating panchang…</p>
           </div>
         )}
 
@@ -150,30 +150,30 @@ export default function MuhurtaPage() {
                 { label: "Yoga", value: yoga?.name },
                 { label: "Karana", value: karana?.name },
               ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
-                  <p className="text-xs text-gray-500">{item.label}</p>
-                  <p className="text-sm font-semibold text-gray-900 mt-0.5">{item.value ?? "—"}</p>
+                <div key={item.label} className="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{item.label}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5">{item.value ?? "—"}</p>
                 </div>
               ))}
             </div>
 
-            <div className="flex items-center gap-4 text-xs text-gray-500 border border-dashed border-gray-200 rounded-xl p-4">
-              <span><span className="font-medium text-gray-600">{data.vara}</span> ({data.vara_lord})</span>
+            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4">
+              <span><span className="font-medium text-gray-600 dark:text-gray-400">{data.vara}</span> ({data.vara_lord})</span>
               <span>Sunrise {fmtTime(data.sunrise)}</span>
               <span>Sunset {fmtTime(data.sunset)}</span>
             </div>
 
             {/* Auspicious windows */}
             <div>
-              <h2 className="text-sm font-semibold text-emerald-800 mb-2">Auspicious windows</h2>
+              <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-2">Auspicious windows</h2>
               <div className="space-y-2">
                 {data.auspicious.map((w) => (
-                  <div key={w.name} className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+                  <div key={w.name} className="rounded-xl border border-emerald-100 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-950/40 p-4">
                     <div className="flex items-baseline justify-between">
-                      <p className="text-sm font-semibold text-emerald-900">{w.name}</p>
-                      <p className="text-xs text-emerald-700 font-medium">{fmtTime(w.starts_at)} – {fmtTime(w.ends_at)}</p>
+                      <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">{w.name}</p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">{fmtTime(w.starts_at)} – {fmtTime(w.ends_at)}</p>
                     </div>
-                    <p className="text-xs text-emerald-800/80 mt-1.5 leading-relaxed">{w.note}</p>
+                    <p className="text-xs text-emerald-800/80 dark:text-emerald-200/80 mt-1.5 leading-relaxed">{w.note}</p>
                   </div>
                 ))}
               </div>
@@ -181,21 +181,21 @@ export default function MuhurtaPage() {
 
             {/* Inauspicious windows */}
             <div>
-              <h2 className="text-sm font-semibold text-amber-800 mb-2">Windows to plan around</h2>
+              <h2 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">Windows to plan around</h2>
               <div className="space-y-2">
                 {data.inauspicious.map((w) => (
-                  <div key={w.name} className="rounded-xl border border-amber-100 bg-amber-50/60 p-4">
+                  <div key={w.name} className="rounded-xl border border-amber-100 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/40 p-4">
                     <div className="flex items-baseline justify-between">
-                      <p className="text-sm font-semibold text-amber-900">{w.name}</p>
-                      <p className="text-xs text-amber-700 font-medium">{fmtTime(w.starts_at)} – {fmtTime(w.ends_at)}</p>
+                      <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">{w.name}</p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 font-medium">{fmtTime(w.starts_at)} – {fmtTime(w.ends_at)}</p>
                     </div>
-                    <p className="text-xs text-amber-800/80 mt-1.5 leading-relaxed">{w.note}</p>
+                    <p className="text-xs text-amber-800/80 dark:text-amber-200/80 mt-1.5 leading-relaxed">{w.note}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <p className="text-xs text-gray-500 text-center pt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center pt-2">
               Calculated for your saved birth location — update it on your Profile page if you&apos;ve relocated.
             </p>
           </div>

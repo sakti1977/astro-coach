@@ -689,27 +689,27 @@ export default function ChatInterface({ chart, dashas }: Props) {
       {/* Context bar. The chat column is max-w-3xl, which is too narrow for
           every control on one line — a shrinking rounded-full button collapses
           into a circle and clips "Lagna" / "How we work". */}
-      <div className="flex flex-col gap-2 p-3 border-b border-gray-100 bg-gray-50 text-sm">
+      <div className="flex flex-col gap-2 p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-sm">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
           <span className="text-xl shrink-0">{currentMahaMeta?.symbol ?? "●"}</span>
-          <span className="text-gray-600 min-w-0">
-            <span className="font-medium text-gray-900">{dashas.current_maha}</span> Maha ·{" "}
-            <span className="font-medium text-gray-900">{dashas.current_antar}</span> Antar
+          <span className="text-gray-600 dark:text-gray-400 min-w-0">
+            <span className="font-medium text-gray-900 dark:text-gray-100">{dashas.current_maha}</span> Maha ·{" "}
+            <span className="font-medium text-gray-900 dark:text-gray-100">{dashas.current_antar}</span> Antar
           </span>
-          <span className="ml-auto shrink-0 whitespace-nowrap text-xs text-gray-500">
+          <span className="ml-auto shrink-0 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
             Lagna: {SIGN_NAMES[chart.ascendant.sign_num]}
           </span>
-          <Link href="/trust" className="shrink-0 whitespace-nowrap text-xs text-gray-500 hover:text-gray-600 underline decoration-dotted underline-offset-2" title="How we calculate your chart, and why we never upsell remedies">
+          <Link href="/trust" className="shrink-0 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-400 underline decoration-dotted underline-offset-2" title="How we calculate your chart, and why we never upsell remedies">
             How we work
           </Link>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-gray-500">
+        <div className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
           {/* New Topic */}
           <button
             type="button"
             onClick={requestNewTopic}
             disabled={streaming}
-            className="disabled:opacity-40 inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+            className="disabled:opacity-40 inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors"
             title="Start a new topic (your chart and profile stay; a delivered plan is saved under Earlier plans)"
           >
             <RotateCcw className="w-3 h-3" /> New Topic
@@ -720,7 +720,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
               type="button"
               onClick={proposePlanHabits}
               disabled={planHabitsLoading || streaming}
-              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors disabled:opacity-50"
               title="Turn this plan's behavioral practices into tracked sadhana"
             >
               {planHabitsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />} Track this plan
@@ -731,7 +731,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
               type="button"
               onClick={() => send("Please give me my complete plan now, based on everything so far.", true)}
               disabled={streaming}
-              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 transition-colors disabled:opacity-40"
+              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors disabled:opacity-40"
               title="Skip ahead — get your complete plan now instead of continuing discovery"
             >
               <Zap className="w-3 h-3" /> Get My Plan Now
@@ -742,7 +742,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
             type="button"
             onClick={() => { setShowSettings((v) => !v); setShowMemory(false); }}
             aria-expanded={showSettings}
-            className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+            className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
             title="Remedies, voice and language"
           >
             <Settings2 className="w-3 h-3" /> Settings
@@ -750,7 +750,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           <button
             type="button"
             onClick={() => { setShowMemory((v) => !v); setShowSettings(false); setMemoryStatus(""); }}
-            className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+            className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
             title="See and delete what the coach has noted about you"
           >
             <Brain className="w-3 h-3" /> Memory ({observations.length})
@@ -759,8 +759,8 @@ export default function ChatInterface({ chart, dashas }: Props) {
             <span
               className={`inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
                 phase === "recommending"
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-amber-50 text-amber-700 border border-amber-200"
+                  ? "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
               }`}
               title={
                 planDelivered
@@ -783,10 +783,10 @@ export default function ChatInterface({ chart, dashas }: Props) {
       </div>
 
       {showSettings && (
-        <div className="px-4 py-4 border-b border-gray-100 bg-white">
+        <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Coach settings</p>
-            <button type="button" onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600" aria-label="Close settings">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Coach settings</p>
+            <button type="button" onClick={() => setShowSettings(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400" aria-label="Close settings">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -794,34 +794,34 @@ export default function ChatInterface({ chart, dashas }: Props) {
             value={{ includeReligiousSolutions, tonePreference, preferredLanguage }}
             onChange={updatePreferences}
           />
-          <p className="mt-3 text-[11px] text-gray-500">
+          <p className="mt-3 text-[11px] text-gray-500 dark:text-gray-400">
             Current: {includeReligiousSolutions ? "Vedic remedies on" : "Behavioral only"} · {tonePreference === "skeptic" ? "Plain language" : "Traditional voice"} · {SARVAM_LANGUAGES.find((l) => l.code === preferredLanguage)?.label ?? preferredLanguage}. Also on your Profile page.
           </p>
         </div>
       )}
 
       {showMemory && (
-        <div className="px-4 py-3 border-b border-gray-100 bg-white text-sm">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-sm">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">What the coach remembers about you</p>
-            <button type="button" onClick={() => setShowMemory(false)} className="text-gray-400 hover:text-gray-600" aria-label="Close memory">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">What the coach remembers about you</p>
+            <button type="button" onClick={() => setShowMemory(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400" aria-label="Close memory">
               <X className="w-4 h-4" />
             </button>
           </div>
           {observations.length === 0 ? (
-            <p className="text-xs text-gray-500">Nothing yet. Notes appear here as you share things in conversation.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Nothing yet. Notes appear here as you share things in conversation.</p>
           ) : (
             <>
               <ul className="max-h-48 overflow-y-auto space-y-1">
                 {observations.map((o) => (
-                  <li key={o.id} className="flex items-start gap-2 text-xs text-gray-700">
-                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] uppercase text-gray-500">{o.category}</span>
+                  <li key={o.id} className="flex items-start gap-2 text-xs text-gray-700 dark:text-gray-300">
+                    <span className="shrink-0 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] uppercase text-gray-500 dark:text-gray-400">{o.category}</span>
                     <span className="flex-1 min-w-0">{o.text}</span>
                     <button
                       type="button"
                       onClick={() => forgetObservations([o.id])}
                       disabled={streaming}
-                      className="shrink-0 text-gray-400 hover:text-red-600 disabled:opacity-40"
+                      className="shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-40"
                       aria-label="Forget this note"
                       title="Forget this note"
                     >
@@ -834,25 +834,25 @@ export default function ChatInterface({ chart, dashas }: Props) {
                 type="button"
                 onClick={() => forgetObservations("all")}
                 disabled={streaming}
-                className="mt-2 text-xs font-medium text-red-600 hover:underline disabled:opacity-40"
+                className="mt-2 text-xs font-medium text-red-600 dark:text-red-400 hover:underline disabled:opacity-40"
               >
                 Forget all
               </button>
             </>
           )}
-          {memoryStatus && <p className="mt-1 text-xs text-gray-500">{memoryStatus}</p>}
+          {memoryStatus && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{memoryStatus}</p>}
         </div>
       )}
 
       {confirmingNewTopic && (
-        <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-amber-100 bg-amber-50 text-xs text-amber-800">
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-amber-100 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-200">
           <span className="flex-1 min-w-0">
             Start a new topic? This conversation will be cleared{planDelivered ? "; its plan is saved under Earlier plans" : ""}.
           </span>
           <button type="button" onClick={startNewTopic} className="px-2.5 py-1 rounded-full bg-amber-600 text-white font-medium hover:bg-amber-700">
             Start new topic
           </button>
-          <button type="button" onClick={() => setConfirmingNewTopic(false)} className="px-2.5 py-1 rounded-full border border-amber-200 font-medium hover:bg-amber-100">
+          <button type="button" onClick={() => setConfirmingNewTopic(false)} className="px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-800 font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40">
             Cancel
           </button>
         </div>
@@ -863,7 +863,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
         {messages.length === 0 && (
           <div className="text-center py-12">
             <Sparkles className="w-9 h-9 mb-3 mx-auto text-indigo-300" />
-            <p className="text-gray-500 text-sm max-w-xs mx-auto">
+            <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">
               Your personal Vedic astrology coach is ready. Ask anything about your chart, current period, goals, or life direction.
             </p>
             <div className="mt-4 flex flex-wrap gap-2 justify-center">
@@ -871,7 +871,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
                 <button
                   key={s}
                   onClick={() => setInput(s)}
-                  className="text-xs border border-gray-200 rounded-full px-3 py-1.5 text-gray-600 hover:bg-gray-50"
+                  className="text-xs border border-gray-200 dark:border-gray-700 rounded-full px-3 py-1.5 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                 >
                   {s}
                 </button>
@@ -879,15 +879,15 @@ export default function ChatInterface({ chart, dashas }: Props) {
             </div>
             {pastTopics.length > 0 && (
               <div className="mt-8 max-w-xl mx-auto text-left">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Earlier plans</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Earlier plans</p>
                 <div className="space-y-2">
                   {pastTopics.map((t) => (
-                    <details key={t.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
-                      <summary className="cursor-pointer text-sm text-gray-700">
+                    <details key={t.id} className="rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-3 py-2">
+                      <summary className="cursor-pointer text-sm text-gray-700 dark:text-gray-300">
                         {t.title}
-                        <span className="ml-2 text-xs text-gray-500">{new Date(t.endedAt).toLocaleDateString()}</span>
+                        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{new Date(t.endedAt).toLocaleDateString()}</span>
                       </summary>
-                      <div className="chat-markdown mt-2 text-sm leading-relaxed text-gray-800">
+                      <div className="chat-markdown mt-2 text-sm leading-relaxed text-gray-800 dark:text-gray-200">
                         <ReactMarkdown>{t.plan}</ReactMarkdown>
                       </div>
                     </details>
@@ -904,11 +904,11 @@ export default function ChatInterface({ chart, dashas }: Props) {
               className={`max-w-[85%] rounded-2xl px-4 py-3 text-base leading-relaxed ${
                 msg.role === "user"
                   ? "bg-indigo-600 text-white rounded-br-sm"
-                  : "bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm"
+                  : "bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm shadow-sm"
               }`}
             >
               {msg.role === "assistant" && msg.content === "" ? (
-                <span className="inline-flex items-center gap-1.5 text-gray-500">
+                <span className="inline-flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
                   <svg className="w-3 h-3 animate-spin text-indigo-400" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -925,7 +925,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
                       type="button"
                       onClick={() => toggleListen(i, msg.displayContent ?? msg.content)}
                       disabled={loadingAudioIndex === i}
-                      className="text-xs text-indigo-500 hover:text-indigo-700 disabled:opacity-50 inline-flex items-center gap-1"
+                      className="text-xs text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50 inline-flex items-center gap-1"
                       title="Hear this reply spoken aloud"
                     >
                       {loadingAudioIndex === i ? (
@@ -944,7 +944,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
                           onClick={() => rateMessage(msg, msg.feedback === "up" ? null : "up")}
                           aria-label="Helpful"
                           aria-pressed={msg.feedback === "up"}
-                          className={`p-1 rounded-md transition-colors ${msg.feedback === "up" ? "text-emerald-600 bg-emerald-50" : "text-gray-400 hover:text-gray-600"}`}
+                          className={`p-1 rounded-md transition-colors ${msg.feedback === "up" ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"}`}
                         >
                           <ThumbsUp className="w-3.5 h-3.5" />
                         </button>
@@ -953,14 +953,14 @@ export default function ChatInterface({ chart, dashas }: Props) {
                           onClick={() => rateMessage(msg, msg.feedback === "down" ? null : "down")}
                           aria-label="Not helpful"
                           aria-pressed={msg.feedback === "down"}
-                          className={`p-1 rounded-md transition-colors ${msg.feedback === "down" ? "text-rose-600 bg-rose-50" : "text-gray-400 hover:text-gray-600"}`}
+                          className={`p-1 rounded-md transition-colors ${msg.feedback === "down" ? "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400"}`}
                         >
                           <ThumbsDown className="w-3.5 h-3.5" />
                         </button>
                       </span>
                     )}
                     {feedbackNote?.ts === msg.timestamp && (
-                      <span className="text-[11px] text-gray-500">{feedbackNote.text}</span>
+                      <span className="text-[11px] text-gray-500 dark:text-gray-400">{feedbackNote.text}</span>
                     )}
                   </div>
                   {reasonPickerFor === msg.timestamp && msg.feedback === "down" && (
@@ -970,7 +970,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
                           key={r.id}
                           type="button"
                           onClick={() => rateMessage(msg, "down", r.id)}
-                          className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
+                          className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                         >
                           {r.label}
                         </button>
@@ -993,23 +993,23 @@ export default function ChatInterface({ chart, dashas }: Props) {
           />
         )}
         {(planHabits || planHabitsError) && (
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+          <div className="rounded-2xl border border-emerald-100 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-950/40 p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Practices from this plan</p>
-              <button type="button" onClick={() => { setPlanHabits(null); setPlanHabitsError(""); }} className="text-xs text-emerald-700 hover:underline">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-200">Practices from this plan</p>
+              <button type="button" onClick={() => { setPlanHabits(null); setPlanHabitsError(""); }} className="text-xs text-emerald-700 dark:text-emerald-300 hover:underline">
                 Close
               </button>
             </div>
-            {planHabitsError && <p className="text-sm text-red-600">{planHabitsError}</p>}
+            {planHabitsError && <p className="text-sm text-red-600 dark:text-red-400">{planHabitsError}</p>}
             {planHabits && (
               <ul className="space-y-2">
                 {planHabits.map((h) => {
                   const added = addedHabits.includes(h.habit);
                   return (
-                    <li key={h.habit} className="flex items-start gap-3 rounded-xl bg-white border border-emerald-100 px-3 py-2">
+                    <li key={h.habit} className="flex items-start gap-3 rounded-xl bg-white dark:bg-gray-900 border border-emerald-100 dark:border-emerald-900/60 px-3 py-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">{h.habit}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-sm text-gray-900 dark:text-gray-100">{h.habit}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                           {h.frequency} · {PLANET_META[h.planet as PlanetKey]?.label ?? h.planet}{h.why ? ` · ${h.why}` : ""}
                         </p>
                       </div>
@@ -1017,7 +1017,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
                         type="button"
                         onClick={() => addPlanHabit(h)}
                         disabled={added}
-                        className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium border border-emerald-200 text-emerald-700 hover:bg-emerald-100 disabled:bg-emerald-600 disabled:text-white disabled:border-emerald-600"
+                        className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 disabled:bg-emerald-600 disabled:text-white disabled:border-emerald-600"
                       >
                         {added ? "Added" : "Add"}
                       </button>
@@ -1027,7 +1027,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
               </ul>
             )}
             {addedHabits.length > 0 && (
-              <Link href="/habits" className="mt-3 inline-block text-xs font-medium text-emerald-700 hover:underline">
+              <Link href="/habits" className="mt-3 inline-block text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:underline">
                 Open Sadhana tracker →
               </Link>
             )}
@@ -1037,16 +1037,16 @@ export default function ChatInterface({ chart, dashas }: Props) {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t border-gray-100 dark:border-gray-800">
         {chatError && (
-          <div role="alert" className="mb-2 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
+          <div role="alert" className="mb-2 flex items-center gap-2 rounded-xl border border-red-100 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs text-red-700 dark:text-red-300">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span className="flex-1 min-w-0">{chatError}</span>
             <button
               type="button"
               onClick={retryLast}
               disabled={streaming}
-              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-white px-2 py-0.5 font-medium hover:bg-red-100 disabled:opacity-40"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 dark:border-red-800 bg-white dark:bg-gray-900 px-2 py-0.5 font-medium hover:bg-red-100 dark:hover:bg-red-900/40 disabled:opacity-40"
             >
               <RefreshCw className="w-3 h-3" /> Retry
             </button>
@@ -1060,8 +1060,8 @@ export default function ChatInterface({ chart, dashas }: Props) {
             title={recording ? "Stop recording" : "Speak your message"}
             className={`rounded-xl px-3 py-2.5 text-sm font-medium border transition-colors disabled:opacity-50 ${
               recording
-                ? "bg-red-50 border-red-200 text-red-600 animate-pulse"
-                : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                ? "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 animate-pulse"
+                : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50"
             }`}
           >
             {transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -1081,16 +1081,17 @@ export default function ChatInterface({ chart, dashas }: Props) {
                 send();
               }
             }}
-            placeholder={phase === "recommending" ? "Ask a follow-up… (Shift+Enter for a new line)" : "Tell me what's going on… (Shift+Enter for a new line)"}
+            placeholder={phase === "recommending" ? "Ask a follow-up…" : "Tell me what's going on…"}
+            title="Enter to send · Shift+Enter for a new line"
             disabled={streaming}
-            className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+            className="flex-1 resize-none border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-base text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
           />
           {streaming ? (
             <button
               type="button"
               onClick={stopStreaming}
               title="Stop generating"
-              className="inline-flex items-center gap-1 border border-gray-200 text-gray-700 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center gap-1 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
             >
               <Square className="w-3.5 h-3.5" /> Stop
             </button>
@@ -1098,14 +1099,14 @@ export default function ChatInterface({ chart, dashas }: Props) {
             <button
               onClick={() => send()}
               disabled={!input.trim()}
-              className="bg-indigo-600 text-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-40 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
+              className="bg-indigo-600 text-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-40 hover:bg-indigo-700 shadow-sm shadow-indigo-200 dark:shadow-black/30 transition-colors"
             >
               Send
             </button>
           )}
         </div>
         {voiceError && (
-          <p className="text-xs text-red-500 text-center mt-1.5">{voiceError}</p>
+          <p className="text-xs text-red-500 dark:text-red-400 text-center mt-1.5">{voiceError}</p>
         )}
         <AdviceDisclaimer className="mt-2" />
       </div>
