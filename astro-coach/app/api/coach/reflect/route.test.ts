@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { runReflection, type ReflectInput } from "./route";
-import { OBS_CAP, OBS_SUMMARISE_EVERY } from "@/lib/constants";
+import { OBS_CAP, OBS_SUMMARISE_AT } from "@/lib/constants";
 import type { CoachingObservation } from "@/lib/profile";
 
 // This is the "new convention needed for orchestration logic" flagged in the
@@ -46,15 +46,16 @@ describe("runReflection", () => {
     expect(result.finalObservations.map((o) => o.text)).toContain("avoids exam prep when anxious");
   });
 
-  it("invokes the summarisation agent exactly at the OBS_SUMMARISE_EVERY boundary and adopts its output", async () => {
-    const extract = vi.fn().mockResolvedValue(extractionJson([], false));
+  it("invokes the summarisation agent once OBS_SUMMARISE_AT observations have accumulated and adopts its output", async () => {
+    const extract = vi.fn().mockResolvedValue(extractionJson([{ text: "the one that tips it over", category: "goal" }], false));
     const summarise = vi.fn().mockResolvedValue(
       JSON.stringify({ summaryObservations: [{ text: "consolidated: exam anxiety pattern", category: "pattern" }] })
     );
 
-    const existing = Array.from({ length: 5 }, (_, i) => obs(`note ${i}`));
+    // Exchange count is irrelevant: it resets on every New Topic.
+    const existing = Array.from({ length: OBS_SUMMARISE_AT - 1 }, (_, i) => obs(`note ${i}`));
     const result = await runReflection(
-      baseInput({ exchangeCount: OBS_SUMMARISE_EVERY, existingObservations: existing }),
+      baseInput({ exchangeCount: 2, existingObservations: existing }),
       { extract, summarise }
     );
 
@@ -65,12 +66,12 @@ describe("runReflection", () => {
     expect(result.finalObservations[0].text).toBe("consolidated: exam anxiety pattern");
   });
 
-  it("does not summarise when the exchange count is a multiple of the threshold but there are no observations yet", async () => {
+  it("does not summarise below the observation threshold, however many exchanges have passed", async () => {
     const extract = vi.fn().mockResolvedValue(extractionJson([], false));
     const summarise = vi.fn();
 
     const result = await runReflection(
-      baseInput({ exchangeCount: OBS_SUMMARISE_EVERY, existingObservations: [] }),
+      baseInput({ exchangeCount: 100, existingObservations: [obs("only note")] }),
       { extract, summarise }
     );
 
@@ -96,15 +97,15 @@ describe("runReflection", () => {
     const extract = vi.fn().mockResolvedValue(extractionJson([{ text: "new note", category: "goal" }], false));
     const summarise = vi.fn().mockRejectedValue(new Error("upstream 500"));
 
-    const existing = [obs("prior note")];
+    const existing = Array.from({ length: OBS_SUMMARISE_AT - 1 }, (_, i) => obs(`note ${i}`));
     const result = await runReflection(
-      baseInput({ exchangeCount: OBS_SUMMARISE_EVERY, existingObservations: existing }),
+      baseInput({ existingObservations: existing }),
       { extract, summarise }
     );
 
     expect(result.degraded).toBe(true);
     expect(result.summarised).toBe(false);
-    expect(result.finalObservations.map((o) => o.text)).toEqual(["prior note", "new note"]);
+    expect(result.finalObservations.map((o) => o.text)).toEqual([...existing.map((o) => o.text), "new note"]);
   });
 
   it("trims the merged observation list to OBS_CAP, keeping the most recent entries", async () => {

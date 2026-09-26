@@ -128,6 +128,10 @@ _Verified against code as of commit `1fc5f00`. See git history for anything afte
 - The system shall let the user skip discovery entirely via a "Get My Plan Now" action.
 - WHERE the user has enabled Vedic Remedies mode, ritual remedies shall be included alongside behavioral guidance; WHERE disabled, only behavioral guidance shall be shown — never gemstones/mantras/fasting in that mode.
 - The system shall never invent a remedy, placement, or life detail not present in the chart data or the conversation (G1, G2).
+- The server shall derive every piece of chart context itself (natal chart, dashas including the current Pratyantardasha, transits, D9/D10/D7/D30 placements, and computed lordship/dignity/drishti/conjunction/parivartana facts); client-supplied chart, transit or varga text is not accepted. The coaching request body is schema-validated and bounded (`lib/coach-request.ts`).
+- Replies shall stream as they are written. IF a draft fails the output guard (ungrounded or fatalistic) THEN the system shall retry once with a corrective note, and only fall back to the fixed grounding message if the retry also fails; a fatalistic draft is withdrawn from the screen as soon as it is detected. Only a normal, grounded reply advances the coaching phase or counts as the delivered plan.
+- IF the user's latest message signals self-harm or suicidal intent THEN the system shall skip the chart reading entirely and reply with a fixed, non-astrological message pointing to Tele-MANAS (14416) and emergency services (112) (`lib/coach-safety.ts`). This is a safety referral, not a second advice pathway (G4).
+- WHEN the user starts a New Topic, the system shall ask for confirmation and keep the delivered plan under "Earlier plans" (last 5); follow-ups on a topic shall carry the delivered plan so it survives the message window.
 
 ### 4.7 Habits, Goals, Auth/Sync, Notifications, Platform
 - Unchanged from prior verification — see `NON_NEGOTIABLES.md` #1, #6, #7, #8 for the trust/security invariants covering these areas (cloud sync integrity, rate limiting, input validation, secrets hygiene).

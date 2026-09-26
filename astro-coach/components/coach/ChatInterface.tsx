@@ -3,21 +3,24 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square } from "lucide-react";
-import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits } from "@/lib/profile";
+import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square, RefreshCw, AlertCircle } from "lucide-react";
+import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits, PastCoachingTopic } from "@/lib/profile";
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile } from "@/lib/profile";
 import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
-import { buildTransitContext } from "@/lib/astrology/prompts";
 import { SARVAM_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "@/lib/languages";
+import { createCoachStreamParser, type CoachTurnOutcome } from "@/lib/coach-stream";
 import AdviceDisclaimer from "@/components/AdviceDisclaimer";
 import {
   CHAT_HISTORY_DISPLAY,
   CHAT_WINDOW_API,
   EXTRACT_MIN_USER_CHARS,
   EXTRACT_MIN_ASST_CHARS,
+  MAX_PAST_TOPICS,
   TRANSIT_TTL_MS,
 } from "@/lib/constants";
+
+const MAX_RECORDING_MS = 2 * 60 * 1000;
 
 async function translateViaApi(text: string, sourceLanguageCode: string, targetLanguageCode: string): Promise<string> {
   if (!text.trim() || sourceLanguageCode === targetLanguageCode) return text;
@@ -54,14 +57,24 @@ export default function ChatInterface({ chart, dashas }: Props) {
   );
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [transitContext, setTransitContext] = useState<string>("");
+  const [chatError, setChatError] = useState("");
+  const [confirmingNewTopic, setConfirmingNewTopic] = useState(false);
+  const [pastTopics, setPastTopics] = useState<PastCoachingTopic[]>(profile.coaching.pastTopics ?? []);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [voiceError, setVoiceError] = useState("");
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const [loadingAudioIndex, setLoadingAudioIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  // Latest observations, readable from async callbacks without a stale closure.
+  const observationsRef = useRef<CoachingObservation[]>([]);
+  // The in-flight post-turn reflection. The next turn waits for it so it is
+  // sent with the phase and observations that reflection decided on.
+  const reflectionRef = useRef<Promise<void> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastRequestRef = useRef<{ text: string; forcePlanNow: boolean } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
@@ -76,12 +89,18 @@ export default function ChatInterface({ chart, dashas }: Props) {
     });
   }
 
+  function setObservationList(list: CoachingObservation[]) {
+    observationsRef.current = list;
+    setObservations(list);
+  }
+
   // Load observations from IndexedDB on mount
   useEffect(() => {
-    storage.getObservations().then(setObservations);
+    storage.getObservations().then(setObservationList);
   }, []);
 
-  // Fetch or restore cached transits (2hr TTL)
+  // Keep the cached transits fresh for the home-page daily note. The coach
+  // itself no longer uses this copy: /api/coach computes transits server-side.
   useEffect(() => {
     async function loadTransits() {
       const p = getProfile();
@@ -90,7 +109,6 @@ export default function ChatInterface({ chart, dashas }: Props) {
       const tzStr = p.birthData?.timezone ?? "UTC";
 
       if (cached && cached.tzStr === tzStr && Date.now() - new Date(cached.cachedAt).getTime() < TRANSIT_TTL_MS) {
-        setTransitContext(buildTransitContext(cached.data));
         return;
       }
 
@@ -109,9 +127,8 @@ export default function ChatInterface({ chart, dashas }: Props) {
         const fresh: CachedTransits = { data, cachedAt: new Date().toISOString(), tzStr };
         const current = getProfile();
         saveProfile({ ...current, cachedTransits: fresh });
-        setTransitContext(buildTransitContext(data));
       } catch {
-        // Non-critical — coaching works without transit context
+        // Non-critical — only feeds the home-page note
       }
     }
     loadTransits();
@@ -149,12 +166,30 @@ export default function ChatInterface({ chart, dashas }: Props) {
   }
 
   function startNewTopic() {
-    // Reset conversation state — keep chart, profile, and observations (accumulated context)
+    // Reset conversation state — keep chart, profile, and observations (accumulated
+    // context). A delivered plan is archived first so it isn't lost with the chat.
+    setConfirmingNewTopic(false);
+    setChatError("");
+    const current = getProfile();
+    const plan = current.coaching.deliveredPlan?.trim();
+    const firstQuestion = current.chatHistory.find((m) => m.role === "user");
+    const archived: PastCoachingTopic[] = plan
+      ? [
+          {
+            id: crypto.randomUUID(),
+            endedAt: new Date().toISOString(),
+            title: (firstQuestion?.displayContent ?? firstQuestion?.content ?? "Earlier topic").slice(0, 120),
+            plan,
+          },
+          ...(current.coaching.pastTopics ?? []),
+        ].slice(0, MAX_PAST_TOPICS)
+      : (current.coaching.pastTopics ?? []);
+
     setMessages([]);
     setPhase("gathering");
     setExchangeCount(0);
     setPlanDelivered(false);
-    const current = getProfile();
+    setPastTopics(archived);
     saveProfile({
       ...current,
       chatHistory: [],
@@ -163,10 +198,20 @@ export default function ChatInterface({ chart, dashas }: Props) {
         phase: "gathering",
         exchangeCount: 0,
         planDelivered: false,
+        deliveredPlan: undefined,
+        pastTopics: archived,
         lastUpdated: new Date().toISOString(),
       },
     });
     setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
+  function requestNewTopic() {
+    if (messages.length === 0) {
+      startNewTopic();
+      return;
+    }
+    setConfirmingNewTopic(true);
   }
 
   async function toggleRecording() {
@@ -187,6 +232,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
       };
 
       recorder.onstop = async () => {
+        if (recordingTimerRef.current) clearTimeout(recordingTimerRef.current);
         stream.getTracks().forEach((t) => t.stop());
         setRecording(false);
         setTranscribing(true);
@@ -216,6 +262,10 @@ export default function ChatInterface({ chart, dashas }: Props) {
       recorder.start();
       mediaRecorderRef.current = recorder;
       setRecording(true);
+      // Cap the clip so a forgotten mic doesn't record (and upload) indefinitely.
+      recordingTimerRef.current = setTimeout(() => {
+        if (recorder.state === "recording") recorder.stop();
+      }, MAX_RECORDING_MS);
     } catch {
       setVoiceError("Microphone access denied or unavailable");
     }
@@ -276,21 +326,50 @@ export default function ChatInterface({ chart, dashas }: Props) {
     }
   }
 
+  /** Record a completed turn: exchange count, phase, and whether the plan is out. */
+  function commitTurn(
+    count: number,
+    requestPhase: CoachingPhase,
+    requestPlanDelivered: boolean,
+    shouldTransition: boolean
+  ) {
+    // Hard fallback: force recommending at exchange 3 if extraction hasn't fired.
+    // Once a turn has actually run in "recommending" phase, planDelivered flips
+    // true — the NEXT turn is a follow-up, not another full plan delivery.
+    const newPhase: CoachingPhase =
+      requestPhase === "recommending" || shouldTransition || count >= 3 ? "recommending" : "gathering";
+    const newPlanDelivered = requestPhase === "recommending" ? true : requestPlanDelivered;
+    const current = getProfile();
+    saveProfile({
+      ...current,
+      coaching: {
+        ...current.coaching,
+        exchangeCount: count,
+        phase: newPhase,
+        planDelivered: newPlanDelivered,
+        lastUpdated: new Date().toISOString(),
+      },
+    });
+    setPhase(newPhase);
+    setPlanDelivered(newPlanDelivered);
+    setExchangeCount(count);
+  }
+
   /**
    * Post-turn reflection: hands the exchange to the server-side orchestrator
-   * (app/api/coach/reflect), which coordinates the extraction and (every
-   * OBS_SUMMARISE_EVERY exchanges) summarisation agents and returns the
-   * observation list this client should persist as-is. Replaces the old
-   * client-driven extract-then-fire-and-forget-summarise chain — failures
-   * are now logged instead of silently swallowed (see CODE_REVIEW.md).
+   * (app/api/coach/reflect), which coordinates the extraction and (once
+   * OBS_SUMMARISE_AT observations have built up) summarisation agents and
+   * returns the observation list this client should persist as-is. The turn
+   * is always counted, even when reflection fails, so the phase cap still holds.
    */
-  async function extractAndSave(
+  async function reflectAndCommit(
     userMessage: string,
     assistantResponse: string,
-    currentExchangeCount: number,
+    count: number,
     requestPhase: CoachingPhase,
     requestPlanDelivered: boolean
   ) {
+    let shouldTransition = false;
     try {
       const res = await fetch("/api/coach/reflect", {
         method: "POST",
@@ -298,179 +377,159 @@ export default function ChatInterface({ chart, dashas }: Props) {
         body: JSON.stringify({
           userMessage,
           assistantResponse,
-          exchangeCount: currentExchangeCount,
-          existingObservations: observations,
+          exchangeCount: count,
+          existingObservations: observationsRef.current,
         }),
       });
       if (!res.ok) {
         console.error(`[coach/reflect] request failed with status ${res.status}`);
-        return;
+      } else {
+        const result = (await res.json()) as {
+          finalObservations: CoachingObservation[];
+          shouldTransitionToRecommending: boolean;
+          degraded: boolean;
+          error?: string;
+        };
+        if (result.degraded) {
+          console.error(`[coach/reflect] degraded: ${result.error ?? "unknown failure"}`);
+        }
+        await storage.clearObservations();
+        for (const o of result.finalObservations) await storage.addObservation(o);
+        setObservationList(result.finalObservations);
+        shouldTransition = result.shouldTransitionToRecommending;
       }
-
-      const result = (await res.json()) as {
-        finalObservations: CoachingObservation[];
-        shouldTransitionToRecommending: boolean;
-        degraded: boolean;
-        error?: string;
-      };
-
-      if (result.degraded) {
-        console.error(`[coach/reflect] degraded: ${result.error ?? "unknown failure"}`);
-      }
-
-      await storage.clearObservations();
-      for (const o of result.finalObservations) await storage.addObservation(o);
-      setObservations(result.finalObservations);
-
-      // Update phase + exchange count in profile (localStorage)
-      // Hard fallback: force recommending at exchange 3 if extraction hasn't fired.
-      // Once a turn has actually run in "recommending" phase, planDelivered flips
-      // true — the NEXT turn is a follow-up, not another full plan delivery.
-      const newPhase: CoachingPhase =
-        requestPhase === "recommending" || result.shouldTransitionToRecommending || currentExchangeCount >= 3
-          ? "recommending"
-          : "gathering";
-      const newPlanDelivered = requestPhase === "recommending" ? true : requestPlanDelivered;
-      const current = getProfile();
-      saveProfile({
-        ...current,
-        coaching: {
-          ...current.coaching,
-          exchangeCount: currentExchangeCount,
-          phase: newPhase,
-          planDelivered: newPlanDelivered,
-          lastUpdated: new Date().toISOString(),
-        },
-      });
-
-      setPhase(newPhase);
-      setPlanDelivered(newPlanDelivered);
-      setExchangeCount(currentExchangeCount);
     } catch (e: unknown) {
       console.error(`[coach/reflect] ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      commitTurn(count, requestPhase, requestPlanDelivered, shouldTransition);
     }
   }
 
-  // overrideText/forcePlanNow power the "Get my plan now" button — it bypasses
-  // the textbox entirely and forces this one turn to be treated as the (still
-  // ungrounded-in-nothing-new) plan-delivery turn, skipping remaining discovery.
-  async function send(overrideText?: string, forcePlanNow?: boolean) {
+  function friendlyCoachError(status: number, serverMessage?: string): string {
+    if (status === 429) return "You're sending messages quickly. Wait a moment, then try again.";
+    if (status === 401) return "Your session has expired. Please sign in again to continue.";
+    return serverMessage || "The coach couldn't respond just now. Please try again.";
+  }
+
+  function stopStreaming() {
+    abortRef.current?.abort();
+  }
+
+  // forcePlanNow powers the "Get my plan now" button — it bypasses the textbox
+  // entirely and forces this one turn to be treated as the plan-delivery turn,
+  // skipping remaining discovery. `retry` re-sends the last user message after a
+  // failed turn without adding it to the conversation a second time.
+  async function send(overrideText?: string, forcePlanNow?: boolean, retry = false) {
     const rawInput = (overrideText ?? input).trim();
     if (!rawInput || streaming) return;
     const isNonEnglish = preferredLanguage !== DEFAULT_LANGUAGE_CODE;
-
-    // Optimistic bubble shows the user's own words immediately; `content`
-    // (the canonical English text sent to Claude) is filled in just below.
-    const userMsg: ChatMessage = {
-      role: "user",
-      content: rawInput,
-      displayContent: isNonEnglish ? rawInput : undefined,
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    if (overrideText === undefined) setInput("");
+    setChatError("");
     setStreaming(true);
+    lastRequestRef.current = { text: rawInput, forcePlanNow: !!forcePlanNow };
 
-    // Phase/planDelivered actually used for THIS request — read explicitly
-    // rather than from the `phase`/`planDelivered` state closures, since a
-    // forced call can happen in the same tick as the state update that set
-    // them, before this component has re-rendered with the new values.
-    const requestPhase: CoachingPhase = forcePlanNow ? "recommending" : phase;
-    const requestPlanDelivered = forcePlanNow ? false : planDelivered;
-
-    if (isNonEnglish) {
-      try {
-        userMsg.content = await translateViaApi(rawInput, preferredLanguage, DEFAULT_LANGUAGE_CODE);
-      } catch {
-        // Claude often understands common Indian languages directly — degrade gracefully
+    let baseMessages = messages;
+    if (!retry) {
+      // Optimistic bubble shows the user's own words immediately; `content`
+      // (the canonical English text sent to Claude) is filled in just below.
+      const userMsg: ChatMessage = {
+        role: "user",
+        content: rawInput,
+        displayContent: isNonEnglish ? rawInput : undefined,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      if (overrideText === undefined) setInput("");
+      if (isNonEnglish) {
+        try {
+          userMsg.content = await translateViaApi(rawInput, preferredLanguage, DEFAULT_LANGUAGE_CODE);
+        } catch {
+          // Claude often understands common Indian languages directly — degrade gracefully
+        }
       }
+      addChatMessage(userMsg);
+      baseMessages = [...messages, userMsg];
     }
+    const lastUser = [...baseMessages].reverse().find((m) => m.role === "user");
+    const capturedInput = lastUser?.content ?? rawInput;
 
-    const newMessages = [...messages, userMsg];
-    addChatMessage(userMsg);
-    const capturedInput = userMsg.content;
+    // Let the previous turn's reflection land first, so this request carries
+    // the phase and observations it decided on rather than stale ones.
+    if (reflectionRef.current) await reflectionRef.current;
 
-    const assistantMsg: ChatMessage = {
-      role: "assistant",
-      content: "",
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, assistantMsg]);
+    const currentProfile = getProfile();
+    const requestPhase: CoachingPhase = forcePlanNow ? "recommending" : (currentProfile.coaching.phase ?? "gathering");
+    const requestPlanDelivered = forcePlanNow ? false : (currentProfile.coaching.planDelivered ?? false);
+    const isPlanTurn = requestPhase === "recommending" && !requestPlanDelivered;
+
+    setMessages((prev) => [...prev, { role: "assistant", content: "", timestamp: new Date().toISOString() }]);
+    const showAssistant = (text: string) =>
+      setMessages((prev) => {
+        const copy = [...prev];
+        copy[copy.length - 1] = { ...copy[copy.length - 1], content: text };
+        return copy;
+      });
+    const dropAssistant = () => setMessages((prev) => prev.slice(0, -1));
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let accumulated = "";
+    let outcome: CoachTurnOutcome | null = null;
 
     try {
-      const currentProfile = getProfile();
-
-      const d9AscNum = chart.ascendant.d9_sign_num;
-      const d10AscNum = chart.ascendant.d10_sign_num;
-      const vargaContext = [
-        d9AscNum != null ? `D9 Navamsa Ascendant: ${SIGN_NAMES[d9AscNum]} (soul & relationship nature)` : null,
-        d10AscNum != null ? `D10 Dashamsha Ascendant: ${SIGN_NAMES[d10AscNum]} (career & public life)` : null,
-        d9AscNum != null && chart.planets.venus
-          ? `Venus in D9: ${SIGN_NAMES[chart.planets.venus.d9_sign_num ?? chart.planets.venus.sign_num]} (partner qualities)`
-          : null,
-        d10AscNum != null && chart.planets.sun
-          ? `Sun in D10: ${SIGN_NAMES[chart.planets.sun.d10_sign_num ?? chart.planets.sun.sign_num]} H${(((chart.planets.sun.d10_sign_num ?? chart.planets.sun.sign_num) - d10AscNum + 12) % 12) + 1} (professional identity)`
-          : null,
-        d10AscNum != null && chart.planets.saturn
-          ? `Saturn in D10: ${SIGN_NAMES[chart.planets.saturn.d10_sign_num ?? chart.planets.saturn.sign_num]} (career discipline & obstacles)`
-          : null,
-      ]
-        .filter(Boolean)
-        .join("\n");
-
       const res = await fetch("/api/coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           birthData: currentProfile.birthData,
-          chart,
-          dashas,
           goals: currentProfile.goals.map((g) => g.description),
           habits: currentProfile.habits,
           // Observations injected here — survive regardless of message window truncation
-          profileContext: buildCoachingContext(currentProfile, observations),
-          vargaContext,
+          profileContext: buildCoachingContext(currentProfile, observationsRef.current),
+          deliveredPlan: requestPlanDelivered ? currentProfile.coaching.deliveredPlan : undefined,
           phase: requestPhase,
           planDelivered: requestPlanDelivered,
           includeReligiousSolutions,
           tonePreference,
-          transitContext: transitContext || undefined,
           messages: (() => {
-            const window = newMessages.slice(-CHAT_WINDOW_API).map((m) => ({ role: m.role, content: m.content }));
+            const window = baseMessages
+              .filter((m) => m.content.trim())
+              .slice(-CHAT_WINDOW_API)
+              .map((m) => ({ role: m.role, content: m.content }));
             const firstUser = window.findIndex((m) => m.role === "user");
             return firstUser > 0 ? window.slice(firstUser) : window;
           })(),
         }),
       });
 
-      if (!res.body) throw new Error("No response body");
+      if (!res.ok || !res.body) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(friendlyCoachError(res.status, typeof body.error === "string" ? body.error : undefined));
+      }
+
+      const parser = createCoachStreamParser();
+      let serverError = "";
+      const apply = (events: ReturnType<typeof parser.push>) => {
+        let changed = false;
+        for (const event of events) {
+          if (event.type === "text") { accumulated += event.text; changed = true; }
+          else if (event.type === "replace") { accumulated = event.text; changed = true; }
+          else if (event.type === "error") serverError = event.error;
+          else outcome = event.outcome;
+        }
+        if (changed) showAssistant(accumulated);
+      };
 
       const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const text = decoder.decode(value);
-        const lines = text.split("\n");
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6);
-          if (data === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.text) {
-              accumulated += parsed.text;
-              setMessages((prev) => {
-                const copy = [...prev];
-                copy[copy.length - 1] = { ...copy[copy.length - 1], content: accumulated };
-                return copy;
-              });
-            }
-          } catch {}
-        }
+        apply(parser.push(value));
       }
+      apply(parser.end());
+
+      if (serverError) throw new Error(serverError);
+      if (!accumulated.trim()) throw new Error("The coach didn't send a reply. Please try again.");
 
       const finalMsg: ChatMessage = {
         role: "assistant",
@@ -493,44 +552,58 @@ export default function ChatInterface({ chart, dashas }: Props) {
 
       addChatMessage(finalMsg);
 
-      // TOKEN-05: skip extraction for short exchanges — not enough signal
-      // But still count the exchange and apply the hard phase cap
-      const nextExchangeCount = exchangeCount + 1;
-      if (capturedInput.length >= EXTRACT_MIN_USER_CHARS && accumulated.length >= EXTRACT_MIN_ASST_CHARS) {
-        extractAndSave(capturedInput, accumulated, nextExchangeCount, requestPhase, requestPlanDelivered);
-      } else {
-        // Short exchange — update count and check hard cap without calling Claude
-        const newPhase: CoachingPhase =
-          requestPhase === "recommending" || nextExchangeCount >= 3 ? "recommending" : "gathering";
-        const newPlanDelivered = requestPhase === "recommending" ? true : requestPlanDelivered;
+      // Only a normal, grounded reply moves the conversation forward. A safety
+      // reply or a guard fallback is shown but is not "the plan", and an
+      // interrupted stream (no done event) doesn't count either.
+      if (outcome !== "ok") return;
+
+      if (isPlanTurn) {
         const current = getProfile();
-        saveProfile({
-          ...current,
-          coaching: {
-            ...current.coaching,
-            exchangeCount: nextExchangeCount,
-            phase: newPhase,
-            planDelivered: newPlanDelivered,
-            lastUpdated: new Date().toISOString(),
-          },
-        });
-        setPhase(newPhase);
-        setPlanDelivered(newPlanDelivered);
-        setExchangeCount(nextExchangeCount);
+        saveProfile({ ...current, coaching: { ...current.coaching, deliveredPlan: accumulated } });
       }
-    } catch {
-      const errMsg: ChatMessage = {
-        role: "assistant",
-        content:
-          "I encountered an issue connecting to the coaching service. Please check your API key and try again.",
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev.slice(0, -1), errMsg]);
+
+      const nextExchangeCount = (currentProfile.coaching.exchangeCount ?? exchangeCount) + 1;
+      // TOKEN-05: skip extraction for short exchanges — not enough signal
+      if (capturedInput.length >= EXTRACT_MIN_USER_CHARS && accumulated.length >= EXTRACT_MIN_ASST_CHARS) {
+        const pending = reflectAndCommit(capturedInput, accumulated, nextExchangeCount, requestPhase, requestPlanDelivered);
+        reflectionRef.current = pending.finally(() => {
+          if (reflectionRef.current === pending) reflectionRef.current = null;
+        });
+      } else {
+        commitTurn(nextExchangeCount, requestPhase, requestPlanDelivered, false);
+      }
+    } catch (e: unknown) {
+      if (controller.signal.aborted) {
+        // Stopped by the user: keep whatever was written, but it doesn't count as a turn.
+        if (accumulated.trim()) {
+          addChatMessage({ role: "assistant", content: accumulated, timestamp: new Date().toISOString() });
+        } else {
+          dropAssistant();
+        }
+      } else {
+        dropAssistant();
+        setChatError(e instanceof Error && e.message ? e.message : "The coach couldn't respond just now. Please try again.");
+      }
     } finally {
+      abortRef.current = null;
       setStreaming(false);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }
+
+  function retryLast() {
+    const last = lastRequestRef.current;
+    if (!last) return;
+    send(last.text, last.forcePlanNow, true);
+  }
+
+  const suggestions = [
+    `What does my ${dashas.current_antar} Antardasha mean for my work right now?`,
+    chart.doshas?.[0]
+      ? `How do I work with my ${chart.doshas[0].name}?`
+      : `What should I practise during my ${dashas.current_maha} Mahadasha?`,
+    "Where am I strongest, and how do I use it?",
+  ];
 
   const currentMahaMeta = PLANET_META[dashas.current_maha.toLowerCase() as PlanetKey];
 
@@ -557,9 +630,10 @@ export default function ChatInterface({ chart, dashas }: Props) {
           {/* New Topic */}
           <button
             type="button"
-            onClick={startNewTopic}
-            className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
-            title="Clear conversation and start a new topic (keeps your chart and profile)"
+            onClick={requestNewTopic}
+            disabled={streaming}
+            className="disabled:opacity-40 inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-500 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+            title="Start a new topic (your chart and profile stay; a delivered plan is saved under Earlier plans)"
           >
             <RotateCcw className="w-3 h-3" /> New Topic
           </button>
@@ -654,6 +728,20 @@ export default function ChatInterface({ chart, dashas }: Props) {
         </div>
       </div>
 
+      {confirmingNewTopic && (
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-amber-100 bg-amber-50 text-xs text-amber-800">
+          <span className="flex-1 min-w-0">
+            Start a new topic? This conversation will be cleared{planDelivered ? "; its plan is saved under Earlier plans" : ""}.
+          </span>
+          <button type="button" onClick={startNewTopic} className="px-2.5 py-1 rounded-full bg-amber-600 text-white font-medium hover:bg-amber-700">
+            Start new topic
+          </button>
+          <button type="button" onClick={() => setConfirmingNewTopic(false)} className="px-2.5 py-1 rounded-full border border-amber-200 font-medium hover:bg-amber-100">
+            Cancel
+          </button>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
@@ -663,11 +751,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
               Your personal Vedic astrology coach is ready. Ask anything about your chart, current period, goals, or life direction.
             </p>
             <div className="mt-4 flex flex-wrap gap-2 justify-center">
-              {[
-                "What does my current dasha mean for my career?",
-                "What habits should I build right now?",
-                "What are my strongest planetary energies?",
-              ].map((s) => (
+              {suggestions.map((s) => (
                 <button
                   key={s}
                   onClick={() => setInput(s)}
@@ -677,6 +761,24 @@ export default function ChatInterface({ chart, dashas }: Props) {
                 </button>
               ))}
             </div>
+            {pastTopics.length > 0 && (
+              <div className="mt-8 max-w-xl mx-auto text-left">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 mb-2">Earlier plans</p>
+                <div className="space-y-2">
+                  {pastTopics.map((t) => (
+                    <details key={t.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
+                      <summary className="cursor-pointer text-sm text-gray-700">
+                        {t.title}
+                        <span className="ml-2 text-xs text-gray-500">{new Date(t.endedAt).toLocaleDateString()}</span>
+                      </summary>
+                      <div className="chat-markdown mt-2 text-sm leading-relaxed text-gray-800">
+                        <ReactMarkdown>{t.plan}</ReactMarkdown>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -729,7 +831,21 @@ export default function ChatInterface({ chart, dashas }: Props) {
 
       {/* Input */}
       <div className="p-4 border-t border-gray-100">
-        <div className="flex gap-2">
+        {chatError && (
+          <div role="alert" className="mb-2 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="flex-1 min-w-0">{chatError}</span>
+            <button
+              type="button"
+              onClick={retryLast}
+              disabled={streaming}
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-white px-2 py-0.5 font-medium hover:bg-red-100 disabled:opacity-40"
+            >
+              <RefreshCw className="w-3 h-3" /> Retry
+            </button>
+          </div>
+        )}
+        <div className="flex gap-2 items-end">
           <button
             type="button"
             onClick={toggleRecording}
@@ -743,23 +859,43 @@ export default function ChatInterface({ chart, dashas }: Props) {
           >
             {transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : recording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           </button>
-          <input
+          <textarea
             ref={inputRef}
-            type="text"
+            rows={1}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-            placeholder={phase === "recommending" ? "Ask for recommendations..." : "Tell me about yourself..."}
+            onChange={(e) => {
+              setInput(e.target.value);
+              e.target.style.height = "auto";
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder={phase === "recommending" ? "Ask a follow-up… (Shift+Enter for a new line)" : "Tell me what's going on… (Shift+Enter for a new line)"}
             disabled={streaming}
-            className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+            className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
           />
-          <button
-            onClick={() => send()}
-            disabled={!input.trim() || streaming}
-            className="bg-indigo-600 text-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-40 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
-          >
-            {streaming ? "..." : "Send"}
-          </button>
+          {streaming ? (
+            <button
+              type="button"
+              onClick={stopStreaming}
+              title="Stop generating"
+              className="inline-flex items-center gap-1 border border-gray-200 text-gray-700 rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors"
+            >
+              <Square className="w-3.5 h-3.5" /> Stop
+            </button>
+          ) : (
+            <button
+              onClick={() => send()}
+              disabled={!input.trim()}
+              className="bg-indigo-600 text-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-40 hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors"
+            >
+              Send
+            </button>
+          )}
         </div>
         {voiceError && (
           <p className="text-xs text-red-500 text-center mt-1.5">{voiceError}</p>

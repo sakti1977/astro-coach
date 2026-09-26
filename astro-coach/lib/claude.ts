@@ -44,7 +44,8 @@ export async function validateChart(
 export async function* streamCoachResponse(
   systemPrompt: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>,
-  profileContext: string   // dynamic observations — kept separate for cache efficiency
+  profileContext: string,  // dynamic observations — kept separate for cache efficiency
+  signal?: AbortSignal     // client disconnect / Stop — cancels the upstream call too
 ): AsyncGenerator<string> {
   const client = getClient();
 
@@ -72,12 +73,15 @@ export async function* streamCoachResponse(
     });
   }
 
-  const stream = await client.messages.stream({
-    model: "claude-haiku-4-5",   // 5–8× faster than Sonnet; ideal for real-time chat
-    max_tokens: MAX_TOKENS_COACH,
-    system: systemBlocks,
-    messages,
-  });
+  const stream = await client.messages.stream(
+    {
+      model: "claude-haiku-4-5",   // 5–8× faster than Sonnet; ideal for real-time chat
+      max_tokens: MAX_TOKENS_COACH,
+      system: systemBlocks,
+      messages,
+    },
+    { signal }
+  );
 
   for await (const chunk of stream) {
     if (

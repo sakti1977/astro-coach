@@ -148,6 +148,16 @@ export type CoachingPhase = "gathering" | "recommending";
  * language — see SPEC.md §3. */
 export type CoachTonePreference = "jyotish" | "skeptic";
 
+/** A finished coaching topic whose plan was kept when the user started a new one. */
+export interface PastCoachingTopic {
+  id: string;
+  endedAt: string;
+  /** The user's opening message for the topic, trimmed. */
+  title: string;
+  /** Canonical English markdown of the delivered plan. */
+  plan: string;
+}
+
 export interface CoachingObservation {
   id: string;
   timestamp: string;
@@ -199,6 +209,11 @@ export interface UserProfile {
      * full plan now"; after, it means "answer follow-ups only — don't restate
      * the plan or ask a new question." Resets to false on New Topic. */
     planDelivered: boolean;
+    /** The plan text itself, once delivered. Sent back with follow-ups so the
+     * coach stays consistent with it after it scrolls out of the message window. */
+    deliveredPlan?: string;
+    /** Plans from earlier topics, newest first (capped at MAX_PAST_TOPICS). */
+    pastTopics?: PastCoachingTopic[];
     /** "jyotish" (default): traditional Jyotish vocabulary throughout
      * (karma/dharma/guna/upaya). "skeptic": the SAME chart, chain-analysis,
      * and deterministic remedy table, translated into plain psychological/
@@ -336,25 +351,24 @@ export function addValidationAnswer(entry: ValidationEntry): number {
   return score;
 }
 
+/**
+ * User-specific context for the coach's dynamic block. Only things the server
+ * can't derive itself: goals and today's date are already in the prompt, so
+ * they are not repeated here, and validation accuracy is only reported once
+ * the user has actually validated the chart (an unvalidated 0% used to read
+ * to the model as "this chart is wrong").
+ */
 export function buildCoachingContext(
   profile: UserProfile,
-  observations: CoachingObservation[] = [],
-  todayIso?: string
+  observations: CoachingObservation[] = []
 ): string {
-  const { validation, goals, coaching } = profile;
+  const { validation } = profile;
   const lines: string[] = [];
-
-  // Always anchor with current date so Claude knows "now"
-  const now = todayIso ? new Date(todayIso) : new Date();
-  lines.push(`Current date: ${now.toDateString()} (${now.toISOString()})`);
 
   if (validation.confirmedThemes.length > 0)
     lines.push(`Confirmed life themes: ${validation.confirmedThemes.join(", ")}`);
-  if (goals.length > 0)
-    lines.push(`User goals: ${goals.map((g) => g.description).join(", ")}`);
-  if (coaching.behaviorProfile.length > 0)
-    lines.push(`Behavioral notes: ${coaching.behaviorProfile.join(". ")}`);
-  lines.push(`Chart validation accuracy: ${Math.round(validation.accuracyScore * 100)}%`);
+  if (validation.isValidated)
+    lines.push(`Chart validation accuracy: ${Math.round(validation.accuracyScore * 100)}%`);
   if (observations.length > 0) {
     lines.push(
       `Session observations:\n${observations

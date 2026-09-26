@@ -158,3 +158,26 @@ describe("buildCoachSystemPrompt writing-quality bar", () => {
     }
   });
 });
+
+describe("buildCoachSystemPrompt grounding data", () => {
+  it("includes the current Pratyantardasha and computed chart facts", () => {
+    const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-01-01T00:00:00.000Z");
+    expect(prompt).toContain("Saturn Pratyantardasha");
+    expect(prompt).toContain("CHART FACTS");
+    expect(prompt).toContain("Lagna lord: Sun in H1");
+  });
+
+  it("says plainly when no divisional charts are available instead of inviting a guess", () => {
+    const prompt = buildCoachSystemPrompt(CHART, DASHAS, "2026-01-01T00:00:00.000Z");
+    expect(prompt).toContain("do not cite D9/D10/D7/D30 placements");
+  });
+});
+
+describe("buildCoachDynamicBlock delivered plan", () => {
+  it("pins the delivered plan on follow-ups only", () => {
+    const followUp = buildCoachDynamicBlock("recommending", [], undefined, "", undefined, true, undefined, "PLAN BODY");
+    const planTurn = buildCoachDynamicBlock("recommending", [], undefined, "", undefined, false, undefined, "PLAN BODY");
+    expect(followUp).toContain("PLAN BODY");
+    expect(planTurn).not.toContain("PLAN BODY");
+  });
+});

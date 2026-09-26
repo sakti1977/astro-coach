@@ -30,6 +30,8 @@ export interface NatalGrounding {
   goals: Goal[];
   habits: Habit[];
   birthDate?: string;
+  /** IANA zone from the birth data, when known — used for transit timing. */
+  timezone?: string;
   source: "server" | "computed";
 }
 
@@ -110,6 +112,7 @@ async function computeFromBirth(
       goals,
       habits,
       birthDate: birth.date,
+      timezone: birth.timezone,
       source: "computed",
     };
   } catch (err: unknown) {
@@ -136,6 +139,7 @@ export async function resolveNatalGrounding(
         goals: stored.goals,
         habits: stored.habits,
         birthDate: stored.birthDate,
+        timezone: stored.birth?.timezone,
         source: "server",
       };
     }

@@ -5,8 +5,22 @@ import { streamCoachResponse } from "@/lib/claude";
 import { buildCoachSystemPrompt, buildCoachDynamicBlock } from "@/lib/astrology/prompts";
 import { safeClientErrorMessage } from "@/lib/safe-error";
 import { formatHabitsForCoach, resolveNatalGrounding } from "@/lib/server-grounding";
-import { guardCoachText } from "@/lib/coach-output";
-import type { ChatMessage, CoachingPhase, CoachTonePreference, Habit } from "@/lib/profile";
+import { assessCoachOutput, coachRetryNote, COACH_OUTPUT_FALLBACK, isFatalistic } from "@/lib/coach-output";
+import { parseCoachRequest } from "@/lib/coach-request";
+import { encodeCoachEvent, type CoachStreamEvent } from "@/lib/coach-stream";
+import { CRISIS_RESPONSE, detectCrisis } from "@/lib/coach-safety";
+import { serverTransitContext } from "@/lib/coach-transits";
+
+const SSE_HEADERS = {
+  "Content-Type": "text/event-stream",
+  "Cache-Control": "no-cache",
+  Connection: "keep-alive",
+};
+
+function sse(events: CoachStreamEvent[]): Response {
+  const body = events.map(encodeCoachEvent).join("");
+  return new Response(body, { headers: SSE_HEADERS });
+}
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -16,95 +30,128 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
-  const {
-    birthData: clientBirth,
-    goals: clientGoals,
-    habits: clientHabits,
-    profileContext,
-    vargaContext,
-    messages,
-    phase,
-    planDelivered,
-    includeReligiousSolutions,
-    transitContext,
-    tonePreference,
-  } = (await req.json()) as {
-    birthData: unknown;
-    goals: string[];
-    habits?: Habit[];
-    profileContext: string;
-    vargaContext?: string;
-    messages: ChatMessage[];
-    phase?: CoachingPhase;
-    planDelivered?: boolean;
-    includeReligiousSolutions?: boolean;
-    transitContext?: string;
-    tonePreference?: CoachTonePreference;
-  };
+  let rawBody: unknown;
+  try {
+    rawBody = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid coaching request." }, { status: 400 });
+  }
+  const parsed = parseCoachRequest(rawBody);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+  const body = parsed.value;
+  const messages = body.messages;
+  const latestUser = messages[messages.length - 1].content;
 
-  const grounding = await resolveNatalGrounding(
-    access.session?.user?.id,
-    clientBirth
-  );
+  // Safety first: a crisis message gets people, not a chart reading, and
+  // does not need the chart at all.
+  if (detectCrisis(latestUser)) {
+    return sse([
+      { type: "text", text: CRISIS_RESPONSE },
+      { type: "done", outcome: "safety" },
+    ]);
+  }
+
+  const grounding = await resolveNatalGrounding(access.session?.user?.id, body.birthData);
   if (grounding instanceof NextResponse) return grounding;
 
   const goals =
     grounding.source === "server"
       ? grounding.goals.map((g) => g.description)
-      : (clientGoals ?? []);
+      : (body.goals ?? []);
   const habitsSummary = formatHabitsForCoach(
-    grounding.source === "server" ? grounding.habits : (clientHabits ?? [])
+    grounding.source === "server" ? grounding.habits : body.habits
   );
-
-  const todayIso = new Date().toISOString();
+  const transitContext = await serverTransitContext(grounding.chart, grounding.timezone);
 
   const systemPrompt = buildCoachSystemPrompt(
     grounding.chart,
     grounding.dashas,
-    todayIso,
-    includeReligiousSolutions ?? false,
+    new Date().toISOString(),
+    body.includeReligiousSolutions ?? false,
     grounding.chart.yogas ?? [],
     grounding.chart.doshas ?? [],
-    tonePreference ?? "jyotish"
+    body.tonePreference ?? "jyotish"
   );
 
+  const planDelivered = body.planDelivered ?? false;
   const dynamicBlock = buildCoachDynamicBlock(
-    phase ?? "gathering",
+    body.phase ?? "gathering",
     goals,
-    vargaContext,
-    profileContext,
-    transitContext,
-    planDelivered ?? false,
-    habitsSummary
+    undefined,
+    body.profileContext ?? "",
+    transitContext || undefined,
+    planDelivered,
+    habitsSummary,
+    planDelivered ? body.deliveredPlan : undefined
   );
+
+  const userText = messages.filter((m) => m.role === "user").map((m) => m.content).join("\n");
+  const signal = req.signal;
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      const emit = (event: CoachStreamEvent) => controller.enqueue(encoder.encode(encodeCoachEvent(event)));
       try {
-        const apiMessages = messages.map((m) => ({ role: m.role, content: m.content }));
-        const userText = apiMessages.filter((m) => m.role === "user").map((m) => m.content).join("\n");
-        let accumulated = "";
-        for await (const chunk of streamCoachResponse(systemPrompt, apiMessages, dynamicBlock)) {
-          accumulated += chunk;
+        // Stream the first draft as it's written so the user isn't staring at
+        // "Thinking…" for the whole generation.
+        // If a fatalistic line shows up mid-stream, pull what's on screen and
+        // stop showing the draft; the retry below replaces it.
+        let draft = "";
+        let visible = true;
+        for await (const chunk of streamCoachResponse(systemPrompt, messages, dynamicBlock, signal)) {
+          draft += chunk;
+          if (!visible) continue;
+          if (isFatalistic(draft)) {
+            visible = false;
+            emit({ type: "replace", text: "" });
+            continue;
+          }
+          emit({ type: "text", text: chunk });
         }
-        const text = guardCoachText(accumulated, grounding.chart, grounding.dashas, userText);
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+
+        const verdict = assessCoachOutput(draft, grounding.chart, grounding.dashas, userText);
+        if (verdict.ok) {
+          emit({ type: "done", outcome: "ok" });
+          return;
+        }
+
+        // One corrective retry before falling back — a blocked reply used to be
+        // thrown away outright, costing the user the whole turn.
+        console.error(`[coach-output] draft blocked (${verdict.reason}); retrying once`);
+        let retry = "";
+        for await (const chunk of streamCoachResponse(
+          systemPrompt,
+          messages,
+          `${dynamicBlock}\n\n${coachRetryNote(verdict.reason)}`,
+          signal
+        )) {
+          retry += chunk;
+        }
+        if (assessCoachOutput(retry, grounding.chart, grounding.dashas, userText).ok) {
+          emit({ type: "replace", text: retry });
+          emit({ type: "done", outcome: "ok" });
+        } else {
+          console.error("[coach-output] retry blocked too; sending fallback");
+          emit({ type: "replace", text: COACH_OUTPUT_FALLBACK });
+          emit({ type: "done", outcome: "blocked" });
+        }
       } catch (e) {
-        const msg = safeClientErrorMessage(e, "The coach hit a snag. Please try again shortly.", "coach-stream");
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`));
+        if (!signal.aborted) {
+          const msg = safeClientErrorMessage(e, "The coach hit a snag. Please try again shortly.", "coach-stream");
+          emit({ type: "error", error: msg });
+        }
       } finally {
-        controller.close();
+        try {
+          controller.close();
+        } catch {
+          // Already closed by a client disconnect.
+        }
       }
     },
   });
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
+  return new Response(stream, { headers: SSE_HEADERS });
 }
