@@ -10,6 +10,7 @@ import { parseCoachRequest } from "@/lib/coach-request";
 import { encodeCoachEvent, type CoachStreamEvent } from "@/lib/coach-stream";
 import { CRISIS_RESPONSE, detectCrisis } from "@/lib/coach-safety";
 import { serverTransitContext } from "@/lib/coach-transits";
+import { COACH_DAILY_TURN_MAX, COACH_DAILY_WINDOW_MS } from "@/lib/constants";
 
 const SSE_HEADERS = {
   "Content-Type": "text/event-stream",
@@ -28,6 +29,13 @@ export async function POST(req: NextRequest) {
 
   if (!(await checkRateLimit(access.rateLimitKey))) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
+  }
+  // Separate key: the local fallback limiter stores one counter per key.
+  if (!(await checkRateLimit(`${access.rateLimitKey}:coach-day`, COACH_DAILY_TURN_MAX, COACH_DAILY_WINDOW_MS))) {
+    return NextResponse.json(
+      { error: "You've reached today's coaching limit. It resets within 24 hours." },
+      { status: 429 }
+    );
   }
 
   let rawBody: unknown;

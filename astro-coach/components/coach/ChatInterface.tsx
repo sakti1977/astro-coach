@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square, RefreshCw, AlertCircle } from "lucide-react";
+import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square, RefreshCw, AlertCircle, Brain, X } from "lucide-react";
 import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits, PastCoachingTopic, Habit } from "@/lib/profile";
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile, updateProfile } from "@/lib/profile";
 import type { GeneratedHabit } from "@/lib/habit-schema";
@@ -65,6 +65,8 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [planHabitsLoading, setPlanHabitsLoading] = useState(false);
   const [planHabitsError, setPlanHabitsError] = useState("");
   const [addedHabits, setAddedHabits] = useState<string[]>([]);
+  const [showMemory, setShowMemory] = useState(false);
+  const [memoryStatus, setMemoryStatus] = useState("");
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [voiceError, setVoiceError] = useState("");
@@ -245,6 +247,22 @@ export default function ChatInterface({ chart, dashas }: Props) {
       updateProfile({ habits: [...current.habits, habit] });
     }
     setAddedHabits((prev) => [...prev, h.habit]);
+  }
+
+  /** Let the user remove what the coach has noted about them. Deletions are
+   * pushed to their account straight away; if that fails, we say so. */
+  async function forgetObservations(ids: string[] | "all") {
+    if (reflectionRef.current) await reflectionRef.current;
+    const remaining = ids === "all" ? [] : observationsRef.current.filter((o) => !ids.includes(o.id));
+    await storage.clearObservations();
+    for (const o of remaining) await storage.addObservation(o);
+    setObservationList(remaining);
+    try {
+      await storage.syncToServer("");
+      setMemoryStatus("Removed from this device and your account.");
+    } catch {
+      setMemoryStatus("Removed from this device. Your account copy updates on the next successful sync.");
+    }
   }
 
   function requestNewTopic() {
@@ -447,7 +465,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
   }
 
   function friendlyCoachError(status: number, serverMessage?: string): string {
-    if (status === 429) return "You're sending messages quickly. Wait a moment, then try again.";
+    if (status === 429) return serverMessage?.includes("today") ? serverMessage : "You're sending messages quickly. Wait a moment, then try again.";
     if (status === 401) return "Your session has expired. Please sign in again to continue.";
     return serverMessage || "The coach couldn't respond just now. Please try again.";
   }
@@ -744,6 +762,14 @@ export default function ChatInterface({ chart, dashas }: Props) {
               <option key={l.code} value={l.code}>{l.label}</option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={() => { setShowMemory((v) => !v); setMemoryStatus(""); }}
+            className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+            title="See and delete what the coach has noted about you"
+          >
+            <Brain className="w-3 h-3" /> Memory ({observations.length})
+          </button>
           {observations.length > 0 && (
             <span
               className={`inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
@@ -770,6 +796,50 @@ export default function ChatInterface({ chart, dashas }: Props) {
           )}
         </div>
       </div>
+
+      {showMemory && (
+        <div className="px-4 py-3 border-b border-gray-100 bg-white text-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">What the coach remembers about you</p>
+            <button type="button" onClick={() => setShowMemory(false)} className="text-gray-400 hover:text-gray-600" aria-label="Close memory">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {observations.length === 0 ? (
+            <p className="text-xs text-gray-500">Nothing yet. Notes appear here as you share things in conversation.</p>
+          ) : (
+            <>
+              <ul className="max-h-48 overflow-y-auto space-y-1">
+                {observations.map((o) => (
+                  <li key={o.id} className="flex items-start gap-2 text-xs text-gray-700">
+                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] uppercase text-gray-500">{o.category}</span>
+                    <span className="flex-1 min-w-0">{o.text}</span>
+                    <button
+                      type="button"
+                      onClick={() => forgetObservations([o.id])}
+                      disabled={streaming}
+                      className="shrink-0 text-gray-400 hover:text-red-600 disabled:opacity-40"
+                      aria-label="Forget this note"
+                      title="Forget this note"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={() => forgetObservations("all")}
+                disabled={streaming}
+                className="mt-2 text-xs font-medium text-red-600 hover:underline disabled:opacity-40"
+              >
+                Forget all
+              </button>
+            </>
+          )}
+          {memoryStatus && <p className="mt-1 text-xs text-gray-500">{memoryStatus}</p>}
+        </div>
+      )}
 
       {confirmingNewTopic && (
         <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-amber-100 bg-amber-50 text-xs text-amber-800">

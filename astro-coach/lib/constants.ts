@@ -56,6 +56,12 @@ export const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 export const HEALTH_RATE_LIMIT_MAX = 30;
 export const HEALTH_RATE_LIMIT_WINDOW_MS = 60_000;
 
+/** Per-user daily ceiling on coaching turns. Each turn is 2-4 paid model calls
+ * (coach, reflection, translation), so the per-minute limit alone doesn't bound
+ * a day's spend. Generous for real use; stops runaway scripts. */
+export const COACH_DAILY_TURN_MAX = 100;
+export const COACH_DAILY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 // ── Anonymous chart-only guest mode ────────────────────────────────────────────
 /** Stricter than RATE_LIMIT_MAX — anonymous requests are keyed by IP, not by
  * a user id, so the cap is deliberately tighter than the authenticated limit. */
