@@ -128,11 +128,19 @@ _Verified against code as of commit `1fc5f00`. See git history for anything afte
 - The system shall let the user skip discovery entirely via a "Get My Plan Now" action.
 - WHERE the user has enabled Vedic Remedies mode, ritual remedies shall be included alongside behavioral guidance; WHERE disabled, only behavioral guidance shall be shown — never gemstones/mantras/fasting in that mode.
 - The system shall never invent a remedy, placement, or life detail not present in the chart data or the conversation (G1, G2).
+- The server shall derive every piece of chart context itself (natal chart, dashas including the current Pratyantardasha, transits, D9/D10/D7/D30 placements, and computed lordship/dignity/drishti/conjunction/parivartana facts); client-supplied chart, transit or varga text is not accepted. The coaching request body is schema-validated and bounded (`lib/coach-request.ts`).
+- Replies shall stream as they are written. IF a draft fails the output guard (ungrounded or fatalistic) THEN the system shall retry once with a corrective note, and only fall back to the fixed grounding message if the retry also fails; a fatalistic draft is withdrawn from the screen as soon as it is detected. Only a normal, grounded reply advances the coaching phase or counts as the delivered plan.
+- IF the user's latest message signals self-harm or suicidal intent THEN the system shall skip the chart reading entirely and reply with a fixed, non-astrological message pointing to Tele-MANAS (14416) and emergency services (112) (`lib/coach-safety.ts`). This is a safety referral, not a second advice pathway (G4).
+- WHEN the user starts a New Topic, the system shall ask for confirmation and keep the delivered plan under "Earlier plans" (last 5); follow-ups on a topic shall carry the delivered plan so it survives the message window.
 
 ### 4.7 Habits, Goals, Auth/Sync, Notifications, Platform
 - Unchanged from prior verification — see `NON_NEGOTIABLES.md` #1, #6, #7, #8 for the trust/security invariants covering these areas (cloud sync integrity, rate limiting, input validation, secrets hygiene).
 
 ---
+
+### 4.8 Voluntary Support (UPI)
+- WHERE `NEXT_PUBLIC_UPI_ID` is configured, the system shall offer an optional, honour-based UPI contribution: a `/support` page (preset ₹51/₹101/₹251 or any whole amount, QR code, UPI pay link, copyable ID), a sidebar and footer link, one dismissible card per topic after a delivered plan, and one line on the Foundation page. WHERE it is not configured, none of these shall render.
+- Paying shall never gate, unlock, or change any feature, guidance, or remedy, and the ask shall never appear inside coaching output, next to a remedy, or under a crisis reply (`NON_NEGOTIABLES.md` #15).
 
 ## 5. Future Scope — Prioritized Against the Competitive Research
 
@@ -162,7 +170,7 @@ Re-verify market facts in §1 before acting on stale versions of this section �
 
 Source: external product-strategy critique, 2026-07-31. Logged here per §6 rather than acted on directly; each already passes a G1-G4 check below, but still needs explicit approval before promotion into §5.1-5.3. (#14 promoted to §5.1 on 2026-07-31 — see there.)
 
-15. **Candidate — Close the loop between Coach-delivered plans and the Habits tracker.** The coach generates behavioral recommendations (`buildCoachSystemPrompt`'s plan-delivery turn); `/habits` tracks goals/streaks independently. Neither currently reads the other — the coach's `goals` context isn't populated from `/habits`' `Goal[]`, and habit completion doesn't feed back into later coaching turns. Candidate: pass the user's actual habits/goals into the coaching prompt context, and let a plan's action items optionally become trackable habits. G1-G4: passes — this is richer grounding in already-real user data (strengthens G1), not a new advice pathway.
+15. ~~**Candidate — Close the loop between Coach-delivered plans and the Habits tracker.**~~ — **shipped** (2026-09-26): "Track this plan" restructures the delivered plan's behavioral items into habits via `/api/coach/plan-habits` (no new advice, ritual items filtered by `lib/habit-schema.ts`), and tracked habits already flow back into coaching turns via `formatHabitsForCoach`. Original candidate text: The coach generates behavioral recommendations (`buildCoachSystemPrompt`'s plan-delivery turn); `/habits` tracks goals/streaks independently. Neither currently reads the other — the coach's `goals` context isn't populated from `/habits`' `Goal[]`, and habit completion doesn't feed back into later coaching turns. Candidate: pass the user's actual habits/goals into the coaching prompt context, and let a plan's action items optionally become trackable habits. G1-G4: passes — this is richer grounding in already-real user data (strengthens G1), not a new advice pathway.
 16. **Candidate — Weave the chart-validation flow into the primary onboarding narrative instead of a separate, unlinked route.** `/validate`'s yes/no accuracy-calibration mechanic (SPEC §1) is arguably the single most differentiated trust-building feature in the product — nothing comparable exists at AstroTalk/AstroYogi/AstroSage — but it's not linked from the home page's primary CTAs, the chart page, or the coach page. Candidate: sequence it as a named step in the primary flow ("chart → does this match your life? → the read that survives validation is the one you keep") rather than a side quest. G1-G4: passes — resequences an existing, already-compliant flow; adds no new reasoning.
 
 ---

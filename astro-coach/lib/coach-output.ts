@@ -9,8 +9,24 @@ const FATALISTIC = [
   /\bthis marriage will not\b/i,
   /\b(?:guaranteed|destined|doomed) to (?:fail|end|divorce|die)\b/i,
   /\byou have no (?:choice|free will|way out)\b/i,
-  /\bnothing you do can\b/i,
+  /\bnothing you do (?:can|will)\b/i,
+  /\byou will never (?:marry|find (?:love|a partner|peace|success)|succeed|recover|be happy|get married|have children)\b/i,
+  /\b(?:there is|there's) no hope\b/i,
+  /\b(?:it is|it's) (?:your|written in your) (?:fate|destiny) (?:to|that)\b/i,
+  /\bcannot be (?:changed|avoided|escaped)\b/i,
 ];
+
+export function isFatalistic(text: string): boolean {
+  return FATALISTIC.some((pattern) => pattern.test(text));
+}
+
+/** Appended to the dynamic block when a first draft fails the guard, so the
+ * one retry knows exactly what to fix. */
+export function coachRetryNote(reason: CoachOutputProblem): string {
+  return reason === "fatalistic"
+    ? "REWRITE REQUIRED: your previous draft asserted a fixed outcome. Rewrite the reply as tendencies the person can work with (purushartha), with no claim that anything is certain, doomed, or unchangeable."
+    : "REWRITE REQUIRED: your previous draft did not tie its guidance to anything specific. Rewrite the reply so every point names the exact placement, dasha period, transit, or yoga/dosha from the chart data it comes from, or quotes what the user said.";
+}
 
 const USER_STOPWORDS = new Set([
   "about", "after", "again", "could", "should", "would", "there", "their", "which", "where", "while",
@@ -68,7 +84,7 @@ export function assessCoachOutput(
   dashas: DashaData,
   userText: string
 ): { ok: true } | { ok: false; reason: CoachOutputProblem } {
-  if (FATALISTIC.some((pattern) => pattern.test(text))) {
+  if (isFatalistic(text)) {
     return { ok: false, reason: "fatalistic" };
   }
   const grounded =

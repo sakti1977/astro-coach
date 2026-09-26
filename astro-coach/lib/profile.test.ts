@@ -43,18 +43,26 @@ describe("buildCoachingContext", () => {
     goals: [{ id: "1", description: "Get fit", category: "health", createdAt: "2026-01-01T00:00:00.000Z" } satisfies Goal],
   };
 
-  it("is deterministic given an explicit todayIso", () => {
-    const a = buildCoachingContext(baseProfile, [], "2026-07-29T00:00:00.000Z");
-    const b = buildCoachingContext(baseProfile, [], "2026-07-29T00:00:00.000Z");
+  it("is deterministic and does not repeat what the server prompt already has", () => {
+    const a = buildCoachingContext(baseProfile, []);
+    const b = buildCoachingContext(baseProfile, []);
     expect(a).toBe(b);
-    expect(a).toContain("Current date:");
+    expect(a).not.toContain("Current date:");
+    expect(a).not.toContain("Get fit");
   });
 
-  it("includes confirmed themes, goals, and rounded accuracy score", () => {
-    const ctx = buildCoachingContext(baseProfile, [], "2026-07-29T00:00:00.000Z");
+  it("includes confirmed themes and rounded accuracy score", () => {
+    const ctx = buildCoachingContext(baseProfile, []);
     expect(ctx).toContain("Confirmed life themes: career, family");
-    expect(ctx).toContain("Get fit");
     expect(ctx).toContain("Chart validation accuracy: 75%");
+  });
+
+  it("does not report a 0% accuracy for a chart that was never validated", () => {
+    const unvalidated: UserProfile = {
+      ...baseProfile,
+      validation: { questions: [], accuracyScore: 0, confirmedThemes: [], isValidated: false },
+    };
+    expect(buildCoachingContext(unvalidated, [])).not.toContain("accuracy");
   });
 
   it("omits optional sections entirely when there is nothing to say", () => {
@@ -63,7 +71,7 @@ describe("buildCoachingContext", () => {
       validation: { questions: [], accuracyScore: 0, confirmedThemes: [], isValidated: false },
       goals: [],
     };
-    const ctx = buildCoachingContext(empty, [], "2026-07-29T00:00:00.000Z");
+    const ctx = buildCoachingContext(empty, []);
     expect(ctx).not.toContain("Confirmed life themes");
     expect(ctx).not.toContain("User goals");
     expect(ctx).not.toContain("Session observations");
@@ -74,7 +82,7 @@ describe("buildCoachingContext", () => {
       id: "o1", text: "Avoids conflict with authority figures", category: "pattern",
       timestamp: "2026-07-29T00:00:00.000Z", exchangeIndex: 1,
     };
-    const ctx = buildCoachingContext(baseProfile, [observation], "2026-07-29T00:00:00.000Z");
+    const ctx = buildCoachingContext(baseProfile, [observation]);
     expect(ctx).toContain("Session observations");
     expect(ctx).toContain("Avoids conflict with authority figures");
   });

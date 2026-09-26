@@ -10,6 +10,8 @@ export const CHAT_HISTORY_DISPLAY = 20;
 export const CHAT_WINDOW_API = 12;
 /** Maximum messages persisted in localStorage profile. */
 export const CHAT_HISTORY_MAX = 100;
+/** Earlier topics' plans kept when the user starts a New Topic. */
+export const MAX_PAST_TOPICS = 5;
 
 // ── Claude token budgets ───────────────────────────────────────────────────────
 export const MAX_TOKENS_COACH     = 2048;  // streaming coach replies (doubled to prevent mid-thought cutoff)
@@ -19,12 +21,18 @@ export const MAX_TOKENS_HABITS    = 1024;  // habit list JSON
 export const MAX_TOKENS_EXTRACT   = 512;   // observation extraction
 export const MAX_TOKENS_SUMMARISE = 250;   // observation summarisation
 export const MAX_TOKENS_FOUNDATION = 3072; // "Your Foundation" static profile — 5 sections of considered prose
+export const MAX_TOKENS_PLAN_HABITS = 800;  // plan → up to 5 trackable habits
 
 // ── Observation management ─────────────────────────────────────────────────────
 /** Hard cap on stored coaching observations (oldest are pruned beyond this). */
 export const OBS_CAP = 30;
-/** Compress observations into a summary every N completed exchanges. */
-export const OBS_SUMMARISE_EVERY = 20;
+/** Compress observations into a summary once this many have accumulated.
+ * Count-based on purpose: the exchange counter resets on every New Topic and a
+ * topic reaches its plan within ~3 exchanges, so an exchange-based trigger
+ * almost never fired. */
+export const OBS_SUMMARISE_AT = 20;
+/** Longest user message / coach reply the reflection agents will read. */
+export const REFLECT_MAX_CHARS = 8_000;
 
 // ── Extraction heuristic (TOKEN-05) ───────────────────────────────────────────
 /** Skip observation extraction if user message is shorter than this (chars).
@@ -47,6 +55,12 @@ export const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 /** Health-check probes are cheap but still upstream work — cap per IP. */
 export const HEALTH_RATE_LIMIT_MAX = 30;
 export const HEALTH_RATE_LIMIT_WINDOW_MS = 60_000;
+
+/** Per-user daily ceiling on coaching turns. Each turn is 2-4 paid model calls
+ * (coach, reflection, translation), so the per-minute limit alone doesn't bound
+ * a day's spend. Generous for real use; stops runaway scripts. */
+export const COACH_DAILY_TURN_MAX = 100;
+export const COACH_DAILY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 // ── Anonymous chart-only guest mode ────────────────────────────────────────────
 /** Stricter than RATE_LIMIT_MAX — anonymous requests are keyed by IP, not by

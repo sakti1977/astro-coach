@@ -30,6 +30,15 @@ function todayUtcDateString(): string {
   return new Date().toISOString().split("T")[0];
 }
 
+/** YYYY-MM-DD for "now" in an IANA zone; UTC if the zone is missing or invalid. */
+function dateInZone(timeZone: string | undefined): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: timeZone || "UTC", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  } catch {
+    return todayUtcDateString();
+  }
+}
+
 interface FlatPeriod {
   antarLord: string;
   start: string;
@@ -151,7 +160,9 @@ export async function GET(req: NextRequest) {
 
     // ── Daily sadhana reminder ────────────────────────────────────────────
     if (sub.notify_sadhana && profile.habits && profile.habits.length > 0 && sub.last_sadhana_reminder_date !== today) {
-      const anyDoneToday = profile.habits.some((h) => h.completedDates?.includes(today));
+      // Habit dates are recorded in the user's local calendar (lib/habit-dates.ts).
+      const localToday = dateInZone(profile.birth_data?.timezone);
+      const anyDoneToday = profile.habits.some((h) => h.completedDates?.includes(localToday));
       if (!anyDoneToday) {
         const ok = await sendPush(sub, {
           title: "Today's sadhana is still open",

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import ReactMarkdown from "react-markdown";
 import { BookOpen, RotateCw, Copy, CheckCheck, Loader2 } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import SupportNudge from "@/components/support/SupportNudge";
 import SignInRequired from "@/components/SignInRequired";
 import { getProfile, updateProfile, type UserProfile } from "@/lib/profile";
 
@@ -197,9 +198,15 @@ export default function FoundationPage() {
         )}
 
         {saved && !generating && (
-          <p className="text-center text-xs text-gray-500 mt-4">
-            Generated {new Date(saved.generatedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}
-          </p>
+          <>
+            <p className="text-center text-xs text-gray-500 mt-4">
+              Generated {new Date(saved.generatedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}
+            </p>
+            <SupportNudge
+              className="mt-6"
+              message="If this read felt true to you, you can support the work behind it."
+            />
+          </>
         )}
       </div>
     </AppShell>

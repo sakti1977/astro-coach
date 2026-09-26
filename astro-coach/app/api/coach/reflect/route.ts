@@ -10,7 +10,8 @@ import {
 } from "@/lib/astrology/prompts";
 import { extractJsonObject } from "@/lib/claude-json";
 import { safeClientErrorMessage } from "@/lib/safe-error";
-import { OBS_CAP, OBS_SUMMARISE_EVERY } from "@/lib/constants";
+import { OBS_CAP, OBS_SUMMARISE_AT, REFLECT_MAX_CHARS } from "@/lib/constants";
+import { parseObservations } from "@/lib/profile-schema";
 import type { CoachingObservation } from "@/lib/profile";
 
 /**
@@ -78,7 +79,7 @@ export async function runReflection(input: ReflectInput, deps: ReflectDeps): Pro
   let merged = [...existingObservations, ...newObservations];
   if (merged.length > OBS_CAP) merged = merged.slice(-OBS_CAP);
 
-  const dueForSummary = exchangeCount > 0 && exchangeCount % OBS_SUMMARISE_EVERY === 0 && merged.length > 0;
+  const dueForSummary = merged.length >= OBS_SUMMARISE_AT;
   if (!dueForSummary) {
     return {
       finalObservations: merged,
@@ -126,22 +127,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests — please wait a moment" }, { status: 429 });
   }
 
-  const body = (await req.json()) as Partial<ReflectInput>;
+  const body = (await req.json().catch(() => null)) as Partial<ReflectInput> | null;
   if (
+    !body ||
     typeof body.userMessage !== "string" ||
     typeof body.assistantResponse !== "string" ||
     typeof body.exchangeCount !== "number" ||
-    !Array.isArray(body.existingObservations)
+    !Number.isInteger(body.exchangeCount) ||
+    body.exchangeCount < 0 ||
+    !Array.isArray(body.existingObservations) ||
+    body.existingObservations.length > OBS_CAP * 2
   ) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
+  // Observations come back from the browser; only well-formed, bounded entries
+  // are allowed anywhere near the agents' prompts (NON_NEGOTIABLES.md #7).
+  const existingObservations = parseObservations(body.existingObservations)
+    .filter((o) => o.text.length <= 500)
+    .slice(-OBS_CAP);
+
   const result = await runReflection(
     {
-      userMessage: body.userMessage,
-      assistantResponse: body.assistantResponse,
+      userMessage: body.userMessage.slice(0, REFLECT_MAX_CHARS),
+      assistantResponse: body.assistantResponse.slice(0, REFLECT_MAX_CHARS),
       exchangeCount: body.exchangeCount,
-      existingObservations: body.existingObservations,
+      existingObservations,
     },
     { extract: extractObservations, summarise: summariseObservations }
   );

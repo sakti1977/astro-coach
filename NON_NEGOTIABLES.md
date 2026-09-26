@@ -147,10 +147,23 @@ all of which is written to route through the existing chart+chat-grounded core.
 **Check:** For any new coaching-adjacent surface, confirm it calls into the existing grounded
 coaching/remedy path rather than shipping independent, ungrounded advice logic.
 
+### 15. Contributions are voluntary and never touch coaching or remedies
+**Rule:** Money never changes what anyone gets. The UPI "Support Astro Coach" ask is honour-based:
+nothing is gated, unlocked, or reordered by paying. It is never part of LLM-generated text, never
+mentioned in coaching/extraction/remedy prompts, never rendered inside a chat message bubble, and
+never shown under a crisis/safety reply. It lives only in `lib/support.ts` and `components/support/`.
+**Why:** The product's core differentiator (`SPEC.md` §2.1) is "no fear-based remedies, no upsells —
+the same chart always gets the same remedy." A payment ask placed next to a remedy, or folded into
+advice, would read as paying for the remedy and hand competitors the exact criticism we attack them on.
+**Check:** The harness asserts the prompt modules and `remedies.py` never mention UPI/payment/support,
+and that `components/support/` is the only place a UPI link is built. Review any new placement against
+this rule: a separate card or page, dismissible where it interrupts, never inside coaching output.
+
 ### 14. Automated non-negotiables harness
 **Rule:** `astro-coach/lib/non-negotiables.harness.test.ts` and `python-service/test_non_negotiables.py`
 must stay in CI and must fail the build if items 1–13 regress in the ways they can be grepped
 (client Supabase writes, missing rate limits, missing disclaimer, committed secrets, unauthenticated
-ephemeris POSTs, ritual-only remedies, backup import without `parseBackupPayload`).
+ephemeris POSTs, ritual-only remedies, backup import without `parseBackupPayload`, payment asks
+leaking into prompts or remedies).
 **Why:** These exact bugs shipped, were fixed, then similar ones returned because review was manual.
 **Check:** `npm test` in `astro-coach/` and `pytest` in `python-service/`. GitHub Actions `.github/workflows/ci.yml` runs both.

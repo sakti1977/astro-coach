@@ -7,6 +7,7 @@ import {
   MAX_TOKENS_EXTRACT,
   MAX_TOKENS_SUMMARISE,
   MAX_TOKENS_FOUNDATION,
+  MAX_TOKENS_PLAN_HABITS,
 } from "@/lib/constants";
 
 let _client: Anthropic | null = null;
@@ -44,7 +45,8 @@ export async function validateChart(
 export async function* streamCoachResponse(
   systemPrompt: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>,
-  profileContext: string   // dynamic observations — kept separate for cache efficiency
+  profileContext: string,  // dynamic observations — kept separate for cache efficiency
+  signal?: AbortSignal     // client disconnect / Stop — cancels the upstream call too
 ): AsyncGenerator<string> {
   const client = getClient();
 
@@ -72,12 +74,15 @@ export async function* streamCoachResponse(
     });
   }
 
-  const stream = await client.messages.stream({
-    model: "claude-haiku-4-5",   // 5–8× faster than Sonnet; ideal for real-time chat
-    max_tokens: MAX_TOKENS_COACH,
-    system: systemBlocks,
-    messages,
-  });
+  const stream = await client.messages.stream(
+    {
+      model: "claude-haiku-4-5",   // 5–8× faster than Sonnet; ideal for real-time chat
+      max_tokens: MAX_TOKENS_COACH,
+      system: systemBlocks,
+      messages,
+    },
+    { signal }
+  );
 
   for await (const chunk of stream) {
     if (
@@ -175,6 +180,20 @@ export async function summariseObservations(prompt: string): Promise<string> {
   const response = await client.messages.create({
     model: "claude-haiku-4-5",
     max_tokens: MAX_TOKENS_SUMMARISE,
+    messages: [{ role: "user", content: prompt }],
+  });
+  const block = response.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response type");
+  return block.text;
+}
+
+/** Restructure a delivered plan's behavioral items into habit JSON (no new advice). */
+export async function extractPlanHabits(prompt: string): Promise<string> {
+  const client = getClient();
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: MAX_TOKENS_PLAN_HABITS,
+    temperature: 0,
     messages: [{ role: "user", content: prompt }],
   });
   const block = response.content[0];

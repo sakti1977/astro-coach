@@ -75,3 +75,23 @@ describe("assessCoachOutput", () => {
     expect(assessCoachOutput(text, chart, dashas, "help").ok).toBe(false);
   });
 });
+
+describe("assessCoachOutput fatalism coverage", () => {
+  it.each([
+    "With Moon in Aquarius you will never marry.",
+    "Moon in Aquarius means there is no hope for this.",
+    "Moon in Aquarius: this cannot be changed.",
+  ])("rejects %s", (text) => {
+    expect(assessCoachOutput(text, chart, dashas, "marriage")).toEqual({ ok: false, reason: "fatalistic" });
+  });
+
+  it("does not flag agency language that happens to use 'never'", () => {
+    const verdict = assessCoachOutput(
+      "With Moon in Aquarius you will never have to force closeness; build it in small routines.",
+      chart,
+      dashas,
+      "closeness"
+    );
+    expect(verdict.ok).toBe(true);
+  });
+});

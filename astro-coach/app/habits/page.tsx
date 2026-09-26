@@ -9,6 +9,7 @@ import BehaviorRadar from "@/components/habits/BehaviorRadar";
 import { getProfile, updateProfile, type UserProfile, type Habit, type Goal } from "@/lib/profile";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
 import { X, Check, Flame, Sprout } from "lucide-react";
+import { computeStreak, localDate } from "@/lib/habit-dates";
 
 const GOAL_CATEGORIES = ["career", "health", "relationship", "finance", "spiritual", "creative"] as const;
 
@@ -22,7 +23,7 @@ const RADAR_AXES = [
 ];
 
 function today(): string {
-  return new Date().toISOString().split("T")[0];
+  return localDate(new Date());
 }
 
 export default function HabitsPage() {
@@ -58,20 +59,6 @@ export default function HabitsPage() {
     });
     updateProfile({ habits });
     refreshProfile();
-  }
-
-  function computeStreak(dates: string[]): number {
-    const sorted = [...dates].sort().reverse();
-    let streak = 0;
-    const d = new Date();
-    for (const date of sorted) {
-      const expected = d.toISOString().split("T")[0];
-      if (date === expected) {
-        streak++;
-        d.setDate(d.getDate() - 1);
-      } else break;
-    }
-    return streak;
   }
 
   function addGoal() {
@@ -318,9 +305,9 @@ export default function HabitsPage() {
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-1">{h.why}</p>
-                          {h.streak > 0 && (
+                          {computeStreak(h.completedDates) > 0 && (
                             <p className="text-xs text-gray-500 mt-1 inline-flex items-center gap-1">
-                              <Flame className="w-3 h-3 text-orange-500" /> {h.streak}-day streak
+                              <Flame className="w-3 h-3 text-orange-500" /> {computeStreak(h.completedDates)}-day streak
                             </p>
                           )}
                         </div>
