@@ -12,6 +12,8 @@ import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets
 import { SARVAM_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "@/lib/languages";
 import { createCoachStreamParser, type CoachTurnOutcome } from "@/lib/coach-stream";
 import AdviceDisclaimer from "@/components/AdviceDisclaimer";
+import SupportNudge from "@/components/support/SupportNudge";
+import { CRISIS_RESPONSE } from "@/lib/coach-safety";
 import {
   CHAT_HISTORY_DISPLAY,
   CHAT_WINDOW_API,
@@ -65,6 +67,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [planHabitsLoading, setPlanHabitsLoading] = useState(false);
   const [planHabitsError, setPlanHabitsError] = useState("");
   const [addedHabits, setAddedHabits] = useState<string[]>([]);
+  const [supportNudgeDismissed, setSupportNudgeDismissed] = useState(profile.coaching.supportNudgeDismissed ?? false);
   const [showMemory, setShowMemory] = useState(false);
   const [memoryStatus, setMemoryStatus] = useState("");
   const [recording, setRecording] = useState(false);
@@ -179,6 +182,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
     setChatError("");
     setPlanHabits(null);
     setPlanHabitsError("");
+    setSupportNudgeDismissed(false);
     const current = getProfile();
     const plan = current.coaching.deliveredPlan?.trim();
     const firstQuestion = current.chatHistory.find((m) => m.role === "user");
@@ -209,6 +213,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
         planDelivered: false,
         deliveredPlan: undefined,
         pastTopics: archived,
+        supportNudgeDismissed: false,
         lastUpdated: new Date().toISOString(),
       },
     });
@@ -263,6 +268,12 @@ export default function ChatInterface({ chart, dashas }: Props) {
     } catch {
       setMemoryStatus("Removed from this device. Your account copy updates on the next successful sync.");
     }
+  }
+
+  function dismissSupportNudge() {
+    setSupportNudgeDismissed(true);
+    const current = getProfile();
+    saveProfile({ ...current, coaching: { ...current.coaching, supportNudgeDismissed: true } });
   }
 
   function requestNewTopic() {
@@ -939,6 +950,14 @@ export default function ChatInterface({ chart, dashas }: Props) {
             </div>
           </div>
         ))}
+        {planDelivered && !streaming && !supportNudgeDismissed &&
+          // Never under a crisis reply: that moment is about getting help, not us.
+          messages[messages.length - 1]?.content !== CRISIS_RESPONSE && (
+          <SupportNudge
+            message="Found this useful? Astro Coach has no paywall. If you'd like to help keep it running,"
+            onDismiss={dismissSupportNudge}
+          />
+        )}
         {(planHabits || planHabitsError) && (
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
             <div className="flex items-center justify-between mb-2">

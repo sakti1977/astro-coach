@@ -174,3 +174,30 @@ describe("NON_NEGOTIABLES harness", () => {
     expect(src).toContain("buildFoundationTask");
   });
 });
+
+describe("NON_NEGOTIABLES #15 voluntary contributions stay out of coaching", () => {
+  // Not "donation": dana (charitable giving) is a legitimate classical remedy.
+  const PAYMENT = /\bupi\b|\bpayments?\b|\bpay what\b|support astro coach|₹/i;
+
+  it("no prompt module or the remedy table mentions paying", () => {
+    const promptFiles = walk(join(APP_ROOT, "lib/astrology")).filter((f) => /\.ts$/.test(f) && !f.endsWith(".test.ts"));
+    for (const file of promptFiles) {
+      expect(read(file), relative(APP_ROOT, file)).not.toMatch(PAYMENT);
+    }
+    expect(read(join(REPO_ROOT, "python-service/remedies.py"))).not.toMatch(PAYMENT);
+  });
+
+  it("UPI links are only built in lib/support.ts", () => {
+    const files = walk(APP_ROOT).filter((f) => /\.(ts|tsx)$/.test(f) && !f.endsWith(".test.ts"));
+    for (const file of files) {
+      const rel = relative(APP_ROOT, file).replaceAll("\\", "/");
+      if (rel === "lib/support.ts") continue;
+      expect(read(file), rel).not.toContain("upi://");
+    }
+  });
+
+  it("the chat never renders the support card under a crisis reply", () => {
+    const chat = read(join(APP_ROOT, "components/coach/ChatInterface.tsx"));
+    expect(chat).toMatch(/!== CRISIS_RESPONSE && \(\s*<SupportNudge/);
+  });
+});

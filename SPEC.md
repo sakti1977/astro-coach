@@ -138,6 +138,10 @@ _Verified against code as of commit `1fc5f00`. See git history for anything afte
 
 ---
 
+### 4.8 Voluntary Support (UPI)
+- WHERE `NEXT_PUBLIC_UPI_ID` is configured, the system shall offer an optional, honour-based UPI contribution: a `/support` page (preset ₹51/₹101/₹251 or any whole amount, QR code, UPI pay link, copyable ID), a sidebar and footer link, one dismissible card per topic after a delivered plan, and one line on the Foundation page. WHERE it is not configured, none of these shall render.
+- Paying shall never gate, unlock, or change any feature, guidance, or remedy, and the ask shall never appear inside coaching output, next to a remedy, or under a crisis reply (`NON_NEGOTIABLES.md` #15).
+
 ## 5. Future Scope — Prioritized Against the Competitive Research
 
 Re-verify market facts in §1 before acting on stale versions of this section — funding rounds, valuations, and feature parity all move fast in this space.

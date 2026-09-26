@@ -33,6 +33,7 @@ Local/free: `docker compose up` or `./start.sh`.
 | `ALLOWED_ORIGINS` | Python | Public Next origin |
 | `CRON_SECRET` | Next | Host crontab or Railway curl cron, see `deploy/crontab.example` (replaces Vercel Cron) |
 | `UPSTASH_*` / VAPID / `SARVAM_API_KEY` | Next | Optional, same as before |
+| `NEXT_PUBLIC_UPI_ID` / `NEXT_PUBLIC_UPI_PAYEE_NAME` | Next (build + runtime) | Optional voluntary UPI support (`/support`). Hidden when unset. Merchant UPI IDs work more reliably than personal ones from web pay links. |
 
 Copy [`.env.example`](.env.example) to `.env` for Compose. Do not commit `.env`.
 
@@ -95,6 +96,7 @@ Keep `min_machines_running = 1` and `auto_stop_machines = "off"`. Autostop is ho
    | `ANTHROPIC_API_KEY` | Copy from Vercel |
    | `CRON_SECRET` | Copy from Vercel |
    | `SARVAM_API_KEY`, `UPSTASH_*`, `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` | Copy from Vercel if set |
+   | `NEXT_PUBLIC_UPI_ID`, `NEXT_PUBLIC_UPI_PAYEE_NAME` | Optional. Your UPI ID and display name for voluntary support; redeploy after setting (build arg) |
 
    Leave `PORT` unset unless healthchecks fail: Railway injects it; `start-one-host.sh` passes it to `next start`. Optional override: `PORT=3000`.
 4. Settings → Networking: generate a public domain (`*.up.railway.app`). Healthcheck path is `/api/health` (200 only when Next **and** uvicorn are up). Timeout 300s (image start + ephemeris wait).

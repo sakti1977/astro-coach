@@ -16,9 +16,12 @@ import {
   Sprout,
   Menu,
   X,
+  Heart,
 } from "lucide-react";
 import SyncStatus from "@/components/SyncStatus";
 import AdviceDisclaimer from "@/components/AdviceDisclaimer";
+import SupportLink from "@/components/support/SupportLink";
+import { readSupportConfig } from "@/lib/support";
 
 const NAV_ITEMS = [
   { href: "/chart",      label: "Chart",      icon: Hexagon },
@@ -29,6 +32,8 @@ const NAV_ITEMS = [
   { href: "/validate",   label: "Validate",   icon: Target },
   { href: "/coach",      label: "Guidance",   icon: MessageCircle },
   { href: "/habits",     label: "Sadhana",    icon: Sprout },
+  // Only once a UPI ID is configured — see lib/support.ts.
+  ...(readSupportConfig() ? [{ href: "/support", label: "Support", icon: Heart }] : []),
 ];
 
 function Logo() {
@@ -196,6 +201,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {children}
         <div className="px-4 pb-6 pt-2">
           <AdviceDisclaimer />
+          <p className="text-center mt-1">
+            <SupportLink className="text-[10px] text-gray-500 hover:text-gray-700 underline decoration-dotted underline-offset-2" />
+          </p>
         </div>
       </main>
     </div>

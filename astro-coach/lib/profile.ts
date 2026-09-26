@@ -214,6 +214,8 @@ export interface UserProfile {
     deliveredPlan?: string;
     /** Plans from earlier topics, newest first (capped at MAX_PAST_TOPICS). */
     pastTopics?: PastCoachingTopic[];
+    /** The user closed the support card for this topic. Resets on New Topic. */
+    supportNudgeDismissed?: boolean;
     /** "jyotish" (default): traditional Jyotish vocabulary throughout
      * (karma/dharma/guna/upaya). "skeptic": the SAME chart, chain-analysis,
      * and deterministic remedy table, translated into plain psychological/
