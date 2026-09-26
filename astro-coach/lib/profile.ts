@@ -139,6 +139,9 @@ export interface ChatMessage {
    * isn't English. Falls back to `content` when absent. */
   displayContent?: string;
   timestamp: string;
+  /** The user's thumbs up/down on an assistant reply (also sent to /api/coach/feedback). */
+  feedback?: "up" | "down";
+  feedbackReason?: string;
 }
 
 export type CoachingPhase = "gathering" | "recommending";

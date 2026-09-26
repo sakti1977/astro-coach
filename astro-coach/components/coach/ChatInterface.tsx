@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square, RefreshCw, AlertCircle, Brain, X } from "lucide-react";
+import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square, RefreshCw, AlertCircle, Brain, X, ThumbsUp, ThumbsDown } from "lucide-react";
 import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits, PastCoachingTopic, Habit } from "@/lib/profile";
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile, updateProfile } from "@/lib/profile";
 import type { GeneratedHabit } from "@/lib/habit-schema";
@@ -14,6 +14,7 @@ import { createCoachStreamParser, type CoachTurnOutcome } from "@/lib/coach-stre
 import AdviceDisclaimer from "@/components/AdviceDisclaimer";
 import SupportNudge from "@/components/support/SupportNudge";
 import { CRISIS_RESPONSE } from "@/lib/coach-safety";
+import { FEEDBACK_REASONS, type FeedbackRating } from "@/lib/coach-feedback";
 import {
   CHAT_HISTORY_DISPLAY,
   CHAT_WINDOW_API,
@@ -69,6 +70,8 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [addedHabits, setAddedHabits] = useState<string[]>([]);
   const [supportNudgeDismissed, setSupportNudgeDismissed] = useState(profile.coaching.supportNudgeDismissed ?? false);
   const [showMemory, setShowMemory] = useState(false);
+  const [reasonPickerFor, setReasonPickerFor] = useState<string | null>(null);
+  const [feedbackNote, setFeedbackNote] = useState<{ ts: string; text: string } | null>(null);
   const [memoryStatus, setMemoryStatus] = useState("");
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
@@ -274,6 +277,36 @@ export default function ChatInterface({ chart, dashas }: Props) {
     setSupportNudgeDismissed(true);
     const current = getProfile();
     saveProfile({ ...current, coaching: { ...current.coaching, supportNudgeDismissed: true } });
+  }
+
+  /** Thumbs up/down on a reply. Clicking the active thumb again clears it. */
+  async function rateMessage(msg: ChatMessage, rating: FeedbackRating | null, reason?: string) {
+    const apply = (m: ChatMessage): ChatMessage =>
+      m.role === "assistant" && m.timestamp === msg.timestamp
+        ? { ...m, feedback: rating ?? undefined, feedbackReason: rating === "down" ? reason : undefined }
+        : m;
+    setMessages((prev) => prev.map(apply));
+    const current = getProfile();
+    saveProfile({ ...current, chatHistory: current.chatHistory.map(apply) });
+    setReasonPickerFor(rating === "down" && !reason ? msg.timestamp : null);
+    try {
+      const res = await fetch("/api/coach/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messageTimestamp: msg.timestamp,
+          rating,
+          reason: rating === "down" ? reason : undefined,
+          reply: msg.content,
+          phase,
+          tone: tonePreference,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setFeedbackNote(rating ? { ts: msg.timestamp, text: rating === "up" ? "Thanks — noted." : reason ? "Thanks — that helps." : "What was off?" } : null);
+    } catch {
+      setFeedbackNote({ ts: msg.timestamp, text: "Saved on this device; couldn't reach the server." });
+    }
   }
 
   function requestNewTopic() {
@@ -928,21 +961,63 @@ export default function ChatInterface({ chart, dashas }: Props) {
                   <div className="chat-markdown text-base leading-relaxed">
                     <ReactMarkdown>{msg.displayContent ?? msg.content}</ReactMarkdown>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleListen(i, msg.displayContent ?? msg.content)}
-                    disabled={loadingAudioIndex === i}
-                    className="mt-2 text-xs text-indigo-500 hover:text-indigo-700 disabled:opacity-50 inline-flex items-center gap-1"
-                    title="Hear this reply spoken aloud"
-                  >
-                    {loadingAudioIndex === i ? (
-                      <><Loader2 className="w-3 h-3 animate-spin" /> Loading…</>
-                    ) : playingIndex === i ? (
-                      <><Pause className="w-3 h-3" /> Stop</>
-                    ) : (
-                      <><Volume2 className="w-3 h-3" /> Listen</>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleListen(i, msg.displayContent ?? msg.content)}
+                      disabled={loadingAudioIndex === i}
+                      className="text-xs text-indigo-500 hover:text-indigo-700 disabled:opacity-50 inline-flex items-center gap-1"
+                      title="Hear this reply spoken aloud"
+                    >
+                      {loadingAudioIndex === i ? (
+                        <><Loader2 className="w-3 h-3 animate-spin" /> Loading…</>
+                      ) : playingIndex === i ? (
+                        <><Pause className="w-3 h-3" /> Stop</>
+                      ) : (
+                        <><Volume2 className="w-3 h-3" /> Listen</>
+                      )}
+                    </button>
+                    {/* Ratings are for coaching replies; the crisis reply isn't one. */}
+                    {msg.content !== CRISIS_RESPONSE && !(streaming && i === messages.length - 1) && (
+                      <span className="inline-flex items-center gap-1" title="Rating saves your thumbs and this reply (not your messages) to your account, to improve the coach">
+                        <button
+                          type="button"
+                          onClick={() => rateMessage(msg, msg.feedback === "up" ? null : "up")}
+                          aria-label="Helpful"
+                          aria-pressed={msg.feedback === "up"}
+                          className={`p-1 rounded-md transition-colors ${msg.feedback === "up" ? "text-emerald-600 bg-emerald-50" : "text-gray-400 hover:text-gray-600"}`}
+                        >
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => rateMessage(msg, msg.feedback === "down" ? null : "down")}
+                          aria-label="Not helpful"
+                          aria-pressed={msg.feedback === "down"}
+                          className={`p-1 rounded-md transition-colors ${msg.feedback === "down" ? "text-rose-600 bg-rose-50" : "text-gray-400 hover:text-gray-600"}`}
+                        >
+                          <ThumbsDown className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
                     )}
-                  </button>
+                    {feedbackNote?.ts === msg.timestamp && (
+                      <span className="text-[11px] text-gray-500">{feedbackNote.text}</span>
+                    )}
+                  </div>
+                  {reasonPickerFor === msg.timestamp && msg.feedback === "down" && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {FEEDBACK_REASONS.map((r) => (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => rateMessage(msg, "down", r.id)}
+                          className="text-[11px] px-2 py-0.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50"
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : (
                 <p className="whitespace-pre-wrap">{msg.displayContent ?? msg.content}</p>
