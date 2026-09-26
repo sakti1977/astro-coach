@@ -3,13 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
-import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square, RefreshCw, AlertCircle, Brain, X, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square, RefreshCw, AlertCircle, Brain, X, ThumbsUp, ThumbsDown, Settings2 } from "lucide-react";
 import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits, PastCoachingTopic, Habit } from "@/lib/profile";
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile, updateProfile } from "@/lib/profile";
 import type { GeneratedHabit } from "@/lib/habit-schema";
 import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
-import { SARVAM_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "@/lib/languages";
+import { DEFAULT_LANGUAGE_CODE, SARVAM_LANGUAGES } from "@/lib/languages";
+import CoachPreferences, { saveCoachPreferences, type CoachPreferenceValues } from "@/components/settings/CoachPreferences";
 import { createCoachStreamParser, type CoachTurnOutcome } from "@/lib/coach-stream";
 import AdviceDisclaimer from "@/components/AdviceDisclaimer";
 import SupportNudge from "@/components/support/SupportNudge";
@@ -70,6 +71,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [addedHabits, setAddedHabits] = useState<string[]>([]);
   const [supportNudgeDismissed, setSupportNudgeDismissed] = useState(profile.coaching.supportNudgeDismissed ?? false);
   const [showMemory, setShowMemory] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [reasonPickerFor, setReasonPickerFor] = useState<string | null>(null);
   const [feedbackNote, setFeedbackNote] = useState<{ ts: string; text: string } | null>(null);
   const [memoryStatus, setMemoryStatus] = useState("");
@@ -93,13 +95,11 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const audioQueueRef = useRef<string[]>([]);
 
-  function changeLanguage(code: string) {
-    setPreferredLanguage(code);
-    const current = getProfile();
-    saveProfile({
-      ...current,
-      coaching: { ...current.coaching, preferredLanguage: code },
-    });
+  function updatePreferences(change: Partial<CoachPreferenceValues>) {
+    if (change.includeReligiousSolutions !== undefined) setIncludeReligiousSolutions(change.includeReligiousSolutions);
+    if (change.tonePreference !== undefined) setTonePreference(change.tonePreference);
+    if (change.preferredLanguage !== undefined) setPreferredLanguage(change.preferredLanguage);
+    saveCoachPreferences(change);
   }
 
   function setObservationList(list: CoachingObservation[]) {
@@ -151,32 +151,6 @@ export default function ChatInterface({ chart, dashas }: Props) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  function toggleReligiousSolutions() {
-    const newValue = !includeReligiousSolutions;
-    setIncludeReligiousSolutions(newValue);
-    const current = getProfile();
-    saveProfile({
-      ...current,
-      coaching: {
-        ...current.coaching,
-        includeReligiousSolutions: newValue,
-      },
-    });
-  }
-
-  function toggleTonePreference() {
-    const newValue: CoachTonePreference = tonePreference === "jyotish" ? "skeptic" : "jyotish";
-    setTonePreference(newValue);
-    const current = getProfile();
-    saveProfile({
-      ...current,
-      coaching: {
-        ...current.coaching,
-        tonePreference: newValue,
-      },
-    });
-  }
 
   function startNewTopic() {
     // Reset conversation state — keep chart, profile, and observations (accumulated
@@ -763,52 +737,19 @@ export default function ChatInterface({ chart, dashas }: Props) {
               <Zap className="w-3 h-3" /> Get My Plan Now
             </button>
           )}
-          {/* Vedic remedies toggle */}
-          <button
-            onClick={toggleReligiousSolutions}
-            className={`shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
-              includeReligiousSolutions
-                ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
-                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-            }`}
-            title={
-              includeReligiousSolutions
-                ? "Vedic remedies (mantra, gemstone, dana) included alongside behavioral practice — click for behavioral-only"
-                : "Behavioral-only mode — click to include traditional Vedic remedies"
-            }
-          >
-            {includeReligiousSolutions ? "🕉 Vedic Remedies" : "⚛ Behavioral Only"}
-          </button>
-          {/* Voice/framing toggle — see SPEC.md §3 */}
-          <button
-            onClick={toggleTonePreference}
-            className={`shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded-full font-medium border transition-colors ${
-              tonePreference === "skeptic"
-                ? "bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100"
-                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-            }`}
-            title={
-              tonePreference === "skeptic"
-                ? "Plain-language mode — same chart and analysis, no mystical framing. Click for traditional Jyotish voice"
-                : "Traditional Jyotish voice — click for plain psychological/behavioral language instead"
-            }
-          >
-            {tonePreference === "skeptic" ? "🎯 Plain Language" : "🕉 Traditional Voice"}
-          </button>
-          {/* Language selector */}
-          <select
-            value={preferredLanguage}
-            onChange={(e) => changeLanguage(e.target.value)}
-            title="Coaching language — your messages and the coach's replies are translated"
-            className="shrink-0 whitespace-nowrap text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 focus:outline-none"
-          >
-            {SARVAM_LANGUAGES.map((l) => (
-              <option key={l.code} value={l.code}>{l.label}</option>
-            ))}
-          </select>
+          {/* Remedy mode, voice and language live in one settings panel (also on /profile). */}
           <button
             type="button"
-            onClick={() => { setShowMemory((v) => !v); setMemoryStatus(""); }}
+            onClick={() => { setShowSettings((v) => !v); setShowMemory(false); }}
+            aria-expanded={showSettings}
+            className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+            title="Remedies, voice and language"
+          >
+            <Settings2 className="w-3 h-3" /> Settings
+          </button>
+          <button
+            type="button"
+            onClick={() => { setShowMemory((v) => !v); setShowSettings(false); setMemoryStatus(""); }}
             className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
             title="See and delete what the coach has noted about you"
           >
@@ -840,6 +781,24 @@ export default function ChatInterface({ chart, dashas }: Props) {
           )}
         </div>
       </div>
+
+      {showSettings && (
+        <div className="px-4 py-4 border-b border-gray-100 bg-white">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Coach settings</p>
+            <button type="button" onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-600" aria-label="Close settings">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <CoachPreferences
+            value={{ includeReligiousSolutions, tonePreference, preferredLanguage }}
+            onChange={updatePreferences}
+          />
+          <p className="mt-3 text-[11px] text-gray-500">
+            Current: {includeReligiousSolutions ? "Vedic remedies on" : "Behavioral only"} · {tonePreference === "skeptic" ? "Plain language" : "Traditional voice"} · {SARVAM_LANGUAGES.find((l) => l.code === preferredLanguage)?.label ?? preferredLanguage}. Also on your Profile page.
+          </p>
+        </div>
+      )}
 
       {showMemory && (
         <div className="px-4 py-3 border-b border-gray-100 bg-white text-sm">

@@ -8,6 +8,7 @@ import { getProfile, updateProfile, clearProfile, archiveProfile, type UserProfi
 import { storage } from "@/lib/storage-supabase";
 import { useDataSync } from "@/lib/useDataSync";
 import NotificationSettings from "@/components/NotificationSettings";
+import CoachPreferences, { readCoachPreferences, saveCoachPreferences, type CoachPreferenceValues } from "@/components/settings/CoachPreferences";
 import { Sparkles } from "lucide-react";
 
 const ALL_TIMEZONES = [
@@ -62,9 +63,16 @@ export default function ProfilePage() {
     });
   }, [session, authStatus, router]);
 
+  const [coachPrefs, setCoachPrefs] = useState<CoachPreferenceValues>(() => readCoachPreferences());
+  function updateCoachPrefs(change: Partial<CoachPreferenceValues>) {
+    setCoachPrefs((prev) => ({ ...prev, ...change }));
+    saveCoachPreferences(change);
+  }
+
   function refreshProfile() {
     const p = getProfile();
     setProfile(p);
+    setCoachPrefs(readCoachPreferences());
   }
 
   function setField(key: keyof typeof birthForm, val: string) {
@@ -314,6 +322,13 @@ export default function ProfilePage() {
               <p className="text-[10px] text-gray-500">Changing birth data requires recalculating the chart (below) to see updated positions and predictions.</p>
             </div>
           )}
+        </div>
+
+        {/* Coaching preferences — same control as the chat's Settings panel */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-6">
+          <h2 className="font-semibold text-gray-900">Coaching</h2>
+          <p className="text-xs text-gray-500 mb-4">How the coach speaks to you. Changes apply from your next message.</p>
+          <CoachPreferences value={coachPrefs} onChange={updateCoachPrefs} />
         </div>
 
         {/* Recalculate Chart */}
