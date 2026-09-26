@@ -61,4 +61,12 @@ cd "$ROOT/astro-coach"
 npm run start -- -H 0.0.0.0 -p "$APP_PORT" &
 NEXT_PID=$!
 
+# Daily push notifications (replaces Vercel Cron). Off unless CRON_SECRET is
+# set. Not supervised: if it ever stops, the web app keeps serving, and the
+# next container restart brings it back.
+if [ -n "${CRON_SECRET:-}" ]; then
+  echo "→ Starting daily notification job"
+  "$ROOT/deploy/daily-cron.sh" "$APP_PORT" &
+fi
+
 supervise_children "$PYTHON_PID" "$NEXT_PID"

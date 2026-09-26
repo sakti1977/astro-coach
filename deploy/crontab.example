@@ -1,14 +1,14 @@
-# Vercel Cron goes away with Vercel. Same schedule as astro-coach/vercel.json:
-# 02:30 UTC = 08:00 IST.
+# Daily push notifications: GET /api/cron/notifications with the CRON_SECRET
+# bearer token, once a day at 02:30 UTC (08:00 IST).
 #
-# VPS / Compose: crontab -e, replace HOST and CRON_SECRET:
+# One-host image (Railway, Fly, Render, docker run): nothing to set up here.
+# deploy/start-one-host.sh starts deploy/daily-cron.sh whenever CRON_SECRET is
+# set. Optional: CRON_UTC_TIME=HH:MM to change the time (UTC).
+#
+# Docker Compose (web + ephemeris as two containers) or a plain VPS: add a host
+# crontab entry instead (crontab -e), replacing HOST and CRON_SECRET:
 #
 #   30 2 * * * curl -fsS -H "Authorization: Bearer CRON_SECRET" https://HOST/api/cron/notifications >/dev/null
 #
-# Railway: do NOT put a cronSchedule on the web service (that would stop Next).
-# Add a second service in the same project:
-#   Source: Docker image  curlimages/curl
-#   Cron schedule:        30 2 * * *
-#   Start command:        curl -fsS -H "Authorization: Bearer $CRON_SECRET" "$NEXTAUTH_URL/api/cron/notifications"
-# Copy CRON_SECRET and NEXTAUTH_URL from the web service variables.
-# The cron service must exit after curl (Railway skips the next run if it stays Active).
+# Do not also run a separate Railway cron service against the one-host image:
+# the endpoint is idempotent, so it would be harmless, just redundant.

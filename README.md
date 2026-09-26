@@ -31,7 +31,8 @@ Local/free: `docker compose up` or `./start.sh`.
 | `SUPABASE_SERVICE_ROLE_KEY` | Next server | Never `NEXT_PUBLIC_*` |
 | `ANTHROPIC_API_KEY` | Next | Coaching |
 | `ALLOWED_ORIGINS` | Python | Public Next origin |
-| `CRON_SECRET` | Next | Host crontab or Railway curl cron, see `deploy/crontab.example` (replaces Vercel Cron) |
+| `CRON_SECRET` | Next | Turns on the daily notification job in the one-host container (`deploy/daily-cron.sh`, 02:30 UTC). Compose/VPS: host crontab, see `deploy/crontab.example` |
+| `CRON_UTC_TIME` | Next | Optional `HH:MM` (UTC) for the daily job; default `02:30` = 08:00 IST |
 | `UPSTASH_*` / VAPID / `SARVAM_API_KEY` | Next | Optional, same as before |
 | `NEXT_PUBLIC_UPI_ID` / `NEXT_PUBLIC_UPI_PAYEE_NAME` | Next (build + runtime) | Optional voluntary UPI support (`/support`). Hidden when unset. Merchant UPI IDs work more reliably than personal ones from web pay links. |
 
@@ -102,7 +103,7 @@ Keep `min_machines_running = 1` and `auto_stop_machines = "off"`. Autostop is ho
 4. Settings → Networking: generate a public domain (`*.up.railway.app`). Healthcheck path is `/api/health` (200 only when Next **and** uvicorn are up). Timeout 300s (image start + ephemeris wait).
 5. Deploy. Confirm `https://<app>.up.railway.app/api/health` returns `{"ok":true}`. Sign in once (NextAuth). Generate a guest chart to prove kerykeion.
 6. **Supabase stays.** Dashboard → Authentication → URL configuration: add the Railway origin to **Site URL** / **Redirect URLs** (`https://<app>.up.railway.app/**`). Do not delete the Supabase project.
-7. **Cron:** Vercel Cron is gone. Either a second Railway service (`curlimages/curl`, schedule `30 2 * * *`, start command in `deploy/crontab.example`) **or** skip until you need push notifications.
+7. **Daily notifications:** set `CRON_SECRET` (and the `VAPID_*` keys) on this service. The container runs the job itself at 02:30 UTC (`deploy/daily-cron.sh`); no second Railway service is needed. Check the deploy logs for `[daily-cron]` lines.
 8. **Cutover:** Point the custom domain at Railway (CNAME to the Railway domain). Update `NEXTAUTH_URL` + `ALLOWED_ORIGINS` + Supabase redirect URLs. Redeploy. Then **delete the Vercel project** and the **old Railway Python-only** service (Nixpacks / `python-service`). Keep this one Docker service.
 
 ### Local without Docker
@@ -117,11 +118,11 @@ Cloud Agent: `.cursor/environment.json` `start` is `./start.sh`; a tmux terminal
 
 | Stop paying / remove | Why |
 | --- | --- |
-| **Vercel project** | Next now runs on the one-host container (`next start`). `astro-coach/vercel.json` cron is replaced by `deploy/crontab.example` / a Railway curl cron. |
+| **Vercel project** | Done. Next runs on the one-host container (`next start`); the old Vercel cron is replaced by `deploy/daily-cron.sh`. |
 | **Old Railway Python-only service** | Root `Dockerfile` already runs uvicorn. Do not keep Nixpacks `python-service`. |
 | Do **not** delete Supabase | Auth + Postgres stay. |
 
-Leave `python-service/railway.json` and `astro-coach/vercel.json` in git as leftovers; they are unused once you cut over. Use root `railway.json` for the one-host service.
+`python-service/railway.json` is a leftover from the old Python-only service; use the root `railway.json` for the one-host service.
 
 ### Why two processes still
 

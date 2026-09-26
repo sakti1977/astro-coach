@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { Analytics } from '@vercel/analytics/next';
 import AuthProvider from "@/components/AuthProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "./globals.css";
@@ -26,7 +25,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         <AuthProvider>
           {children}
-          <Analytics />
           <ServiceWorkerRegister />
         </AuthProvider>
       </body>
