@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, Suspense } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { LEGAL } from "@/lib/legal";
 import { Sparkles, Mail, Smartphone, Lock } from "lucide-react";
 
 // ── Country code list ──────────────────────────────────────────────────────
@@ -59,6 +61,7 @@ function EmailAuthForm({
   const [email, setEmail]                 = useState("");
   const [password, setPassword]           = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreed, setAgreed]               = useState(false);
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState("");
   const [info, setInfo]                   = useState(""); // success/info messages
@@ -75,6 +78,10 @@ function EmailAuthForm({
     setError(""); setInfo("");
 
     if (mode === "signup") {
+      if (!agreed) {
+        setError("Please agree to the Terms of Use and Privacy Policy to create an account");
+        return;
+      }
       if (password !== confirmPassword) {
         setError("Passwords do not match");
         return;
@@ -308,6 +315,23 @@ function EmailAuthForm({
         </div>
       )}
 
+      {mode === "signup" && (
+        <label className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            required
+            className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 dark:border-gray-600 accent-indigo-600"
+          />
+          <span>
+            I am {LEGAL.minimumAge} or older and agree to the{" "}
+            <Link href="/terms" target="_blank" className="underline">Terms of Use</Link> and{" "}
+            <Link href="/privacy" target="_blank" className="underline">Privacy Policy</Link>.
+          </span>
+        </label>
+      )}
+
       {error && (
         <div className="bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 rounded-xl p-3 text-sm text-red-700 dark:text-red-300">
           {error}
@@ -316,7 +340,7 @@ function EmailAuthForm({
 
       <button
         type="submit"
-        disabled={loading || (mode === "signup" && !!confirmPassword && confirmPassword !== password)}
+        disabled={loading || (mode === "signup" && (!agreed || (!!confirmPassword && confirmPassword !== password)))}
         className="w-full bg-indigo-600 text-white py-3 rounded-xl font-medium text-sm hover:bg-indigo-700 transition-colors disabled:opacity-50 shadow-sm shadow-indigo-200 dark:shadow-black/30"
       >
         {loading
@@ -466,6 +490,11 @@ function PhoneAuthForm({ callbackUrl }: { callbackUrl: string }) {
         >
           {loading ? "Sending OTP…" : "Send OTP"}
         </button>
+        <p className="text-center text-[11px] text-gray-500 dark:text-gray-400">
+          By continuing you confirm you are {LEGAL.minimumAge} or older and agree to the{" "}
+          <Link href="/terms" target="_blank" className="underline">Terms of Use</Link> and{" "}
+          <Link href="/privacy" target="_blank" className="underline">Privacy Policy</Link>.
+        </p>
       </div>
     );
   }
