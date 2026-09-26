@@ -6,6 +6,7 @@ import { buildHabitPrompt } from "@/lib/astrology/prompts";
 import { extractJsonArray } from "@/lib/claude-json";
 import { safeClientErrorMessage } from "@/lib/safe-error";
 import { resolveNatalGrounding } from "@/lib/server-grounding";
+import { parseGeneratedHabits } from "@/lib/habit-schema";
 
 export async function POST(req: NextRequest) {
   const access = await getApiAccessContext(req);
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     const prompt = buildHabitPrompt(grounding.chart, lord, goals, weakPlanets ?? [], new Date().toISOString());
     const raw = await generateHabits(prompt);
-    const habits = extractJsonArray(raw);
+    const habits = parseGeneratedHabits(extractJsonArray(raw));
 
     return NextResponse.json({ habits });
   } catch (err: unknown) {

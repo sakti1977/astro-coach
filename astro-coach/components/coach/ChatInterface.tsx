@@ -4,8 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { Sparkles, RotateCcw, Zap, CheckCircle2, PlayCircle, CircleDot, Loader2, Pause, Volume2, Mic, Square, RefreshCw, AlertCircle } from "lucide-react";
-import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits, PastCoachingTopic } from "@/lib/profile";
-import { addChatMessage, buildCoachingContext, getProfile, saveProfile } from "@/lib/profile";
+import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingPhase, CoachTonePreference, CachedTransits, PastCoachingTopic, Habit } from "@/lib/profile";
+import { addChatMessage, buildCoachingContext, getProfile, saveProfile, updateProfile } from "@/lib/profile";
+import type { GeneratedHabit } from "@/lib/habit-schema";
 import { storage } from "@/lib/storage-supabase";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 import { SARVAM_LANGUAGES, DEFAULT_LANGUAGE_CODE } from "@/lib/languages";
@@ -60,6 +61,10 @@ export default function ChatInterface({ chart, dashas }: Props) {
   const [chatError, setChatError] = useState("");
   const [confirmingNewTopic, setConfirmingNewTopic] = useState(false);
   const [pastTopics, setPastTopics] = useState<PastCoachingTopic[]>(profile.coaching.pastTopics ?? []);
+  const [planHabits, setPlanHabits] = useState<GeneratedHabit[] | null>(null);
+  const [planHabitsLoading, setPlanHabitsLoading] = useState(false);
+  const [planHabitsError, setPlanHabitsError] = useState("");
+  const [addedHabits, setAddedHabits] = useState<string[]>([]);
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [voiceError, setVoiceError] = useState("");
@@ -170,6 +175,8 @@ export default function ChatInterface({ chart, dashas }: Props) {
     // context). A delivered plan is archived first so it isn't lost with the chat.
     setConfirmingNewTopic(false);
     setChatError("");
+    setPlanHabits(null);
+    setPlanHabitsError("");
     const current = getProfile();
     const plan = current.coaching.deliveredPlan?.trim();
     const firstQuestion = current.chatHistory.find((m) => m.role === "user");
@@ -204,6 +211,40 @@ export default function ChatInterface({ chart, dashas }: Props) {
       },
     });
     setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
+  async function proposePlanHabits() {
+    const plan = getProfile().coaching.deliveredPlan;
+    if (!plan || planHabitsLoading) return;
+    setPlanHabitsLoading(true);
+    setPlanHabitsError("");
+    try {
+      const res = await fetch("/api/coach/plan-habits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Couldn't turn the plan into habits.");
+      const habits = (data.habits ?? []) as GeneratedHabit[];
+      if (habits.length === 0) throw new Error("This plan has no repeatable practices to track.");
+      setPlanHabits(habits);
+      setAddedHabits([]);
+    } catch (e: unknown) {
+      setPlanHabitsError(e instanceof Error ? e.message : "Couldn't turn the plan into habits.");
+    } finally {
+      setPlanHabitsLoading(false);
+    }
+  }
+
+  function addPlanHabit(h: GeneratedHabit) {
+    const current = getProfile();
+    const exists = current.habits.some((x) => x.habit.trim().toLowerCase() === h.habit.trim().toLowerCase());
+    if (!exists) {
+      const habit: Habit = { ...h, id: crypto.randomUUID(), completedDates: [], streak: 0 };
+      updateProfile({ habits: [...current.habits, habit] });
+    }
+    setAddedHabits((prev) => [...prev, h.habit]);
   }
 
   function requestNewTopic() {
@@ -639,13 +680,15 @@ export default function ChatInterface({ chart, dashas }: Props) {
           </button>
           {/* Skip discovery, get the plan immediately */}
           {planDelivered && (
-            <Link
-              href="/habits"
-              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors"
-              title="Turn the plan's behavioral items into tracked sadhana"
+            <button
+              type="button"
+              onClick={proposePlanHabits}
+              disabled={planHabitsLoading || streaming}
+              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors disabled:opacity-50"
+              title="Turn this plan's behavioral practices into tracked sadhana"
             >
-              <CheckCircle2 className="w-3 h-3" /> Track on Sadhana
-            </Link>
+              {planHabitsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />} Track this plan
+            </button>
           )}
           {phase === "gathering" && (
             <button
@@ -826,6 +869,47 @@ export default function ChatInterface({ chart, dashas }: Props) {
             </div>
           </div>
         ))}
+        {(planHabits || planHabitsError) && (
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Practices from this plan</p>
+              <button type="button" onClick={() => { setPlanHabits(null); setPlanHabitsError(""); }} className="text-xs text-emerald-700 hover:underline">
+                Close
+              </button>
+            </div>
+            {planHabitsError && <p className="text-sm text-red-600">{planHabitsError}</p>}
+            {planHabits && (
+              <ul className="space-y-2">
+                {planHabits.map((h) => {
+                  const added = addedHabits.includes(h.habit);
+                  return (
+                    <li key={h.habit} className="flex items-start gap-3 rounded-xl bg-white border border-emerald-100 px-3 py-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">{h.habit}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {h.frequency} · {PLANET_META[h.planet as PlanetKey]?.label ?? h.planet}{h.why ? ` · ${h.why}` : ""}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => addPlanHabit(h)}
+                        disabled={added}
+                        className="shrink-0 text-xs px-2.5 py-1 rounded-full font-medium border border-emerald-200 text-emerald-700 hover:bg-emerald-100 disabled:bg-emerald-600 disabled:text-white disabled:border-emerald-600"
+                      >
+                        {added ? "Added" : "Add"}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {addedHabits.length > 0 && (
+              <Link href="/habits" className="mt-3 inline-block text-xs font-medium text-emerald-700 hover:underline">
+                Open Sadhana tracker →
+              </Link>
+            )}
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 

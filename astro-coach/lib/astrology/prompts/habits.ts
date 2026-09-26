@@ -26,6 +26,7 @@ Generate 8 specific, daily/weekly habits that:
 6. Build on natural strengths shown in the chart
 7. Address challenges shown by debilitated or afflicted planets
 8. Create sustainable behavioral patterns aligned with the person's dharma
+9. Are behavioral only: no mantras, gemstones, puja, fasting, dana, or vrata (those come only from the deterministic remedy table)
 
 IMPORTANT: Return ONLY a raw JSON array with no markdown, no explanation, no code fences. The response must start with [ and end with ].
 

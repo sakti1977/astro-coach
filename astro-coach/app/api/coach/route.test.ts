@@ -21,7 +21,8 @@ const DASHAS = {
 } as DashaData;
 
 const drafts: string[][] = [];
-const stream = vi.fn(async function* () {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const stream = vi.fn(async function* (..._args: unknown[]) {
   for (const chunk of drafts.shift() ?? []) yield chunk;
 });
 
@@ -29,7 +30,7 @@ vi.mock("@/lib/api-auth", () => ({
   getApiAccessContext: async () => ({ clientIp: "1.1.1.1", rateLimitKey: "u1", session: { user: { id: "u1" } } }),
 }));
 vi.mock("@/lib/rate-limit", () => ({ checkRateLimit: async () => true }));
-vi.mock("@/lib/claude", () => ({ streamCoachResponse: (...args: unknown[]) => stream(...(args as [])) }));
+vi.mock("@/lib/claude", () => ({ streamCoachResponse: (...args: unknown[]) => stream(...args) }));
 vi.mock("@/lib/coach-transits", () => ({ serverTransitContext: async () => "" }));
 vi.mock("@/lib/server-grounding", () => ({
   resolveNatalGrounding: async () => ({ chart: CHART, dashas: DASHAS, goals: [], habits: [], source: "server" }),

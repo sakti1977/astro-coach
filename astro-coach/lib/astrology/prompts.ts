@@ -16,3 +16,4 @@ export * from "./prompts/extraction";
 export * from "./prompts/dasha";
 export * from "./prompts/habits";
 export * from "./prompts/foundation";
+export * from "./prompts/planHabits";
