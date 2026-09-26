@@ -24,7 +24,7 @@ function AuthErrorContent() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Sparkles className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
-            <span className="font-semibold text-gray-900 dark:text-gray-100 text-xl tracking-tight">Astro Coach</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100 text-xl tracking-tight">Jyotish Coach</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Authentication Error</h1>
         </div>

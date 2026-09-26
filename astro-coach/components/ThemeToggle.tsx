@@ -18,13 +18,13 @@ export default function ThemeToggle({ compact = false }: { compact?: boolean }) 
     // Read after mount: the server render can't know the stored choice.
     queueMicrotask(() => setPref(readThemePreference()));
     const onChange = (e: Event) => setPref((e as CustomEvent<ThemePreference>).detail);
-    window.addEventListener("astro-coach-theme", onChange);
+    window.addEventListener("jyotish-coach-theme", onChange);
     // Follow the OS live while on "system".
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onSystem = () => { if (readThemePreference() === "system") applyTheme("system"); };
     mq.addEventListener("change", onSystem);
     return () => {
-      window.removeEventListener("astro-coach-theme", onChange);
+      window.removeEventListener("jyotish-coach-theme", onChange);
       mq.removeEventListener("change", onSystem);
     };
   }, []);

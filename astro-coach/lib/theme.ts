@@ -8,7 +8,7 @@
 
 export type ThemePreference = "system" | "light" | "dark";
 
-export const THEME_STORAGE_KEY = "astro-coach-theme";
+export const THEME_STORAGE_KEY = "jyotish-coach-theme";
 
 export function readThemePreference(): ThemePreference {
   try {
@@ -38,7 +38,7 @@ export function saveThemePreference(pref: ThemePreference): void {
     // Storage blocked: the choice still applies for this page view.
   }
   applyTheme(pref);
-  window.dispatchEvent(new CustomEvent("astro-coach-theme", { detail: pref }));
+  window.dispatchEvent(new CustomEvent("jyotish-coach-theme", { detail: pref }));
 }
 
 /** Inlined in <head>; must stay dependency-free and tiny. */

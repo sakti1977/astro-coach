@@ -163,7 +163,7 @@ export function parseBackupPayload(input: unknown): ParseResult<UserProfile> {
   const candidate = root.profile && typeof root.profile === "object" ? root.profile : root;
   const result = userProfileSchema.safeParse(candidate);
   if (!result.success) {
-    return { ok: false, error: `This file doesn't look like a valid Astro Coach backup. ${fail(result.error)}` };
+    return { ok: false, error: `This file doesn't look like a valid Jyotish Coach backup. ${fail(result.error)}` };
   }
   return { ok: true, value: result.data as unknown as UserProfile };
 }

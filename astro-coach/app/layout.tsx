@@ -7,7 +7,7 @@ import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Astro Coach — Vedic Astrology Personal Coach",
+  title: "Jyotish Coach — Vedic Astrology Personal Coach",
   description: "A personal AI coaching system grounded in Vedic Jyotish astrology",
   manifest: "/manifest.json",
 };

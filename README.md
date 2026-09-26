@@ -1,4 +1,4 @@
-# Astro Coach
+# Jyotish Coach
 
 Vedic Jyotish coaching app: **Next.js 16** (App Router) + a long-running **Python FastAPI** sidecar (kerykeion 5.12.9 / Swiss Ephemeris). Product docs live in [`astro-coach/README.md`](astro-coach/README.md).
 

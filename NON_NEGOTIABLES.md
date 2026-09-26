@@ -1,4 +1,4 @@
-# Astro Coach — Non-Negotiables
+# Jyotish Coach — Non-Negotiables
 
 _Living checklist. Edit this file directly to add/remove/reword items — the `astro-coach-evaluator`
 subagent (`.claude/agents/astro-coach-evaluator.md`) reads this file at evaluation time, so changes
@@ -148,7 +148,7 @@ all of which is written to route through the existing chart+chat-grounded core.
 coaching/remedy path rather than shipping independent, ungrounded advice logic.
 
 ### 15. Contributions are voluntary and never touch coaching or remedies
-**Rule:** Money never changes what anyone gets. The UPI "Support Astro Coach" ask is honour-based:
+**Rule:** Money never changes what anyone gets. The UPI "Support Jyotish Coach" ask is honour-based:
 nothing is gated, unlocked, or reordered by paying. It is never part of LLM-generated text, never
 mentioned in coaching/extraction/remedy prompts, never rendered inside a chat message bubble, and
 never shown under a crisis/safety reply. It lives only in `lib/support.ts` and `components/support/`.

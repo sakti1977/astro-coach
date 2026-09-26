@@ -177,7 +177,7 @@ describe("NON_NEGOTIABLES harness", () => {
 
 describe("NON_NEGOTIABLES #15 voluntary contributions stay out of coaching", () => {
   // Not "donation": dana (charitable giving) is a legitimate classical remedy.
-  const PAYMENT = /\bupi\b|\bpayments?\b|\bpay what\b|support astro coach|₹/i;
+  const PAYMENT = /\bupi\b|\bpayments?\b|\bpay what\b|support (?:astro|jyotish) coach|₹/i;
 
   it("no prompt module or the remedy table mentions paying", () => {
     const promptFiles = walk(join(APP_ROOT, "lib/astrology")).filter((f) => /\.ts$/.test(f) && !f.endsWith(".test.ts"));
@@ -199,5 +199,21 @@ describe("NON_NEGOTIABLES #15 voluntary contributions stay out of coaching", () 
   it("the chat never renders the support card under a crisis reply", () => {
     const chat = read(join(APP_ROOT, "components/coach/ChatInterface.tsx"));
     expect(chat).toMatch(/!== CRISIS_RESPONSE && \(\s*<SupportNudge/);
+  });
+});
+
+describe("deploy guards (issues #27, #29)", () => {
+  it("CI builds the one-host Docker image with dummy public build args and never pushes it", () => {
+    const ci = read(join(REPO_ROOT, ".github/workflows/ci.yml"));
+    expect(ci).toContain("one-host-image:");
+    expect(ci).toMatch(/file:\s*Dockerfile/);
+    expect(ci).toMatch(/push:\s*false/);
+    expect(ci).toContain("NEXT_PUBLIC_SUPABASE_URL=");
+  });
+
+  it("the one-host image ships the supervisor and the daily notification job", () => {
+    const docker = read(join(REPO_ROOT, "Dockerfile"));
+    expect(docker).toContain("deploy/supervise-children.sh");
+    expect(docker).toContain("deploy/daily-cron.sh");
   });
 });

@@ -12,7 +12,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "Astro Coach", body: "You have a new update.", url: "/" };
+  let payload = { title: "Jyotish Coach", body: "You have a new update.", url: "/" };
   try {
     if (event.data) payload = { ...payload, ...event.data.json() };
   } catch {

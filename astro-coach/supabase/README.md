@@ -1,6 +1,6 @@
 # Supabase Setup Guide
 
-This guide explains how to set up Supabase for the Astro Coach application.
+This guide explains how to set up Supabase for the Jyotish Coach application.
 
 ## Prerequisites
 

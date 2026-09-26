@@ -6,7 +6,7 @@ export default function SupportLink({ className = "", onNavigate }: { className?
   if (!readSupportConfig()) return null;
   return (
     <Link href="/support" onClick={onNavigate} className={className}>
-      Support Astro Coach
+      Support Jyotish Coach
     </Link>
   );
 }

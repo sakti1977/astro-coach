@@ -1,6 +1,6 @@
 # Authentication & User Data Storage
 
-This document explains the authentication system and user data storage implementation for Astro Coach.
+This document explains the authentication system and user data storage implementation for Jyotish Coach.
 
 ## Overview
 

@@ -43,7 +43,7 @@ function Logo() {
       <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
         <Sparkles className="w-3.5 h-3.5 text-white" />
       </div>
-      <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm tracking-tight">Astro Coach</span>
+      <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm tracking-tight">Jyotish Coach</span>
     </Link>
   );
 }

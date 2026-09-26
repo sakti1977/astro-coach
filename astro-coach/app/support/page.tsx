@@ -52,9 +52,9 @@ export default function SupportPage() {
           <div className="w-11 h-11 bg-rose-50 dark:bg-rose-950/40 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Heart className="w-5 h-5 text-rose-500 dark:text-rose-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Support Astro Coach</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Support Jyotish Coach</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">
-            Astro Coach has no paywall, no paid remedies and no gemstone upsells. If it has been useful to you, you can
+            Jyotish Coach has no paywall, no paid remedies and no gemstone upsells. If it has been useful to you, you can
             contribute whatever feels right. It keeps the ephemeris and the coach running.
           </p>
         </div>
@@ -144,7 +144,7 @@ export default function SupportPage() {
         <ul className="mt-8 space-y-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
           <li>Contributions are entirely optional. Nothing in the app is locked, unlocked or changed by paying.</li>
           <li>Your chart gets exactly the same guidance and the same remedies either way. See <Link href="/trust" className="underline">how we work</Link>.</li>
-          <li>Payments go directly to the UPI ID above; Astro Coach never sees your bank or card details.</li>
+          <li>Payments go directly to the UPI ID above; Jyotish Coach never sees your bank or card details.</li>
         </ul>
       </div>
     </AppShell>

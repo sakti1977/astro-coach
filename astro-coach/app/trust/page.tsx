@@ -3,8 +3,8 @@ import AppShell from "@/components/AppShell";
 import { Hexagon, Compass, LayoutGrid, Orbit, Lock, Sprout, Target } from "lucide-react";
 
 export const metadata = {
-  title: "How We Work — Astro Coach",
-  description: "How Astro Coach calculates your chart, why remedies are never upsold, and how to read your results in the voice that works for you.",
+  title: "How We Work — Jyotish Coach",
+  description: "How Jyotish Coach calculates your chart, why remedies are never upsold, and how to read your results in the voice that works for you.",
 };
 
 export default function TrustPage() {

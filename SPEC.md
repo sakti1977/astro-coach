@@ -1,4 +1,4 @@
-# Astro Coach — Product Spec, Competitive Strategy & Roadmap
+# Jyotish Coach — Product Spec, Competitive Strategy & Roadmap
 
 _Last updated: 2026-07-30. Competitive research current as of this date — re-verify facts before quoting externally; this market moves fast (see §5)._
 
@@ -6,7 +6,7 @@ _Last updated: 2026-07-30. Competitive research current as of this date — re-v
 
 ## 0. Product Identity — the non-negotiable North Star
 
-> **Astro Coach is a rational coach.** It forms every assessment from two inputs only: (1) the client's astrological positioning (natal chart, dasha, transits, yogas/doshas) and (2) what the client tells it through chat. It does not defer to fatalism, generic horoscope content, or ritual-first prescriptions. Every resolution or remedy it offers is **practical and behavior/habit-oriented** — things a person can actually do. Ritual remedies (mantra/gemstone/dana/vrata) may be offered as an opt-in layer on top, never as a substitute for the behavioral one, and never invented outside the deterministic remedy table.
+> **Jyotish Coach is a rational coach.** It forms every assessment from two inputs only: (1) the client's astrological positioning (natal chart, dasha, transits, yogas/doshas) and (2) what the client tells it through chat. It does not defer to fatalism, generic horoscope content, or ritual-first prescriptions. Every resolution or remedy it offers is **practical and behavior/habit-oriented** — things a person can actually do. Ritual remedies (mantra/gemstone/dana/vrata) may be offered as an opt-in layer on top, never as a substitute for the behavioral one, and never invented outside the deterministic remedy table.
 
 **Guardrails (enforced by the `astro-coach-evaluator` subagent alongside `NON_NEGOTIABLES.md`):**
 - **G1.** Every coaching output must be traceable to a specific chart placement/dasha/transit AND/OR something the client said in chat. No generic "Cancer people are emotional" filler.
@@ -48,24 +48,24 @@ India's astrology-app market was **~$163-240M in 2024/25**, projected to **$1.8B
 Given the research above, four things compound into a real moat — not just a features list:
 
 ### 2.1 Trust as direct counter-positioning, not just a nice-to-have
-The #1 and #2 players in this market have a *documented, investigated* trust problem: fear-based upselling, cold-reading, fake reviews, no refunds. Astro Coach's existing non-negotiables — a **deterministic remedy table** (no per-conversation improvisation, no upsell surface), **never-fatalistic framing** (G3), and a **transparent "how the chart is calculated" disclosure** — aren't abstract product-quality nice-to-haves. They are a *direct, evidence-backed attack on the market leader's core weakness*. This should be said explicitly in marketing copy and in-app: **"No fear-based remedies. No gemstone upsells. The same chart always gets the same remedy — see exactly how."**
+The #1 and #2 players in this market have a *documented, investigated* trust problem: fear-based upselling, cold-reading, fake reviews, no refunds. Jyotish Coach's existing non-negotiables — a **deterministic remedy table** (no per-conversation improvisation, no upsell surface), **never-fatalistic framing** (G3), and a **transparent "how the chart is calculated" disclosure** — aren't abstract product-quality nice-to-haves. They are a *direct, evidence-backed attack on the market leader's core weakness*. This should be said explicitly in marketing copy and in-app: **"No fear-based remedies. No gemstone upsells. The same chart always gets the same remedy — see exactly how."**
 
 ### 2.2 Skeptic-friendly framing — the single biggest open lane in India
-The Pattern proved this works and built a 15M-user audience doing it. India's market is currently 100% "believer-first." An app that also lands with the "I don't really believe in this, but this personality read is uncannily accurate" audience is tapping a materially larger addressable market than any competitor is currently pursuing. Astro Coach's coaching identity — karakatva/guna framing translated into legible behavioral patterns, mandatory chain-analysis reasoning (placement → lordship → fusion → dignity → synthesis, not bare assertion), behavior-first remedies — is *already structurally close to this*. See §3 for what's needed to make it real, not just implicit.
+The Pattern proved this works and built a 15M-user audience doing it. India's market is currently 100% "believer-first." An app that also lands with the "I don't really believe in this, but this personality read is uncannily accurate" audience is tapping a materially larger addressable market than any competitor is currently pursuing. Jyotish Coach's coaching identity — karakatva/guna framing translated into legible behavioral patterns, mandatory chain-analysis reasoning (placement → lordship → fusion → dignity → synthesis, not bare assertion), behavior-first remedies — is *already structurally close to this*. See §3 for what's needed to make it real, not just implicit.
 
 ### 2.3 Calculation rigor as a provable, not just claimed, differentiator
 AstroSage wins on depth but loses on UX and trust signaling (ad-cluttered, purist-oriented). This product just built and shipped (this session) a runtime consistency harness that mathematically guarantees dasha/antardasha/pratyantardasha dates never drift — provable via `python-service/test_dasha.py`, not just asserted. Combined with the new Muhurta module (closing AstroSage's calculation-breadth lead) and a coherent coaching relationship (not just reports), this is "AstroSage-level rigor with none of AstroSage's UX or trust baggage."
 
 ### 2.4 Owned distribution: regional panchang audiences
-This account already operates `Bangla-Calendar`, `bengali-panchang-bot`, and `Odia-Panchang`. No competitor has this. Funneling those regional audiences into Astro Coach's coaching product is a distribution advantage that can't be replicated without years of the same regional content history.
+This account already operates `Bangla-Calendar`, `bengali-panchang-bot`, and `Odia-Panchang`. No competitor has this. Funneling those regional audiences into Jyotish Coach's coaching product is a distribution advantage that can't be replicated without years of the same regional content history.
 
 ### 2.5 The long-term, hardest-to-copy moat: outcome-correlated remedy efficacy
-Given remedies are free and deterministic (never upsold), Astro Coach is uniquely positioned to do what no competitor — marketplace or AI — is doing: correlate "remedy actually followed" against "outcome reported" over time, and honestly report back what its own data shows works. This requires years of longitudinal, consented user relationships to build — the single hardest thing here for AstroTalk or AstroSage to fast-follow, precisely *because* their business models depend on upselling and one-off transactions rather than a sustained coaching relationship.
+Given remedies are free and deterministic (never upsold), Jyotish Coach is uniquely positioned to do what no competitor — marketplace or AI — is doing: correlate "remedy actually followed" against "outcome reported" over time, and honestly report back what its own data shows works. This requires years of longitudinal, consented user relationships to build — the single hardest thing here for AstroTalk or AstroSage to fast-follow, precisely *because* their business models depend on upselling and one-off transactions rather than a sustained coaching relationship.
 
 ### 2.6 What "world-class" actually means here — lessons from The Pattern (15M users)
-A deeper review (astrologer-written, not just funding coverage) of The Pattern surfaces something more specific than "translate jargon into plain language" (§3 already covers that). Its **actual** differentiator is writing quality — reviewers repeatedly describe the prose itself, not the feature set, as "eerily accurate." Its own documented weaknesses are just as instructive, because Astro Coach already has structural answers to every one of them — they just aren't packaged to make the contrast obvious yet:
+A deeper review (astrologer-written, not just funding coverage) of The Pattern surfaces something more specific than "translate jargon into plain language" (§3 already covers that). Its **actual** differentiator is writing quality — reviewers repeatedly describe the prose itself, not the feature set, as "eerily accurate." Its own documented weaknesses are just as instructive, because Jyotish Coach already has structural answers to every one of them — they just aren't packaged to make the contrast obvious yet:
 
-| The Pattern's weakness (per review) | Astro Coach's existing structural answer |
+| The Pattern's weakness (per review) | Jyotish Coach's existing structural answer |
 |---|---|
 | Black-box opacity — users can't see which placement drove an insight | Chain-analysis method already names the exact placement/house/lordship inline |
 | Restrictive à la carte paywall, cost compounds | Deterministic remedy table, never upsold (§2.1) |

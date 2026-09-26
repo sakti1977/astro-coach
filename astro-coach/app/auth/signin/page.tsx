@@ -553,7 +553,7 @@ function SignInForm() {
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 dark:shadow-black/30">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-gray-900 dark:text-gray-100 text-xl tracking-tight">Astro Coach</span>
+            <span className="font-bold text-gray-900 dark:text-gray-100 text-xl tracking-tight">Jyotish Coach</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {tab === "email" ? "Welcome back" : "Sign in with phone"}

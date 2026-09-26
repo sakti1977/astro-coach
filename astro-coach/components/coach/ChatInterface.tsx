@@ -988,7 +988,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
           // Never under a crisis reply: that moment is about getting help, not us.
           messages[messages.length - 1]?.content !== CRISIS_RESPONSE && (
           <SupportNudge
-            message="Found this useful? Astro Coach has no paywall. If you'd like to help keep it running,"
+            message="Found this useful? Jyotish Coach has no paywall. If you'd like to help keep it running,"
             onDismiss={dismissSupportNudge}
           />
         )}

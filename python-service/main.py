@@ -12,7 +12,7 @@ from dasha import calculate_dashas
 from transits import calculate_transits
 from muhurta import calculate_muhurta
 
-app = FastAPI(title="Astro Coach Ephemeris Service")
+app = FastAPI(title="Jyotish Coach Ephemeris Service")
 
 # SEC-01: shared-secret auth so anyone who learns the deployed URL can't call
 # /calculate, /dasha, /transits directly and bypass the Next.js rate limiter.

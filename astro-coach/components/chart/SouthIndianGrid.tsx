@@ -64,7 +64,7 @@ export default function SouthIndianGrid({ chart, size }: Props) {
       ))}
       {/* Center label */}
       <text x={renderSize / 2} y={renderSize / 2 - 8} textAnchor="middle" fontSize={12}
-        fill="#9CA3AF" fontWeight="bold">ASTRO</text>
+        fill="#9CA3AF" fontWeight="bold">JYOTISH</text>
       <text x={renderSize / 2} y={renderSize / 2 + 8} textAnchor="middle" fontSize={12}
         fill="#9CA3AF" fontWeight="bold">COACH</text>
 

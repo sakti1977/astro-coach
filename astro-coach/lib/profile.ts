@@ -2,6 +2,8 @@
 
 import { CHAT_HISTORY_MAX, MAX_ARCHIVES } from "@/lib/constants";
 
+// Storage keys keep the product's original name: renaming them would strand
+// every existing user's saved chart and history.
 const PROFILE_KEY = "astro_coach_profile";
 
 /** A single concrete remedy tied to one planet — deterministic, computed by the

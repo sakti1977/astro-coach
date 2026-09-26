@@ -1,5 +1,5 @@
 /**
- * Centralised magic numbers for the Astro Coach application.
+ * Centralised magic numbers for the Jyotish Coach application.
  * Import from here instead of scattering literals throughout the codebase.
  */
 

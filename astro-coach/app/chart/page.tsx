@@ -42,7 +42,7 @@ export default function ChartPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `astro-coach-${p.birthData?.name?.replace(/\s+/g, "-") ?? "profile"}.json`;
+    a.download = `jyotish-coach-${p.birthData?.name?.replace(/\s+/g, "-") ?? "profile"}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
