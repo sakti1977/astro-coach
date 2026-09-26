@@ -18,6 +18,19 @@ import {
 // explicitly. Sonnet 5 also rejects non-default temperature/top_p/top_k.
 const NO_THINKING = { type: "disabled" } as const;
 
+/**
+ * Text of a JSON-returning call. A reply cut off at max_tokens is half a JSON
+ * document; say so plainly instead of letting JSON.parse fail somewhere later.
+ */
+export function jsonReplyText(response: Pick<Anthropic.Message, "content" | "stop_reason">, label: string): string {
+  const block = response.content[0];
+  if (!block || block.type !== "text") throw new Error("Unexpected response type");
+  if (response.stop_reason === "max_tokens") {
+    throw new Error(`${label} reply truncated at max_tokens`);
+  }
+  return block.text;
+}
+
 let _client: Anthropic | null = null;
 
 function getClient(): Anthropic {
@@ -185,9 +198,7 @@ export async function extractObservations(prompt: string): Promise<string> {
     max_tokens: MAX_TOKENS_EXTRACT,
     messages: [{ role: "user", content: prompt }],
   });
-  const block = response.content[0];
-  if (block.type !== "text") throw new Error("Unexpected response type");
-  return block.text;
+  return jsonReplyText(response, "Observation extraction");
 }
 
 /** PERF-01: compress accumulated observations into a compact profile summary. */
@@ -198,9 +209,7 @@ export async function summariseObservations(prompt: string): Promise<string> {
     max_tokens: MAX_TOKENS_SUMMARISE,
     messages: [{ role: "user", content: prompt }],
   });
-  const block = response.content[0];
-  if (block.type !== "text") throw new Error("Unexpected response type");
-  return block.text;
+  return jsonReplyText(response, "Observation summary");
 }
 
 /** Restructure a delivered plan's behavioral items into habit JSON (no new advice). */
