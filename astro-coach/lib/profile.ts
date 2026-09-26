@@ -6,6 +6,10 @@ import { CHAT_HISTORY_MAX, MAX_ARCHIVES } from "@/lib/constants";
 // every existing user's saved chart and history.
 const PROFILE_KEY = "astro_coach_profile";
 
+/** Fired on window after a pull from the account replaces the local profile,
+ * so pages that read the profile once on mount can re-read it. */
+export const PROFILE_SYNCED_EVENT = "profile-synced";
+
 /** A single concrete remedy tied to one planet — deterministic, computed by the
  * ephemeris service from remedies.py's table, never improvised per-conversation.
  * `behavioral` is always present; the traditional fields are present whenever

@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Sparkles, Hexagon, Target, Orbit, Lock, Check, Loader2, MapPin, ChevronRight, Compass, LayoutGrid, Lightbulb, AlertTriangle } from "lucide-react";
-import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, type CoachTonePreference, type NatalChart, type DashaData } from "@/lib/profile";
+import { getProfile, updateProfile, clearProfile, archiveProfile, saveProfile, PROFILE_SYNCED_EVENT, type CoachTonePreference, type NatalChart, type DashaData } from "@/lib/profile";
 import { parseBackupPayload } from "@/lib/profile-schema";
 import { buildDailyTransitNote } from "@/lib/transitNote";
 import ConfirmResetModal from "@/components/ConfirmResetModal";
@@ -62,7 +62,7 @@ interface GeoResult {
 export default function HomePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { syncToServer, lastSyncedAt, isSyncing } = useDataSync();
+  const { syncToServer, lastSyncedAt, isSyncing, error: syncError } = useDataSync();
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -96,9 +96,9 @@ export default function HomePage() {
   const [transitNote, setTransitNote] = useState<string | null>(null);
   const [needsValidation, setNeedsValidation] = useState(false);
 
-  useEffect(() => {
-    if (status === "loading") return;
-
+  // Reads the saved profile into page state. Runs on load and again when a
+  // pull from the account lands (a new device starts with nothing local).
+  const loadFromProfile = useCallback(() => {
     // Unauthenticated visitors can view this page (hero, features, sample
     // demo) — only submitting birth data requires a session, enforced in
     // handleSubmit per SPEC.md §4.1. getProfile() is purely localStorage-
@@ -138,8 +138,15 @@ export default function HomePage() {
       });
     }
 
+  }, []);
+
+  useEffect(() => {
+    if (status === "loading") return;
+    loadFromProfile();
+    window.addEventListener(PROFILE_SYNCED_EVENT, loadFromProfile);
+    return () => window.removeEventListener(PROFILE_SYNCED_EVENT, loadFromProfile);
     // We no longer hard-redirect to /chart — the home page now serves as a useful landing + quick actions when a chart exists.
-  }, [status, router]);
+  }, [status, loadFromProfile]);
 
   // Service health check runs independently of auth state
   useEffect(() => {
@@ -377,12 +384,17 @@ export default function HomePage() {
     }
   }
 
-  if (!ready) {
+  // Signed in on a device with no local chart: the account copy may still be
+  // on its way, so don't flash the empty "calculate your chart" form.
+  const awaitingCloudProfile =
+    status === "authenticated" && !hasExistingChart && !lastSyncedAt && !syncError;
+
+  if (!ready || awaitingCloudProfile) {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <Sparkles className="w-8 h-8 mb-4 mx-auto text-indigo-400" />
-          <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{awaitingCloudProfile ? "Loading your saved chart…" : "Loading…"}</p>
         </div>
       </div>
     );
@@ -464,7 +476,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-12">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
         {/* Sample Foundation demo — a taste of the real product before the data-entry
             form, shown to first-time visitors (including anonymous ones, now that this
             page no longer hard-redirects signed-out visitors to sign-in). Fully static,
@@ -512,25 +524,6 @@ export default function HomePage() {
             </div>
           </div>
         )}
-
-        {/* Features */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
-          {[
-            { icon: Hexagon, label: "Accurate Chart", desc: "Swiss Ephemeris + Lahiri ayanamsha", color: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400" },
-            { icon: Target, label: "Life Validated", desc: "Yes/no questions calibrate accuracy", color: "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400" },
-            { icon: Sparkles, label: "Behavior-first coaching", desc: "Chart-grounded habits. Ritual remedies are opt-in, never upsold.", color: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400" },
-          ].map((f) => (
-            <div key={f.label} className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 text-center hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700 transition-all">
-              <div className={`w-10 h-10 ${f.color} rounded-xl flex items-center justify-center mx-auto mb-3`}>
-                <f.icon className="w-5 h-5" />
-              </div>
-              <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{f.label}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-
-        <JyotishPrimer />
 
         {/* Real chart-derived highlights — deterministic, no LLM call (G1: read-only display of already-computed data) */}
         {hasExistingChart && ready && chart && dashas && (
@@ -626,6 +619,25 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Features */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+          {[
+            { icon: Hexagon, label: "Accurate Chart", desc: "Swiss Ephemeris + Lahiri ayanamsha", color: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400" },
+            { icon: Target, label: "Life Validated", desc: "Yes/no questions calibrate accuracy", color: "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400" },
+            { icon: Sparkles, label: "Behavior-first coaching", desc: "Chart-grounded habits. Ritual remedies are opt-in, never upsold.", color: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400" },
+          ].map((f) => (
+            <div key={f.label} className="border border-gray-100 dark:border-gray-800 rounded-2xl p-5 text-center hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700 transition-all">
+              <div className={`w-10 h-10 ${f.color} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                <f.icon className="w-5 h-5" />
+              </div>
+              <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{f.label}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <JyotishPrimer />
+
         {/* Restore from backup — shown only when no chart exists yet (new device / cleared browser) */}
         {!hasExistingChart && ready && (
           <div className="mb-6 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center justify-between gap-4">
@@ -641,7 +653,7 @@ export default function HomePage() {
         )}
 
         {/* Form */}
-        <div id="birth-form" className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-6 shadow-sm">
+        <div id="birth-form" className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 sm:p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
             {hasExistingChart ? "Update birth details or recalculate" : "Calculate your birth chart"}
           </h2>
@@ -655,7 +667,7 @@ export default function HomePage() {
             {!hasExistingChart && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">How would you like this framed?</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setTonePreference("jyotish")}
@@ -689,7 +701,7 @@ export default function HomePage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Date of Birth <span className="text-red-400">*</span>
@@ -755,7 +767,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
                 { label: "Latitude", key: "lat" },
                 { label: "Longitude", key: "lng" },
@@ -768,7 +780,7 @@ export default function HomePage() {
                   />
                 </div>
               ))}
-              <div>
+              <div className="col-span-2 sm:col-span-1">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Timezone</label>
                 <select title="Timezone" value={form.timezone} onChange={(e) => setField("timezone", e.target.value)}
                   className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-900">

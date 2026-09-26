@@ -68,3 +68,22 @@ body {
 .dark svg:not(.jyotish-wheel) [fill="#EFF6FF"] { fill: #1E293B; }
 .dark svg:not(.jyotish-wheel) [fill="#F9FAFB"] { fill: #111827; }
 .dark svg:not(.jyotish-wheel) [fill="#1D4ED8"] { fill: #93C5FD; }
+
+/* Phones. iOS zooms the whole page into any form field under 16px and never
+   zooms back, which leaves the layout looking broken; and native date/time
+   pickers keep an intrinsic width and their own height, so in a grid they
+   overflow or sit taller than the fields beside them. */
+@media (max-width: 639px) {
+  input, select, textarea { font-size: 16px; }
+}
+input[type="date"], input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  min-height: 2.9rem;
+  text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+}
