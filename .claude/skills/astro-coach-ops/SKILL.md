@@ -18,6 +18,12 @@ Product name is **Jyotish Coach** (domain `jyotishcoach.com`). Repo/folders/stor
 | Domains | `jyotishcoach.com` (custom, verified), `astro-coach-production.up.railway.app` |
 | Supabase project | `qsnszpicjztibcwsehsj` (ap-northeast-1) |
 
+Domain `jyotishcoach.com` is registered **through Medium**; its DNS is edited in Medium's domain
+settings (the owner does it — no connector reaches it; the WordPress.com connector only has the
+unrelated `saktibagchi.in`). Records: ANAME `@` → Railway, `_railway-verify` TXT, and iCloud+ Custom
+Email Domain mail (MX mx01/mx02.mail.icloud.com, `apple-domain=` TXT, SPF, `sig1._domainkey` CNAME)
+for `support@jyotishcoach.com` (the address on /privacy and /terms). This sandbox can't query DNS.
+
 Other Railway projects in the workspace (`saktibagchi-blog`, `amusing-delight`/CSAgent, empty
 `adequate-possibility`) are unrelated — don't touch them. Vercel is gone; the old
 `astro-coach-hjvh` Python-only service was deleted 2026-09-26.
@@ -53,8 +59,8 @@ names only (`valuesRedacted`).
 
 ## Supabase
 
-- Migrations 001–006 in `astro-coach/supabase/migrations/` are all applied to production
-  (004 behavioral default, 005 `coach_feedback`, 006 trigger-function hardening). `list_migrations`
+- Migrations 001–007 in `astro-coach/supabase/migrations/` are all applied to production
+  (004 behavioral default, 005 `coach_feedback`, 006 trigger-function hardening, 007 RLS `(select auth.uid())`). `list_migrations`
   returns `[]` because earlier ones were run in the SQL editor — trust the table/function state, not that list.
 - `CREATE OR REPLACE FUNCTION` **drops `SET search_path`** — re-apply
   `ALTER FUNCTION ... SET search_path = ''` (and the `REVOKE EXECUTE`) whenever `handle_new_user`
