@@ -4,12 +4,22 @@ import { GeistMono } from "geist/font/mono";
 import AuthProvider from "@/components/AuthProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Jyotish Coach — Vedic Astrology Personal Coach",
-  description: "A personal AI coaching system grounded in Vedic Jyotish astrology",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   manifest: "/manifest.json",
+  openGraph: {
+    type: "website",
+    siteName: "Jyotish Coach",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    locale: "en_IN",
+  },
+  twitter: { card: "summary_large_image", title: SITE_TITLE, description: SITE_DESCRIPTION },
 };
 
 export const viewport: Viewport = {

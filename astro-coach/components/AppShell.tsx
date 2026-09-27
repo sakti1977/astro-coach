@@ -207,6 +207,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <p className="text-center mt-1">
             <SupportLink className="text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline decoration-dotted underline-offset-2" />
           </p>
+          <p className="text-center mt-1 text-[10px] text-gray-500 dark:text-gray-400">
+            <Link href="/privacy" className="hover:text-gray-700 dark:hover:text-gray-300 underline decoration-dotted underline-offset-2">Privacy</Link>
+            {" · "}
+            <Link href="/terms" className="hover:text-gray-700 dark:hover:text-gray-300 underline decoration-dotted underline-offset-2">Terms</Link>
+          </p>
         </div>
       </main>
     </div>

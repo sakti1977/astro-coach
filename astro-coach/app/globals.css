@@ -87,3 +87,11 @@ input[type="date"]::-webkit-date-and-time-value,
 input[type="time"]::-webkit-date-and-time-value {
   text-align: left;
 }
+
+/* Privacy Policy / Terms reading styles (components/legal/LegalPage.tsx). */
+.legal h2 { font-size: 1rem; font-weight: 600; margin: 2rem 0 0.5rem; color: var(--foreground); }
+.legal p { margin: 0.5rem 0; }
+.legal ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+.legal li { margin: 0.25rem 0; }
+.legal a { text-decoration: underline; }
+.legal h2:first-child { margin-top: 0; }

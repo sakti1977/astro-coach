@@ -26,8 +26,8 @@ export const MAX_TOKENS_COACH     = 3072;  // streaming coach replies
 export const MAX_TOKENS_DASHA     = 1600;  // dasha prediction JSON (5 arrays × 4 items needs headroom)
 export const MAX_TOKENS_VALIDATE  = 1400;  // chart validation questions
 export const MAX_TOKENS_HABITS    = 1400;  // habit list JSON
-export const MAX_TOKENS_EXTRACT   = 512;   // observation extraction
-export const MAX_TOKENS_SUMMARISE = 250;   // observation summarisation
+export const MAX_TOKENS_EXTRACT   = 800;   // observation extraction (JSON; truncation = parse failure)
+export const MAX_TOKENS_SUMMARISE = 1024;  // observation summarisation: 5-7 sentences of JSON is ~300-450 tokens
 export const MAX_TOKENS_FOUNDATION = 12000; // "Your Foundation" — ~3K of prose plus adaptive thinking (counts toward the limit)
 export const MAX_TOKENS_PLAN_HABITS = 800;  // plan → up to 5 trackable habits
 

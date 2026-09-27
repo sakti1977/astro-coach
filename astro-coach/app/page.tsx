@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import JyotishWheel from "@/components/home/JyotishWheel";
 import JyotishPrimer from "@/components/home/JyotishPrimer";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -883,6 +884,13 @@ export default function HomePage() {
             </div>
           </div>
         </details>
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">
+          <Link href="/privacy" className="underline decoration-dotted underline-offset-2">Privacy</Link>
+          {" · "}
+          <Link href="/terms" className="underline decoration-dotted underline-offset-2">Terms</Link>
+          {" · "}
+          <Link href="/trust" className="underline decoration-dotted underline-offset-2">How we work</Link>
+        </p>
       </div>
     </main>
   );
