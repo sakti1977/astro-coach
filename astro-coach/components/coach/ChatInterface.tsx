@@ -689,7 +689,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
       {/* Context bar. The chat column is max-w-3xl, which is too narrow for
           every control on one line — a shrinking rounded-full button collapses
           into a circle and clips "Lagna" / "How we work". */}
-      <div className="flex flex-col gap-2 p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-sm">
+      <div className="shrink-0 flex flex-col gap-2 p-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-sm">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
           <span className="text-xl shrink-0">{currentMahaMeta?.symbol ?? "●"}</span>
           <span className="text-gray-600 dark:text-gray-400 min-w-0">
@@ -704,6 +704,20 @@ export default function ChatInterface({ chart, dashas }: Props) {
           </Link>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
+          <label htmlFor="coach-toolbar-language" className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-gray-900 dark:text-gray-100">
+            Language
+            <select
+              id="coach-toolbar-language"
+              aria-label="Coaching language"
+              value={preferredLanguage}
+              onChange={(e) => updatePreferences({ preferredLanguage: e.target.value })}
+              className="rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-0.5 text-xs font-medium text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              {SARVAM_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>{l.label}</option>
+              ))}
+            </select>
+          </label>
           {/* New Topic */}
           <button
             type="button"
@@ -1036,8 +1050,25 @@ export default function ChatInterface({ chart, dashas }: Props) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+      {/* Input. Language stays on this row, not inside Settings: people look
+          for it next to the message box. */}
+      <div className="shrink-0 p-4 border-t border-gray-100 dark:border-gray-800">
+        <div className="mb-2 flex items-center gap-2">
+          <label htmlFor="coach-chat-language" className="shrink-0 text-xs font-medium text-gray-900 dark:text-gray-100">
+            Language
+          </label>
+          <select
+            id="coach-chat-language"
+            aria-label="Coaching language"
+            value={preferredLanguage}
+            onChange={(e) => updatePreferences({ preferredLanguage: e.target.value })}
+            className="min-w-0 flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            {SARVAM_LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>{l.label}</option>
+            ))}
+          </select>
+        </div>
         {chatError && (
           <div role="alert" className="mb-2 flex items-center gap-2 rounded-xl border border-red-100 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs text-red-700 dark:text-red-300">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
