@@ -98,6 +98,19 @@ describe("NON_NEGOTIABLES harness", () => {
     }
   });
 
+  it("analytics stay anonymous: no IP, user agent or account id is stored", () => {
+    const route = read(join(APP_ROOT, "app/api/analytics/event/route.ts"));
+    const upsert = route.match(/\.upsert\(\s*\{([^}]*)\}/)?.[1] ?? "";
+    expect(upsert.replace(/\s+/g, " ").trim()).toBe("visitor_id: visitorId, event, day: utcDay(), ref");
+    expect(route).not.toContain("session.user");
+
+    const migration = read(join(APP_ROOT, "supabase/migrations/008_analytics_funnel.sql"));
+    const table = migration.match(/CREATE TABLE IF NOT EXISTS analytics_events \(([\s\S]*?)\n\);/)?.[1] ?? "";
+    expect(table).toContain("visitor_id UUID");
+    expect(table).not.toMatch(/\b(ip|ip_address|user_agent|user_id|email|phone)\b/i);
+    expect(migration).toContain("ENABLE ROW LEVEL SECURITY");
+  });
+
   it("in-memory rate limit is pinned to one Railway replica", () => {
     const railway = JSON.parse(read(join(REPO_ROOT, "railway.json"))) as {
       deploy?: { numReplicas?: number };

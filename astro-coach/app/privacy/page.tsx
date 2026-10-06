@@ -32,6 +32,7 @@ export default function PrivacyPage() {
         <li><strong>Goals, habits and check-ins:</strong> what you track, when you mark it done, and your answers to chart validation questions.</li>
         <li><strong>Feedback:</strong> if you rate a reply with thumbs up or down, we store the rating with that reply.</li>
         <li><strong>Notifications:</strong> if you turn on reminders, your browser&rsquo;s push subscription (an address your browser gives us to deliver notifications).</li>
+        <li><strong>Anonymous usage counts:</strong> a random ID your browser makes for itself, plus which of three steps happened (opened the site, calculated a chart, got a first coach reply), the date, and, on a first visit, the site that sent you (for example &ldquo;google.com&rdquo;). It is not linked to your account, name, birth details or messages, and we do not store your IP address or device details with it. We use it to see whether people find and come back to the app. Rows are deleted after 180 days. Browsers that send Do Not Track or Global Privacy Control are not counted.</li>
         <li><strong>Technical data:</strong> your IP address, used briefly to limit abuse (rate limiting), and standard server logs kept by our host for a short period.</li>
       </ul>
       <p>
@@ -41,7 +42,7 @@ export default function PrivacyPage() {
 
       <h2>What we do not collect</h2>
       <ul>
-        <li>We do not run advertising or third-party analytics trackers, and we do not sell or rent your data.</li>
+        <li>We do not run advertising or third-party analytics trackers, and we do not sell or rent your data. The anonymous usage counts above are collected by us alone, on our own server.</li>
         <li>Voluntary contributions by UPI go straight from your UPI app to our UPI ID. We never see your bank account, card or UPI PIN.</li>
       </ul>
 
@@ -52,6 +53,7 @@ export default function PrivacyPage() {
         <li>To send reminders you have switched on.</li>
         <li>To keep the service safe: rate limiting, abuse prevention and fixing errors.</li>
         <li>To improve replies, using the ratings you choose to give.</li>
+        <li>To understand, in aggregate, whether people find the app and come back to it.</li>
       </ul>
       <p>We rely on your consent, given when you create an account and when you enable optional features. You can withdraw it at any time (see &ldquo;Your choices&rdquo; below).</p>
 
@@ -72,7 +74,7 @@ export default function PrivacyPage() {
       <h2>On your device</h2>
       <p>
         We use one essential cookie to keep you signed in. Your chart, settings and recent history are also saved in your
-        browser&rsquo;s local storage so the app works quickly and offline. There are no advertising cookies.
+        browser&rsquo;s local storage so the app works quickly and offline. The random ID for anonymous usage counts is also kept in local storage (not a cookie), and you can erase it by clearing site data. There are no advertising cookies.
       </p>
 
       <h2>How long we keep it</h2>

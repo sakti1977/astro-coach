@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendPush, isPushConfigured, type PushSubscriptionRow } from "@/lib/push";
 import { fetchTransits } from "@/lib/ephemeris";
 import { safeClientErrorMessage } from "@/lib/safe-error";
+import { retentionCutoffDay } from "@/lib/analytics";
 import type { DashaData, Habit, NatalChart } from "@/lib/profile";
 
 // Runs once daily, called by deploy/daily-cron.sh inside the one-host
@@ -76,6 +77,14 @@ export async function GET(req: NextRequest) {
   if (!supabaseAdmin || !isPushConfigured()) {
     return NextResponse.json({ error: "Push notifications are not configured" }, { status: 503 });
   }
+
+  // Housekeeping that rides on the daily run: drop funnel rows past retention
+  // (lib/analytics.ts). Best effort; it must never block notifications.
+  const { error: pruneError } = await supabaseAdmin
+    .from("analytics_events")
+    .delete()
+    .lt("day", retentionCutoffDay());
+  if (pruneError) console.error(`[cron-notifications] analytics prune: ${pruneError.message}`);
 
   const { data: subs, error: subsError } = await supabaseAdmin
     .from("push_subscriptions")

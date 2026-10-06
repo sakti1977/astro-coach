@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import AuthProvider from "@/components/AuthProvider";
+import AnalyticsBeacon from "@/components/AnalyticsBeacon";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/site";
@@ -45,6 +46,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <ServiceWorkerRegister />
+          <AnalyticsBeacon />
         </AuthProvider>
       </body>
     </html>
