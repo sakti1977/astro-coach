@@ -8,6 +8,7 @@ import type { ChatMessage, NatalChart, DashaData, CoachingObservation, CoachingP
 import { addChatMessage, buildCoachingContext, getProfile, saveProfile, updateProfile } from "@/lib/profile";
 import type { GeneratedHabit } from "@/lib/habit-schema";
 import { storage } from "@/lib/storage-supabase";
+import { trackEvent } from "@/lib/analytics-client";
 import { PLANET_META, SIGN_NAMES, type PlanetKey } from "@/lib/astrology/planets";
 import { DEFAULT_LANGUAGE_CODE, SARVAM_LANGUAGES } from "@/lib/languages";
 import CoachPreferences, { saveCoachPreferences, type CoachPreferenceValues } from "@/components/settings/CoachPreferences";
@@ -633,6 +634,7 @@ export default function ChatInterface({ chart, dashas }: Props) {
       // reply or a guard fallback is shown but is not "the plan", and an
       // interrupted stream (no done event) doesn't count either.
       if (outcome !== "ok") return;
+      trackEvent("coach_message");
 
       if (isPlanTurn) {
         const current = getProfile();

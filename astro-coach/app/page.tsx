@@ -12,6 +12,7 @@ import { parseBackupPayload } from "@/lib/profile-schema";
 import { buildDailyTransitNote } from "@/lib/transitNote";
 import ConfirmResetModal from "@/components/ConfirmResetModal";
 import { storage } from "@/lib/storage-supabase";
+import { trackEvent } from "@/lib/analytics-client";
 import { useDataSync } from "@/lib/useDataSync";
 import { PLANET_META, type PlanetKey } from "@/lib/astrology/planets";
 import { dignityPhrase } from "@/lib/astrology/dignityFraming";
@@ -296,6 +297,7 @@ export default function HomePage() {
         }
       }
 
+      trackEvent("chart_created");
       router.push("/chart");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong");
