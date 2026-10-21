@@ -66,6 +66,10 @@ names only (`valuesRedacted`).
   behaviour, no extra ephemeris calls), `computed` (serve a chart calculated from saved birth data,
   falling back to the saved one if the ephemeris is down). Read results with Railway `get-logs`
   filter `chart-integrity`. Flip to `computed` only after shadow logs show no unexplained MISMATCH.
+- Model spend is logged, not limited: every model call writes `[llm-usage] {"op","model","in","out",
+  "cacheRead","cacheWrite","usd"}` (no user id or text). Sum `usd` by `op` from Railway `get-logs`
+  (filter `llm-usage`) to see cost per operation. `usd` is an estimate from `lib/llm-usage.ts`'s price
+  table; `usd:null` means a model has no price entry there; update the table when `MODEL_*` changes.
 - `CREATE OR REPLACE FUNCTION` **drops `SET search_path`** — re-apply
   `ALTER FUNCTION ... SET search_path = ''` (and the `REVOKE EXECUTE`) whenever `handle_new_user`
   is replaced.
