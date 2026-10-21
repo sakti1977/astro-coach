@@ -193,4 +193,18 @@ describe("chart source for signed-in users", () => {
     await resolveNatalGrounding("computed-user-3", undefined);
     expect(fetchChart).toHaveBeenCalledTimes(1);
   });
+
+  it("never hands one person's cached chart (which echoes their name) to another", async () => {
+    process.env.CHART_SOURCE_MODE = "computed";
+    fetchChart.mockImplementation(async (req: { name: string }) => ({
+      ...computedChart,
+      birth_data: { name: req.name },
+    }));
+    useStoredRow({ ...storedRow({ lat: 17.7 }), birth_data: { ...birth, name: "Alice", lat: 17.7 } });
+    const alice = await resolveNatalGrounding("computed-user-4", undefined);
+    useStoredRow({ ...storedRow({ lat: 17.7 }), birth_data: { ...birth, name: "Bob", lat: 17.7 } });
+    const bob = await resolveNatalGrounding("computed-user-5", undefined);
+    expect((alice as unknown as { chart: { birth_data: { name: string } } }).chart.birth_data.name).toBe("Alice");
+    expect((bob as unknown as { chart: { birth_data: { name: string } } }).chart.birth_data.name).toBe("Bob");
+  });
 });

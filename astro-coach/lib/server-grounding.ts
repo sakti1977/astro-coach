@@ -145,8 +145,10 @@ type CachedChart = Pick<NatalGrounding, "chart" | "dashas" | "birthDate" | "time
 const computedCache = new Map<string, { value: CachedChart; expires: number }>();
 
 function birthKey(birth: BirthData): string {
-  // The chart depends on when and where, not on the name.
-  return [birth.date, birth.time, birth.lat, birth.lng, birth.timezone].join("|");
+  // The name is part of the key because the ephemeris echoes it back inside the
+  // chart (birth_data.name); sharing an entry would carry one person's name into
+  // another's grounding.
+  return [birth.name, birth.date, birth.time, birth.lat, birth.lng, birth.timezone].join("|");
 }
 
 /** computeFromBirth, memoised per birth moment so shadow checks and repeat turns don't re-hit the ephemeris. */
