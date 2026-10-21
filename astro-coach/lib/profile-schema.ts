@@ -120,6 +120,8 @@ export const syncPushBodySchema = z.object({
   profile: syncProfileSchema,
   observations: z.array(observationSchema).optional(),
   localUpdatedAt: z.string().optional(),
+  /** user_profiles.revision the client last pulled or pushed. */
+  expectedRevision: z.number().int().nonnegative().optional(),
   force: z.boolean().optional(),
 });
 
