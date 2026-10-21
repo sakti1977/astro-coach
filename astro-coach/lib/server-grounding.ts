@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { ephemerisClientErrorMessage, fetchChart, fetchDashas } from "@/lib/ephemeris";
 import { parseBirthData, parseDashaData, parseNatalChart } from "@/lib/profile-schema";
 import type { DashaData, Goal, Habit, NatalChart } from "@/lib/profile";
+import { diffCharts } from "@/lib/chart-integrity";
 
 type BirthData = {
   name: string;
@@ -122,6 +123,94 @@ async function computeFromBirth(
 }
 
 /**
+ * Where the coach's chart comes from when an account has stored birth data.
+ *  - "stored":   trust the saved chart (the original behaviour; it was written by the browser).
+ *  - "shadow":   still serve the saved chart, but recalculate in the background and log any
+ *                disagreement. This is the default: it measures the problem without risking users.
+ *  - "computed": serve a chart the ephemeris calculates from the saved birth data; fall back to
+ *                the saved chart only if the ephemeris is unreachable.
+ * Set with CHART_SOURCE_MODE.
+ */
+export type ChartSourceMode = "stored" | "shadow" | "computed";
+
+export function chartSourceMode(): ChartSourceMode {
+  const raw = process.env.CHART_SOURCE_MODE;
+  return raw === "stored" || raw === "computed" ? raw : "shadow";
+}
+
+const COMPUTED_TTL_MS = 60 * 60 * 1000; // dasha "current_*" fields roll over with the date
+const CACHE_MAX = 500;
+
+type CachedChart = Pick<NatalGrounding, "chart" | "dashas" | "birthDate" | "timezone">;
+const computedCache = new Map<string, { value: CachedChart; expires: number }>();
+
+function birthKey(birth: BirthData): string {
+  // The name is part of the key because the ephemeris echoes it back inside the
+  // chart (birth_data.name); sharing an entry would carry one person's name into
+  // another's grounding.
+  return [birth.name, birth.date, birth.time, birth.lat, birth.lng, birth.timezone].join("|");
+}
+
+/** computeFromBirth, memoised per birth moment so shadow checks and repeat turns don't re-hit the ephemeris. */
+async function computeFromBirthCached(
+  birth: BirthData,
+  goals: Goal[],
+  habits: Habit[]
+): Promise<NatalGrounding | NextResponse> {
+  const key = birthKey(birth);
+  const hit = computedCache.get(key);
+  if (hit && hit.expires > Date.now()) {
+    return { ...structuredClone(hit.value), goals, habits, source: "computed" };
+  }
+  const result = await computeFromBirth(birth, goals, habits);
+  if (result instanceof NextResponse) return result;
+  if (computedCache.size >= CACHE_MAX) computedCache.clear();
+  computedCache.set(key, {
+    value: structuredClone({
+      chart: result.chart,
+      dashas: result.dashas,
+      birthDate: result.birthDate,
+      timezone: result.timezone,
+    }),
+    expires: Date.now() + COMPUTED_TTL_MS,
+  });
+  return result;
+}
+
+const shadowChecked = new Set<string>();
+
+/**
+ * Fire-and-forget: compare the saved chart with a fresh calculation and log the
+ * outcome. Never throws and never delays or alters the response. Logs carry
+ * field paths only, no birth details or chart values.
+ */
+function scheduleShadowCheck(userId: string, stored: StoredGrounding): void {
+  if (!stored.birth || !stored.chart || !stored.dashas) return;
+  const checkKey = `${userId}|${stored.updatedAt ?? ""}|${birthKey(stored.birth)}`;
+  if (shadowChecked.has(checkKey)) return;
+  if (shadowChecked.size >= CACHE_MAX) shadowChecked.clear();
+  shadowChecked.add(checkKey);
+
+  const who = userId.slice(0, 8);
+  const { chart, dashas, birth } = stored;
+  void (async () => {
+    const computed = await computeFromBirthCached(birth, [], []);
+    if (computed instanceof NextResponse) {
+      console.warn(`[chart-integrity] shadow check skipped user=${who} (calculation unavailable)`);
+      return;
+    }
+    const diffs = diffCharts({ chart, dashas }, computed);
+    if (diffs.length === 0) {
+      console.info(`[chart-integrity] match user=${who}`);
+    } else {
+      console.warn(`[chart-integrity] MISMATCH user=${who} fields=${diffs.join(",")}`);
+    }
+  })().catch((err: unknown) => {
+    console.warn(`[chart-integrity] shadow check failed user=${who}: ${err instanceof Error ? err.name : "error"}`);
+  });
+}
+
+/**
  * Prefer the stored natal chart. If that row has no chart yet, recompute
  * from birth data (the stored row, otherwise the request). Never trust
  * planet positions sent by the browser.
@@ -132,6 +221,17 @@ export async function resolveNatalGrounding(
 ): Promise<NatalGrounding | NextResponse> {
   if (userId) {
     const stored = await loadStoredGrounding(userId);
+    const mode = chartSourceMode();
+
+    if (mode === "computed" && stored?.birth) {
+      const computed = await computeFromBirthCached(stored.birth, stored.goals, stored.habits);
+      if (!(computed instanceof NextResponse)) return computed;
+      if (!(stored.chart && stored.dashas)) return computed;
+      console.warn(`[chart-integrity] calculation unavailable, serving saved chart user=${userId.slice(0, 8)}`);
+    } else if (mode === "shadow" && stored) {
+      scheduleShadowCheck(userId, stored);
+    }
+
     if (stored?.chart && stored?.dashas) {
       return {
         chart: stored.chart,

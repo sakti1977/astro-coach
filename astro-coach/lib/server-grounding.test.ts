@@ -1,11 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { fetchChart, fetchDashas } = vi.hoisted(() => ({
+const { fetchChart, fetchDashas, admin } = vi.hoisted(() => ({
   fetchChart: vi.fn(),
   fetchDashas: vi.fn(),
+  admin: { current: null as unknown },
 }));
 
-vi.mock("@/lib/supabase-admin", () => ({ supabaseAdmin: null }));
+vi.mock("@/lib/supabase-admin", () => ({
+  get supabaseAdmin() {
+    return admin.current;
+  },
+}));
 vi.mock("@/lib/ephemeris", () => ({
   fetchChart,
   fetchDashas,
@@ -13,7 +18,7 @@ vi.mock("@/lib/ephemeris", () => ({
     err instanceof Error ? err.message : fallback,
 }));
 
-import { resolveNatalGrounding } from "./server-grounding";
+import { chartSourceMode, resolveNatalGrounding } from "./server-grounding";
 
 const birth = {
   name: "Ada",
@@ -83,5 +88,123 @@ describe("resolveNatalGrounding", () => {
     fetchChart.mockRejectedValue(new Error("Cannot reach ephemeris service at http://127.0.0.1:8000"));
     const result = await resolveNatalGrounding(undefined, birth);
     expect(result).toMatchObject({ status: 503 });
+  });
+});
+
+function storedRow(overrides: { ascSignNum?: number; lat?: number } = {}) {
+  return {
+    chart: { ...computedChart, ascendant: { ...computedChart.ascendant, sign_num: overrides.ascSignNum ?? 4 } },
+    dashas: computedDashas,
+    goals: [],
+    habits: [],
+    birth_data: { ...birth, lat: overrides.lat ?? birth.lat },
+    updated_at: "2026-10-01T00:00:00Z",
+  };
+}
+
+function useStoredRow(row: unknown) {
+  admin.current = {
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: row, error: null }) }) }) }),
+  };
+}
+
+describe("chart source for signed-in users", () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  const info = vi.spyOn(console, "info").mockImplementation(() => {});
+
+  beforeEach(() => {
+    fetchChart.mockReset();
+    fetchDashas.mockReset();
+    fetchChart.mockResolvedValue(computedChart);
+    fetchDashas.mockResolvedValue(computedDashas);
+    warn.mockClear();
+    info.mockClear();
+  });
+
+  afterEach(() => {
+    admin.current = null;
+    delete process.env.CHART_SOURCE_MODE;
+  });
+
+  it("defaults to shadow mode", () => {
+    expect(chartSourceMode()).toBe("shadow");
+    process.env.CHART_SOURCE_MODE = "bogus";
+    expect(chartSourceMode()).toBe("shadow");
+  });
+
+  it("stored mode serves the saved chart without calling the ephemeris", async () => {
+    process.env.CHART_SOURCE_MODE = "stored";
+    useStoredRow(storedRow({ ascSignNum: 9 }));
+    const result = await resolveNatalGrounding("stored-user-1", undefined);
+    expect(result).toMatchObject({ source: "server" });
+    expect(fetchChart).not.toHaveBeenCalled();
+  });
+
+  it("shadow mode serves the saved chart, then logs a tampered one once", async () => {
+    useStoredRow(storedRow({ ascSignNum: 9, lat: 11.1 }));
+    const result = await resolveNatalGrounding("shadow-user-1", undefined);
+    expect(result).toMatchObject({ source: "server" });
+    expect((result as unknown as { chart: typeof computedChart }).chart.ascendant.sign_num).toBe(9);
+
+    await vi.waitFor(() => expect(warn).toHaveBeenCalledTimes(1));
+    expect(warn.mock.calls[0][0]).toMatch(/MISMATCH user=shadow-u fields=ascendant\.sign_num/);
+    expect(warn.mock.calls[0][0]).not.toMatch(/Kolkata|1990/);
+
+    await resolveNatalGrounding("shadow-user-1", undefined);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(fetchChart).toHaveBeenCalledTimes(1);
+  });
+
+  it("shadow mode logs a match when the saved chart agrees", async () => {
+    useStoredRow(storedRow({ lat: 12.2 }));
+    await resolveNatalGrounding("shadow-user-2", undefined);
+    await vi.waitFor(() => expect(info).toHaveBeenCalledWith(expect.stringMatching(/match user=shadow-u/)));
+  });
+
+  it("shadow mode never lets an ephemeris failure reach the user", async () => {
+    fetchChart.mockRejectedValue(new Error("Cannot reach ephemeris service at http://internal:8000"));
+    useStoredRow(storedRow({ lat: 13.3 }));
+    const result = await resolveNatalGrounding("shadow-user-3", undefined);
+    expect(result).toMatchObject({ source: "server" });
+    await vi.waitFor(() => expect(warn).toHaveBeenCalled());
+    expect(warn.mock.calls[0][0]).not.toContain("internal");
+  });
+
+  it("computed mode ignores a tampered saved chart", async () => {
+    process.env.CHART_SOURCE_MODE = "computed";
+    useStoredRow(storedRow({ ascSignNum: 9, lat: 14.4 }));
+    const result = await resolveNatalGrounding("computed-user-1", undefined);
+    expect(result).toMatchObject({ source: "computed" });
+    expect((result as unknown as { chart: typeof computedChart }).chart.ascendant.sign_num).toBe(4);
+  });
+
+  it("computed mode falls back to the saved chart if the ephemeris is down", async () => {
+    process.env.CHART_SOURCE_MODE = "computed";
+    fetchChart.mockRejectedValue(new Error("down"));
+    useStoredRow(storedRow({ lat: 15.5 }));
+    const result = await resolveNatalGrounding("computed-user-2", undefined);
+    expect(result).toMatchObject({ source: "server" });
+  });
+
+  it("computed mode serves a repeat turn from cache", async () => {
+    process.env.CHART_SOURCE_MODE = "computed";
+    useStoredRow(storedRow({ lat: 16.6 }));
+    await resolveNatalGrounding("computed-user-3", undefined);
+    await resolveNatalGrounding("computed-user-3", undefined);
+    expect(fetchChart).toHaveBeenCalledTimes(1);
+  });
+
+  it("never hands one person's cached chart (which echoes their name) to another", async () => {
+    process.env.CHART_SOURCE_MODE = "computed";
+    fetchChart.mockImplementation(async (req: { name: string }) => ({
+      ...computedChart,
+      birth_data: { name: req.name },
+    }));
+    useStoredRow({ ...storedRow({ lat: 17.7 }), birth_data: { ...birth, name: "Alice", lat: 17.7 } });
+    const alice = await resolveNatalGrounding("computed-user-4", undefined);
+    useStoredRow({ ...storedRow({ lat: 17.7 }), birth_data: { ...birth, name: "Bob", lat: 17.7 } });
+    const bob = await resolveNatalGrounding("computed-user-5", undefined);
+    expect((alice as unknown as { chart: { birth_data: { name: string } } }).chart.birth_data.name).toBe("Alice");
+    expect((bob as unknown as { chart: { birth_data: { name: string } } }).chart.birth_data.name).toBe("Bob");
   });
 });

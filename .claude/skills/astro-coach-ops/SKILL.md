@@ -60,6 +60,12 @@ names only (`valuesRedacted`).
   and makes `/api/sync` writes atomic. Verified: all existing rows at revision 0, `anon`/`authenticated`
   cannot execute `sync_push`, `service_role` can. The route still falls back to a non-transactional
   (but non-lossy) write path if the function is ever missing, e.g. on a fresh project.
+- `CHART_SOURCE_MODE` (optional env var) controls where a signed-in user's chart comes from:
+  `shadow` (default; serves the saved chart, recalculates once per user per process in the background
+  and logs `[chart-integrity] match|MISMATCH ... fields=...` with field paths only), `stored` (old
+  behaviour, no extra ephemeris calls), `computed` (serve a chart calculated from saved birth data,
+  falling back to the saved one if the ephemeris is down). Read results with Railway `get-logs`
+  filter `chart-integrity`. Flip to `computed` only after shadow logs show no unexplained MISMATCH.
 - `CREATE OR REPLACE FUNCTION` **drops `SET search_path`** — re-apply
   `ALTER FUNCTION ... SET search_path = ''` (and the `REVOKE EXECUTE`) whenever `handle_new_user`
   is replaced.
