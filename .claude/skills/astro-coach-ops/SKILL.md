@@ -56,10 +56,10 @@ names only (`valuesRedacted`).
 - Migrations 001–006 in `astro-coach/supabase/migrations/` are all applied to production
   (004 behavioral default, 005 `coach_feedback`, 006 trigger-function hardening). `list_migrations`
   returns `[]` because earlier ones were run in the SQL editor — trust the table/function state, not that list.
-- Migration 009 (`sync_push` RPC + `user_profiles.revision`) makes `/api/sync` writes atomic. It is
-  additive and may be applied before or after the code deploys: the route falls back to a
-  non-transactional (but non-lossy) write path while the function is missing. Once applied, check
-  `select revision from user_profiles limit 1` and that `anon`/`authenticated` cannot execute `sync_push`.
+- Migration 009 (`sync_push` RPC + `user_profiles.revision`) is **applied to production** (2026-10-21)
+  and makes `/api/sync` writes atomic. Verified: all existing rows at revision 0, `anon`/`authenticated`
+  cannot execute `sync_push`, `service_role` can. The route still falls back to a non-transactional
+  (but non-lossy) write path if the function is ever missing, e.g. on a fresh project.
 - `CREATE OR REPLACE FUNCTION` **drops `SET search_path`** — re-apply
   `ALTER FUNCTION ... SET search_path = ''` (and the `REVOKE EXECUTE`) whenever `handle_new_user`
   is replaced.
