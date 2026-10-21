@@ -4,6 +4,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { safeClientErrorMessage } from "@/lib/safe-error";
 import { parseSyncPushBody } from "@/lib/profile-schema";
+import { pushSync } from "@/lib/sync-push";
 
 // This route replaces direct browser -> Supabase writes/reads for user_profiles
 // and coaching_observations. The browser's anon Supabase client is never signed
@@ -41,71 +42,71 @@ export async function POST(req: NextRequest) {
     if (!parsed.ok) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-    const { profile, observations, force } = parsed.value;
+    const { profile, observations, force, expectedRevision } = parsed.value;
     const localUpdatedAt =
       parsed.value.localUpdatedAt
       ?? (typeof profile.coaching?.lastUpdated === "string" ? profile.coaching.lastUpdated : undefined);
 
-    const { data: existing } = await supabaseAdmin
-      .from("user_profiles")
-      .select("updated_at, chart")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Clients that know the revision they last saw are checked atomically
+    // inside the database write. Older clients keep the timestamp heuristic.
+    if (expectedRevision === undefined && !force) {
+      const { data: existing } = await supabaseAdmin
+        .from("user_profiles")
+        .select("updated_at, chart")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (
-      !force
-      && existing?.chart
-      && isNewer(existing.updated_at as string | undefined, localUpdatedAt)
-    ) {
+      if (existing?.chart && isNewer(existing.updated_at as string | undefined, localUpdatedAt)) {
+        return NextResponse.json(
+          {
+            error: "Cloud copy is newer. Pull latest before pushing, or retry with force.",
+            code: "SYNC_CONFLICT",
+            serverUpdatedAt: existing.updated_at,
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    const result = await pushSync(supabaseAdmin, {
+      userId,
+      profileRow: {
+        birth_data: profile.birthData,
+        chart: profile.chart,
+        dashas: profile.dashas,
+        validation: profile.validation,
+        goals: profile.goals,
+        habits: profile.habits,
+        chat_history: profile.chatHistory,
+        coaching: profile.coaching,
+      },
+      // Only replace observations when the client actually sent the array.
+      // An omitted field must not wipe cloud memory.
+      observations: observations?.map((obs) => ({
+        observation_id: obs.id,
+        timestamp: obs.timestamp,
+        text: obs.text,
+        category: obs.category,
+        exchange_index: obs.exchangeIndex,
+      })),
+      expectedRevision,
+      force,
+    });
+
+    if (!result.ok) {
       return NextResponse.json(
         {
-          error: "Cloud copy is newer. Pull latest before pushing, or retry with force.",
+          error: "Cloud copy changed on another device. Pull latest before pushing, or retry with force.",
           code: "SYNC_CONFLICT",
-          serverUpdatedAt: existing.updated_at,
+          revision: result.revision,
         },
         { status: 409 }
       );
     }
 
-    const { error: profileError } = await supabaseAdmin
-      .from("user_profiles")
-      .upsert({
-        user_id: userId,
-        birth_data: profile.birthData as unknown as Record<string, unknown>,
-        chart: profile.chart as unknown as Record<string, unknown>,
-        dashas: profile.dashas as unknown as Record<string, unknown>,
-        validation: profile.validation as unknown as Record<string, unknown>,
-        goals: profile.goals as unknown as Record<string, unknown>,
-        habits: profile.habits as unknown as Record<string, unknown>,
-        chat_history: profile.chatHistory as unknown as Record<string, unknown>,
-        coaching: profile.coaching as unknown as Record<string, unknown>,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" });
-
-    if (profileError) throw profileError;
-
-    // Only replace observations when the client actually sent the array.
-    // An omitted field must not wipe cloud memory.
-    if (observations) {
-      await supabaseAdmin.from("coaching_observations").delete().eq("user_id", userId);
-
-      if (observations.length > 0) {
-        const { error: obsError } = await supabaseAdmin
-          .from("coaching_observations")
-          .insert(
-            observations.map((obs) => ({
-              user_id: userId,
-              observation_id: obs.id,
-              timestamp: obs.timestamp,
-              text: obs.text,
-              category: obs.category,
-              exchange_index: obs.exchangeIndex,
-            }))
-          );
-        if (obsError) throw obsError;
-      }
+    if (result.revision !== undefined) {
+      return NextResponse.json({ ok: true, revision: result.revision });
     }
-
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     const msg = safeClientErrorMessage(err, "Sync failed. Please try again shortly.", "sync-push");

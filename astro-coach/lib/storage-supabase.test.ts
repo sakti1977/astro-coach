@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { storage } from "./storage-supabase";
 import { getProfile, PROFILE_SYNCED_EVENT } from "./profile";
 
@@ -42,5 +42,39 @@ describe("syncFromServer", () => {
     window.removeEventListener(PROFILE_SYNCED_EVENT, heard);
     expect(getProfile().chart).toEqual({ ascendant: { sign: "Leo" } });
     expect(heard).not.toHaveBeenCalled();
+  });
+});
+
+describe("sync revision", () => {
+  beforeEach(() => {
+    vi.spyOn(storage, "getObservations").mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+
+  it("sends the revision it last saw, keeps the one the server returns, and scopes it per account", async () => {
+    const bodies: Array<Record<string, unknown>> = [];
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify({ ok: true, revision: bodies.length + 4 }), { status: 200 });
+    }));
+
+    await storage.syncToServer("user-a");
+    expect(bodies[0].expectedRevision).toBeUndefined();
+    await storage.syncToServer("user-a");
+    expect(bodies[1].expectedRevision).toBe(5);
+    await storage.syncToServer("user-b");
+    expect(bodies[2].expectedRevision).toBeUndefined();
+  });
+
+  it("does not move the revision on a conflict", async () => {
+    localStorage.setItem("astro_coach_sync_revision_u1", "2");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ code: "SYNC_CONFLICT", revision: 7 }), { status: 409 })));
+    await expect(storage.syncToServer("u1")).rejects.toMatchObject({ code: "SYNC_CONFLICT" });
+    expect(localStorage.getItem("astro_coach_sync_revision_u1")).toBe("2");
   });
 });

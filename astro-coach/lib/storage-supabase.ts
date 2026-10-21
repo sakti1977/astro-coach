@@ -28,6 +28,31 @@ interface AstroCoachSchema extends DBSchema {
 const DB_NAME = "astro_coach_db";
 const DB_VERSION = 1;
 
+// Server-managed user_profiles.revision this browser last pulled or pushed. Sent
+// back on push so the server can reject a write made on top of a stale copy.
+// Keyed per account so signing in as someone else never reuses it.
+const REVISION_KEY_PREFIX = "astro_coach_sync_revision_";
+
+function readSyncRevision(userId: string): number | undefined {
+  try {
+    const raw = localStorage.getItem(REVISION_KEY_PREFIX + userId);
+    if (raw === null) return undefined;
+    const n = Number(raw);
+    return Number.isInteger(n) && n >= 0 ? n : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function writeSyncRevision(userId: string, revision: unknown): void {
+  if (typeof revision !== "number" || !Number.isInteger(revision)) return;
+  try {
+    localStorage.setItem(REVISION_KEY_PREFIX + userId, String(revision));
+  } catch {
+    // Storage unavailable: pushes fall back to the timestamp check.
+  }
+}
+
 // ─── Supabase-enabled Adapter ─────────────────────────────────────────────────
 class SupabaseStorageAdapter implements StorageAdapter {
   private _db: IDBPDatabase<AstroCoachSchema> | null = null;
@@ -79,7 +104,7 @@ class SupabaseStorageAdapter implements StorageAdapter {
   // direct browser -> Supabase call runs as `auth.uid() = NULL` and RLS
   // rejects it silently. The server route re-derives the user id from the
   // verified NextAuth session and uses the service-role key there instead.
-  async syncToServer(_userId: string): Promise<void> {
+  async syncToServer(userId: string): Promise<void> {
     try {
       const profile = getProfile();
       const observations = await this.getObservations();
@@ -91,6 +116,7 @@ class SupabaseStorageAdapter implements StorageAdapter {
           profile,
           observations,
           localUpdatedAt: profile.coaching?.lastUpdated,
+          expectedRevision: readSyncRevision(userId),
         }),
       });
 
@@ -104,13 +130,16 @@ class SupabaseStorageAdapter implements StorageAdapter {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `Sync failed (${res.status})`);
       }
+
+      const pushed = await res.json().catch(() => ({}));
+      writeSyncRevision(userId, pushed.revision);
     } catch (error) {
       console.error("Error syncing to server:", error);
       throw error;
     }
   }
 
-  async syncFromServer(_userId: string): Promise<void> {
+  async syncFromServer(userId: string): Promise<void> {
     try {
       const res = await fetch("/api/sync", { method: "GET" });
       if (!res.ok) {
@@ -155,6 +184,7 @@ class SupabaseStorageAdapter implements StorageAdapter {
         };
 
         saveProfile(profile);
+        writeSyncRevision(userId, profileData.revision);
         // Pages read the profile once on mount, usually before this pull
         // lands; without this a new device showed the empty chart form.
         window.dispatchEvent(new Event(PROFILE_SYNCED_EVENT));
