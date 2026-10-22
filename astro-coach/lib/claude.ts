@@ -11,6 +11,7 @@ import {
   MODEL_PRIMARY,
   MODEL_LIGHT,
 } from "@/lib/constants";
+import { createStreamUsageTracker, recordLlmUsage } from "@/lib/llm-usage";
 
 // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and thinking
 // tokens count against max_tokens. The chat and JSON calls below were tuned
@@ -58,6 +59,7 @@ export async function validateChart(
     ],
     messages: [{ role: "user", content: userPrompt }],
   });
+  recordLlmUsage("validate", MODEL_PRIMARY, response.usage);
 
   const block = response.content[0];
   if (block.type !== "text") throw new Error("Unexpected response type");
@@ -109,13 +111,21 @@ export async function* streamCoachResponse(
     { signal }
   );
 
-  for await (const chunk of stream) {
-    if (
-      chunk.type === "content_block_delta" &&
-      chunk.delta.type === "text_delta"
-    ) {
-      yield chunk.delta.text;
+  const usage = createStreamUsageTracker();
+  try {
+    for await (const chunk of stream) {
+      usage.observe(chunk);
+      if (
+        chunk.type === "content_block_delta" &&
+        chunk.delta.type === "text_delta"
+      ) {
+        yield chunk.delta.text;
+      }
     }
+  } finally {
+    // Also runs when the caller stops early (Stop button, disconnect): that
+    // partial reply is still billed.
+    recordLlmUsage("coach", MODEL_PRIMARY, usage.usage());
   }
 }
 
@@ -149,13 +159,21 @@ export async function* streamFoundationProfile(
     messages: [{ role: "user", content: task }],
   });
 
-  for await (const chunk of stream) {
-    if (
-      chunk.type === "content_block_delta" &&
-      chunk.delta.type === "text_delta"
-    ) {
-      yield chunk.delta.text;
+  const usage = createStreamUsageTracker();
+  try {
+    for await (const chunk of stream) {
+      usage.observe(chunk);
+      if (
+        chunk.type === "content_block_delta" &&
+        chunk.delta.type === "text_delta"
+      ) {
+        yield chunk.delta.text;
+      }
     }
+  } finally {
+    // Also runs when the caller stops early (Stop button, disconnect): that
+    // partial reply is still billed.
+    recordLlmUsage("foundation", MODEL_PRIMARY, usage.usage());
   }
 }
 
@@ -172,6 +190,7 @@ export async function generateDashaPrediction(
       { role: "user", content: prompt },
     ],
   });
+  recordLlmUsage("dasha", MODEL_PRIMARY, response.usage);
   const block = response.content[0];
   if (block.type !== "text") throw new Error("Unexpected response type");
   return block.text;
@@ -185,6 +204,7 @@ export async function generateHabits(prompt: string): Promise<string> {
     thinking: NO_THINKING,
     messages: [{ role: "user", content: prompt }],
   });
+  recordLlmUsage("habits", MODEL_PRIMARY, response.usage);
   const block = response.content[0];
   if (block.type !== "text") throw new Error("Unexpected response type");
   return block.text;
@@ -198,6 +218,7 @@ export async function extractObservations(prompt: string): Promise<string> {
     max_tokens: MAX_TOKENS_EXTRACT,
     messages: [{ role: "user", content: prompt }],
   });
+  recordLlmUsage("extract", MODEL_LIGHT, response.usage);
   return jsonReplyText(response, "Observation extraction");
 }
 
@@ -209,6 +230,7 @@ export async function summariseObservations(prompt: string): Promise<string> {
     max_tokens: MAX_TOKENS_SUMMARISE,
     messages: [{ role: "user", content: prompt }],
   });
+  recordLlmUsage("summarise", MODEL_LIGHT, response.usage);
   return jsonReplyText(response, "Observation summary");
 }
 
@@ -221,6 +243,7 @@ export async function extractPlanHabits(prompt: string): Promise<string> {
     temperature: 0,
     messages: [{ role: "user", content: prompt }],
   });
+  recordLlmUsage("plan_habits", MODEL_LIGHT, response.usage);
   const block = response.content[0];
   if (block.type !== "text") throw new Error("Unexpected response type");
   return block.text;
